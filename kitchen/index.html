@@ -1088,6 +1088,22 @@
         </div>
       </div>
 
+      <div class="section-title"><h2>AI (for photo scan)</h2></div>
+      <div class="settings-group">
+        <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <div class="label-wrap">
+            <div>Claude API key</div>
+            <div class="label-sub">Enables photo-to-inventory scanning. Stored only in your browser — never uploaded.</div>
+          </div>
+          <input type="password" id="setClaudeKey" placeholder="sk-ant-..." autocomplete="off" spellcheck="false" style="width:100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: monospace; font-size: 13px;" />
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <button class="btn btn-secondary" id="testClaudeKey" style="flex:1;">Test key</button>
+            <button class="btn btn-ghost" id="clearClaudeKey" style="flex:1;">Clear</button>
+          </div>
+          <div id="claudeKeyStatus" class="label-sub" style="min-height:18px;"></div>
+        </div>
+      </div>
+
       <div class="section-title"><h2>Data</h2></div>
       <div class="settings-group">
         <div class="settings-row" id="exportBtn" style="cursor:pointer;">
@@ -1512,6 +1528,7 @@
           familyDefault: 4,
           lowStockThreshold: 1,
           hasOnboarded: false,
+          claudeKey: "",
         }
       };
       SEED_INVENTORY.forEach(i => { seeded.inventory[normalize(i.name)] = i; });
@@ -2017,12 +2034,13 @@
     // ============================================================
     function renderScanResult(dataUrl) {
       const container = document.getElementById("scanResult");
+      const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
       container.innerHTML = `
         <img class="preview-img" src="${dataUrl}" alt="Captured photo" />
         <div class="card">
           <h3 style="margin:0 0 4px;">What's in this photo?</h3>
-          <p style="color:var(--muted); font-size:12px; margin:0 0 10px;">Type each item on a new line. Leading numbers treated as quantity.</p>
-          <div class="field"><textarea id="bulkItems" placeholder="Ground beef&#10;Yellow onion&#10;2 tomatoes"></textarea></div>
+          <p style="color:var(--muted); font-size:12px; margin:0 0 10px;">${hasKey ? "Claude is identifying items… you can edit the list before saving." : "Type each item on a new line. Leading numbers are quantities."}</p>
+          <div class="field"><textarea id="bulkItems" placeholder="Ground beef&#10;Yellow onion&#10;2 tomatoes">${hasKey ? "Analyzing photo with Claude…" : ""}</textarea></div>
           <div class="field">
             <label>Where?</label>
             <select id="bulkLoc">
@@ -2034,10 +2052,64 @@
           </div>
           <button class="btn btn-green" id="bulkSave">Add all to inventory</button>
         </div>
-        <div class="info-banner" style="margin-top:10px;">
-          <strong>Auto-identify:</strong> add a Claude API key in settings, connect a serverless function, and this photo will fill the list automatically.
-        </div>`;
+        ${hasKey ? "" : `<div class="info-banner" style="margin-top:10px;"><strong>Tip:</strong> Add a Claude API key in Settings to auto-identify items from photos.</div>`}`;
       document.getElementById("bulkSave").addEventListener("click", bulkAddItems);
+
+      if (hasKey) {
+        analyzePhotoWithClaude(dataUrl).then((items) => {
+          const ta = document.getElementById("bulkItems");
+          if (!ta) return;
+          if (items && items.length) {
+            ta.value = items.join("\n");
+            haptic(10);
+          } else {
+            ta.value = "";
+            ta.placeholder = "Claude didn't find any items. Add them manually.";
+          }
+        }).catch((err) => {
+          const ta = document.getElementById("bulkItems");
+          if (!ta) return;
+          ta.value = "";
+          ta.placeholder = `Error: ${err.message}. Add items manually.`;
+        });
+      }
+    }
+
+    async function analyzePhotoWithClaude(dataUrl) {
+      const key = (state.settings.claudeKey || "").trim();
+      if (!key) throw new Error("No API key set");
+      const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
+      if (!match) throw new Error("Bad image format");
+      const mediaType = match[1];
+      const b64 = match[2];
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5",
+          max_tokens: 800,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
+              { type: "text", text: "List every kitchen food item you see in this photo, one per line. Use simple names like 'ground beef', 'yellow onion', '2 tomatoes'. Include a leading quantity ONLY if you can clearly count individual pieces. No bullet points, no extra text — just the plain list of items." },
+            ],
+          }],
+        }),
+      });
+      if (!res.ok) {
+        let detail = "";
+        try { const j = await res.json(); detail = j.error?.message || ""; } catch {}
+        throw new Error(`Claude API ${res.status}${detail ? ": " + detail : ""}`);
+      }
+      const data = await res.json();
+      const text = (data.content || []).map(c => c.text || "").join("\n");
+      return text.split("\n").map(l => l.replace(/^[-•*\d.)\s]+/, "").trim()).filter(Boolean);
     }
     function bulkAddItems() {
       const text = document.getElementById("bulkItems").value;
@@ -2255,6 +2327,8 @@
       document.getElementById("setHaptic").checked = !!state.settings.haptic;
       document.getElementById("setFamily").value = state.settings.familyDefault;
       document.getElementById("setLowStock").value = state.settings.lowStockThreshold;
+      document.getElementById("setClaudeKey").value = state.settings.claudeKey || "";
+      document.getElementById("claudeKeyStatus").textContent = state.settings.claudeKey ? "Key saved in this browser." : "";
       showModal("settingsModal");
     }
     function wireSettings() {
@@ -2269,6 +2343,48 @@
       });
       document.getElementById("setLowStock").addEventListener("input", e => {
         state.settings.lowStockThreshold = Number(e.target.value) || 1; saveState(); renderInventory();
+      });
+      document.getElementById("setClaudeKey").addEventListener("change", e => {
+        state.settings.claudeKey = e.target.value.trim();
+        saveState();
+        document.getElementById("claudeKeyStatus").textContent = state.settings.claudeKey ? "Key saved in this browser." : "";
+      });
+      document.getElementById("testClaudeKey").addEventListener("click", async () => {
+        const k = document.getElementById("setClaudeKey").value.trim();
+        const status = document.getElementById("claudeKeyStatus");
+        if (!k) { status.textContent = "Enter a key first."; return; }
+        state.settings.claudeKey = k; saveState();
+        status.textContent = "Testing…";
+        try {
+          const res = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "x-api-key": k,
+              "anthropic-version": "2023-06-01",
+              "anthropic-dangerous-direct-browser-access": "true",
+            },
+            body: JSON.stringify({
+              model: "claude-haiku-4-5-20251001",
+              max_tokens: 10,
+              messages: [{ role: "user", content: "Say OK" }],
+            }),
+          });
+          if (res.ok) { status.textContent = "✅ Key works!"; haptic(10); }
+          else {
+            let msg = `HTTP ${res.status}`;
+            try { const j = await res.json(); if (j.error?.message) msg = j.error.message; } catch {}
+            status.textContent = `❌ ${msg}`;
+          }
+        } catch (err) {
+          status.textContent = `❌ ${err.message}`;
+        }
+      });
+      document.getElementById("clearClaudeKey").addEventListener("click", () => {
+        state.settings.claudeKey = "";
+        document.getElementById("setClaudeKey").value = "";
+        document.getElementById("claudeKeyStatus").textContent = "Key cleared.";
+        saveState();
       });
       document.getElementById("exportBtn").addEventListener("click", exportData);
       document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
