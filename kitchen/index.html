@@ -618,6 +618,77 @@
     [data-theme="dark"] .info-banner { border-color: #5a4500; color: #ffcc66; }
     .info-banner strong { color: inherit; }
 
+    /* Chat UI */
+    .chat-messages {
+      display: flex; flex-direction: column; gap: 10px;
+      padding-bottom: 8px;
+      min-height: 40vh;
+    }
+    .chat-msg {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 14px; line-height: 1.5;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+    .chat-msg.user {
+      align-self: flex-end;
+      background: var(--green);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-msg.assistant {
+      align-self: flex-start;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-msg.typing {
+      color: var(--muted);
+      font-style: italic;
+    }
+    .chat-suggestions {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin: 10px 0;
+    }
+    .chip.chip-suggest {
+      font-size: 12px;
+      padding: 8px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .chat-input-row {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg);
+      padding: 8px 0;
+      display: flex; gap: 8px; align-items: flex-end;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .chat-input-row textarea {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 10px 14px;
+      background: var(--card);
+      color: var(--text);
+      font-family: inherit; font-size: 14px;
+      resize: none;
+      min-height: 40px;
+      max-height: 120px;
+    }
+    .chat-input-row button {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 50%;
+      font-size: 16px;
+    }
+
     /* Meal plan grid */
     .plan-grid {
       display: grid;
@@ -842,7 +913,10 @@
     <div class="view" id="viewPlan">
       <div class="section-title"><h2>This week's meals</h2></div>
       <div class="plan-grid" id="planGrid"></div>
-      <button class="btn btn-primary" id="generatePlanList">🛒 Generate shopping list</button>
+      <div style="display:flex; gap:8px; flex-wrap: wrap;">
+        <button class="btn btn-green" id="autoPlanWeek" style="flex:1; min-width: 140px;">✨ Auto-plan my week</button>
+        <button class="btn btn-primary" id="generatePlanList" style="flex:1; min-width: 140px;">🛒 Shopping list</button>
+      </div>
     </div>
 
     <!-- SCAN VIEW -->
@@ -858,15 +932,31 @@
       </label>
       <div id="scanResult"></div>
     </div>
+
+    <!-- ASK VIEW -->
+    <div class="view" id="viewAsk">
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-suggestions" id="chatSuggestions">
+        <button class="chip chip-suggest" data-suggest="What should we cook tonight?">🍽️ What should we cook tonight?</button>
+        <button class="chip chip-suggest" data-suggest="Plan my meals for the whole week using what I have">📅 Plan my week</button>
+        <button class="chip chip-suggest" data-suggest="What am I running low on that I should buy?">🛒 What should I restock?</button>
+        <button class="chip chip-suggest" data-suggest="What can I make quickly in under 30 minutes?">⚡ Something quick</button>
+      </div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" placeholder="Ask about recipes, meal planning, what to buy…" rows="1"></textarea>
+        <button id="chatSend" class="btn btn-green" aria-label="Send">➤</button>
+      </div>
+    </div>
   </main>
 
   <button class="fab" id="fab" aria-label="Add">+</button>
 
   <nav class="tabs">
     <button class="tab-btn active" data-view="cook"><span class="tab-icon">🍲</span><span>Cook</span></button>
-    <button class="tab-btn" data-view="inventory"><span class="tab-icon">📦</span><span>Inventory</span></button>
+    <button class="tab-btn" data-view="inventory"><span class="tab-icon">📦</span><span>Inv</span></button>
     <button class="tab-btn" data-view="plan"><span class="tab-icon">📅</span><span>Plan</span></button>
     <button class="tab-btn" data-view="scan"><span class="tab-icon">📷</span><span>Scan</span></button>
+    <button class="tab-btn" data-view="ask"><span class="tab-icon">💬</span><span>Ask</span></button>
   </nav>
 
   <!-- Recipe detail modal -->
@@ -1085,6 +1175,45 @@
             <div class="label-sub">Flag items at or below this count</div>
           </div>
           <input type="number" id="setLowStock" min="0" max="10" step="0.5" style="width:60px; text-align:center;" />
+        </div>
+      </div>
+
+      <div class="section-title"><h2>Preferences (for AI suggestions)</h2></div>
+      <div class="settings-group">
+        <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <div class="label-wrap">
+            <div>Allergies</div>
+            <div class="label-sub">e.g. peanuts, shellfish</div>
+          </div>
+          <input type="text" id="prefAllergies" placeholder="none" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);" />
+        </div>
+        <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <div class="label-wrap">
+            <div>Dietary restrictions</div>
+            <div class="label-sub">e.g. vegetarian, low-carb, gluten-free</div>
+          </div>
+          <input type="text" id="prefDietary" placeholder="none" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);" />
+        </div>
+        <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <div class="label-wrap">
+            <div>Cuisines we love</div>
+            <div class="label-sub">e.g. Italian, Thai, Mexican</div>
+          </div>
+          <input type="text" id="prefLikedCuisines" placeholder="any" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);" />
+        </div>
+        <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <div class="label-wrap">
+            <div>Foods we don't like</div>
+            <div class="label-sub">e.g. mushrooms, olives, cilantro</div>
+          </div>
+          <input type="text" id="prefDislikedFoods" placeholder="none" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);" />
+        </div>
+        <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <div class="label-wrap">
+            <div>Family notes</div>
+            <div class="label-sub">Anything the assistant should know — picky toddler, busy weeknights, etc.</div>
+          </div>
+          <textarea id="prefFamilyNotes" placeholder="" style="width:100%; min-height:60px; padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:inherit; font-size:14px;"></textarea>
         </div>
       </div>
 
@@ -1522,6 +1651,7 @@
         history: {}, // recipeId -> ISO date
         mealPlan: {}, // dayName -> recipeId
         customRecipes: [],
+        chatHistory: [], // {role: "user"|"assistant", content: string, ts: ISO}
         settings: {
           theme: "system",
           haptic: true,
@@ -1529,7 +1659,14 @@
           lowStockThreshold: 1,
           hasOnboarded: false,
           claudeKey: "",
-        }
+          prefs: {
+            allergies: "",
+            dietary: "",
+            likedCuisines: "",
+            dislikedFoods: "",
+            familyNotes: "",
+          },
+        },
       };
       SEED_INVENTORY.forEach(i => { seeded.inventory[normalize(i.name)] = i; });
       return seeded;
@@ -1693,12 +1830,14 @@
         cook: "What can we cook today?",
         inventory: "What's in your kitchen",
         plan: "Plan your week, generate the shopping list",
-        scan: "Add items by photo"
+        scan: "Add items by photo",
+        ask: "Your kitchen assistant"
       };
       document.getElementById("headerSubtitle").textContent = subs[name] || "";
       if (name === "cook") renderCook();
       else if (name === "inventory") renderInventory();
       else if (name === "plan") renderPlan();
+      else if (name === "ask") renderChat();
       haptic(5);
     }
 
@@ -2260,6 +2399,170 @@
     }
 
     // ============================================================
+    // ASSISTANT (chat + auto-plan)
+    // ============================================================
+    function buildAssistantContext() {
+      const p = state.settings.prefs || {};
+      const inv = Object.values(state.inventory).map(i => {
+        return `- ${i.name}${i.qty ? ` (${i.qty}${i.unit ? " " + i.unit : ""})` : ""}${i.expiry ? ` exp:${i.expiry}` : ""}`;
+      }).join("\n") || "(empty)";
+
+      const recipes = RECIPES.concat(state.customRecipes || []).map(r =>
+        `- ${r.id}: ${r.name} (${r.cuisine || "—"}, ${r.mealType || "—"}, ${r.time}, serves ${r.baseServings})`
+      ).join("\n");
+
+      const plan = DAYS.map(d => `${d}: ${state.mealPlan[d] ? getRecipe(state.mealPlan[d])?.name || "—" : "empty"}`).join("\n");
+
+      const favorites = (state.favorites || []).map(id => getRecipe(id)?.name).filter(Boolean).join(", ") || "none";
+
+      const recentHistory = Object.entries(state.history || {})
+        .sort((a, b) => b[1].localeCompare(a[1]))
+        .slice(0, 5)
+        .map(([id, date]) => `${getRecipe(id)?.name || id} (${date.slice(0, 10)})`)
+        .join(", ") || "none";
+
+      return `You are Ryan's kitchen assistant. Keep responses concise (under 120 words unless asked for detail). Be warm and direct.
+
+FAMILY PREFERENCES
+Family size default: ${state.settings.familyDefault}
+Allergies: ${p.allergies || "none"}
+Dietary: ${p.dietary || "none"}
+Loved cuisines: ${p.likedCuisines || "any"}
+Disliked foods: ${p.dislikedFoods || "none"}
+Notes: ${p.familyNotes || "(none)"}
+
+CURRENT INVENTORY
+${inv}
+
+FAVORITES: ${favorites}
+RECENTLY COOKED: ${recentHistory}
+
+CURRENT MEAL PLAN
+${plan}
+
+RECIPE LIBRARY (IDs you can reference)
+${recipes}
+
+When suggesting recipes, prefer ones that use ingredients already in inventory. When the user asks to plan a week, respond ONLY with a JSON object of this exact shape (no other text): {"plan": {"Mon": "recipe_id", "Tue": "recipe_id", ...}}. For all other requests, respond in natural conversational language.`;
+    }
+
+    async function callAssistant(userMessage, opts = {}) {
+      const key = (state.settings.claudeKey || "").trim();
+      if (!key) throw new Error("Set your Claude API key in Settings first");
+
+      const system = buildAssistantContext();
+      const messages = (state.chatHistory || []).slice(-10).map(m => ({ role: m.role, content: m.content }));
+      messages.push({ role: "user", content: userMessage });
+
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: opts.model || "claude-sonnet-4-5",
+          max_tokens: opts.maxTokens || 800,
+          system,
+          messages,
+        }),
+      });
+      if (!res.ok) {
+        let detail = "";
+        try { const j = await res.json(); detail = j.error?.message || ""; } catch {}
+        throw new Error(`Claude API ${res.status}${detail ? ": " + detail : ""}`);
+      }
+      const data = await res.json();
+      return (data.content || []).map(c => c.text || "").join("\n").trim();
+    }
+
+    function renderChat() {
+      const container = document.getElementById("chatMessages");
+      const history = state.chatHistory || [];
+      if (!history.length) {
+        container.innerHTML = `<div class="empty-state" style="padding:24px 12px;"><span class="big">💬</span><p style="margin:8px 0 0; font-size:13px;">Ask me anything about your kitchen — what to cook, what to buy, how to plan.</p></div>`;
+        return;
+      }
+      container.innerHTML = history.map(m => {
+        const cls = m.role === "user" ? "user" : "assistant";
+        return `<div class="chat-msg ${cls}">${escapeHtml(m.content)}</div>`;
+      }).join("");
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    async function sendChat(text) {
+      if (!text || !text.trim()) return;
+      const msg = text.trim();
+      state.chatHistory.push({ role: "user", content: msg, ts: new Date().toISOString() });
+      saveState();
+      renderChat();
+
+      // Show typing indicator
+      const container = document.getElementById("chatMessages");
+      const typing = document.createElement("div");
+      typing.className = "chat-msg assistant typing";
+      typing.textContent = "Thinking…";
+      container.appendChild(typing);
+      container.scrollTop = container.scrollHeight;
+
+      try {
+        const reply = await callAssistant(msg);
+        state.chatHistory.push({ role: "assistant", content: reply, ts: new Date().toISOString() });
+        saveState();
+        renderChat();
+        haptic(10);
+      } catch (err) {
+        typing.remove();
+        state.chatHistory.push({ role: "assistant", content: `⚠️ ${err.message}`, ts: new Date().toISOString() });
+        saveState();
+        renderChat();
+      }
+    }
+
+    async function autoPlanWeek() {
+      const key = (state.settings.claudeKey || "").trim();
+      if (!key) { alert("Add your Claude API key in Settings first."); return; }
+      const btn = document.getElementById("autoPlanWeek");
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "✨ Planning…";
+      try {
+        const reply = await callAssistant(
+          "Plan my full week of dinners. Return ONLY the JSON object, no other text. Use recipe IDs from the library. Favor recipes whose ingredients I already have. Avoid repeats unless I have lots of leftover ingredients. Include variety across cuisines. The JSON shape is: {\"plan\": {\"Mon\":\"id\",\"Tue\":\"id\",\"Wed\":\"id\",\"Thu\":\"id\",\"Fri\":\"id\",\"Sat\":\"id\",\"Sun\":\"id\"}}",
+          { maxTokens: 400 }
+        );
+        // Try to extract JSON
+        const jsonMatch = reply.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("Couldn't parse plan");
+        const parsed = JSON.parse(jsonMatch[0]);
+        const plan = parsed.plan || parsed;
+        let applied = 0;
+        DAYS.forEach(d => {
+          const id = plan[d];
+          if (id && getRecipe(id)) {
+            state.mealPlan[d] = id;
+            applied++;
+          }
+        });
+        saveState();
+        renderPlan();
+        showToast(`✨ Planned ${applied} meal${applied === 1 ? "" : "s"}`);
+        haptic(20);
+      } catch (err) {
+        alert(`Auto-plan failed: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    }
+
+    // ============================================================
     // CUSTOM RECIPE
     // ============================================================
     function openCustom() {
@@ -2323,12 +2626,18 @@
     // SETTINGS
     // ============================================================
     function openSettings() {
+      const p = state.settings.prefs || {};
       document.getElementById("setTheme").value = state.settings.theme;
       document.getElementById("setHaptic").checked = !!state.settings.haptic;
       document.getElementById("setFamily").value = state.settings.familyDefault;
       document.getElementById("setLowStock").value = state.settings.lowStockThreshold;
       document.getElementById("setClaudeKey").value = state.settings.claudeKey || "";
       document.getElementById("claudeKeyStatus").textContent = state.settings.claudeKey ? "Key saved in this browser." : "";
+      document.getElementById("prefAllergies").value = p.allergies || "";
+      document.getElementById("prefDietary").value = p.dietary || "";
+      document.getElementById("prefLikedCuisines").value = p.likedCuisines || "";
+      document.getElementById("prefDislikedFoods").value = p.dislikedFoods || "";
+      document.getElementById("prefFamilyNotes").value = p.familyNotes || "";
       showModal("settingsModal");
     }
     function wireSettings() {
@@ -2385,6 +2694,21 @@
         document.getElementById("setClaudeKey").value = "";
         document.getElementById("claudeKeyStatus").textContent = "Key cleared.";
         saveState();
+      });
+      // Preferences — save on blur for natural UX
+      const prefFields = [
+        ["prefAllergies", "allergies"],
+        ["prefDietary", "dietary"],
+        ["prefLikedCuisines", "likedCuisines"],
+        ["prefDislikedFoods", "dislikedFoods"],
+        ["prefFamilyNotes", "familyNotes"],
+      ];
+      prefFields.forEach(([id, key]) => {
+        document.getElementById(id).addEventListener("input", e => {
+          state.settings.prefs = state.settings.prefs || {};
+          state.settings.prefs[key] = e.target.value;
+          saveState();
+        });
       });
       document.getElementById("exportBtn").addEventListener("click", exportData);
       document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
@@ -2562,6 +2886,32 @@
 
     // Plan
     document.getElementById("generatePlanList").addEventListener("click", planShoppingList);
+    document.getElementById("autoPlanWeek").addEventListener("click", autoPlanWeek);
+
+    // Chat
+    document.getElementById("chatSend").addEventListener("click", () => {
+      const input = document.getElementById("chatInput");
+      const text = input.value;
+      input.value = "";
+      sendChat(text);
+    });
+    document.getElementById("chatInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById("chatSend").click();
+      }
+    });
+    // Auto-resize chat input
+    document.getElementById("chatInput").addEventListener("input", (e) => {
+      e.target.style.height = "auto";
+      e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+    });
+    // Suggestion chips
+    document.querySelectorAll(".chip-suggest").forEach(btn => {
+      btn.addEventListener("click", () => {
+        sendChat(btn.dataset.suggest);
+      });
+    });
 
     // Onboard
     document.getElementById("obNext").addEventListener("click", () => {
