@@ -1039,7 +1039,10 @@
       <ul class="checklist" id="checklist"></ul>
       <div class="btn-row" style="flex-direction: column;">
         <button class="btn btn-primary" id="goToCart" disabled>Go to my Instacart cart</button>
+        <button class="btn btn-secondary" id="orderViaClaudeChrome">🤖 Order via Claude in Chrome</button>
+        <button class="btn btn-secondary" id="orderViaAmazon">📦 Order on Amazon Fresh</button>
         <button class="btn btn-secondary" id="copyList">Copy list to clipboard</button>
+        <p class="subtitle" style="margin-top:6px; font-size:12px;">Claude-in-Chrome drives Instacart for you (install the extension first). Amazon Fresh opens each item in a new tab — allow pop-ups.</p>
       </div>
     </div>
   </div>
@@ -2858,12 +2861,67 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       window.open("https://www.instacart.com/store/checkout_v3", "_blank");
     });
     document.getElementById("copyList").addEventListener("click", async () => {
-      const text = checklistItems.map(i => {
-        const q = i.scaledQty != null ? formatQty(i.scaledQty) : formatQty(i.qty);
-        return `• ${q}${i.unit ? " " + i.unit : ""} ${i.name}`;
-      }).join("\n");
+      const text = buildShoppingListText();
       try { await navigator.clipboard.writeText(text); showToast("List copied"); }
       catch (e) { alert(text); }
+    });
+
+    // Build a nicely formatted plaintext shopping list (used by multiple handlers)
+    function buildShoppingListText() {
+      return checklistItems.map(i => {
+        const q = i.scaledQty != null ? formatQty(i.scaledQty) : (i.qty != null ? formatQty(i.qty) : "");
+        return `• ${q ? q + " " : ""}${i.unit ? i.unit + " " : ""}${i.name}`.trim();
+      }).join("\n");
+    }
+
+    // Order via Claude in Chrome: opens claude.ai with a prompt pre-loaded,
+    // instructing Claude to drive Instacart and add every item to the cart.
+    // Relies on the user having Claude in Chrome (the browser-automation
+    // extension) installed and signed in.
+    document.getElementById("orderViaClaudeChrome").addEventListener("click", () => {
+      if (!checklistItems.length) { showToast("Nothing on the list"); return; }
+      const listText = buildShoppingListText();
+      const prompt = [
+        "Please open Instacart (instacart.com), pick a store near me, and add every item below to my cart.",
+        "",
+        "Use my default store/address if one is set. Use the closest match for each item name (generic brands are fine unless I've specified).",
+        "",
+        "SHOPPING LIST:",
+        listText,
+        "",
+        "When you've finished adding everything, stop at the cart/checkout page so I can review and pay myself. Do NOT place the order or enter payment info."
+      ].join("\n");
+      const url = "https://claude.ai/new?q=" + encodeURIComponent(prompt);
+      window.open(url, "_blank", "noopener");
+      showToast("Opening Claude — make sure Claude in Chrome is installed");
+    });
+
+    // Order via Amazon Fresh: opens a search tab on Amazon Fresh per item.
+    // Amazon's public cart-add URL requires ASINs, which we don't know, so
+    // this is the next-best thing — pre-filtered search in the Fresh store
+    // with one click to "Add to cart" for each result.
+    document.getElementById("orderViaAmazon").addEventListener("click", async () => {
+      if (!checklistItems.length) { showToast("Nothing on the list"); return; }
+      // Also copy the list so the user has it handy to paste into the main search box if they prefer.
+      try { await navigator.clipboard.writeText(buildShoppingListText()); } catch (e) {}
+      const amazonFreshNode = "133140011"; // Amazon Fresh dept
+      const urls = checklistItems.map(i =>
+        "https://www.amazon.com/s?k=" + encodeURIComponent(i.name) +
+        "&rh=n%3A" + amazonFreshNode + "&i=amazonfresh"
+      );
+      // Open the first immediately (allowed), then stagger the rest so
+      // pop-up blockers are less likely to kill them.
+      let openedFirst = false;
+      urls.forEach((u, idx) => {
+        setTimeout(() => {
+          const w = window.open(u, "_blank", "noopener");
+          if (!w && !openedFirst) {
+            alert("Amazon tabs were blocked. Please allow pop-ups for this site, then tap the button again.");
+          }
+          openedFirst = true;
+        }, idx * 350);
+      });
+      showToast(`Opening ${urls.length} Amazon Fresh tabs — list also copied`);
     });
 
     // Item modal
