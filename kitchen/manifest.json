@@ -1,0 +1,20 @@
+{
+  "name": "My Kitchen",
+  "short_name": "Kitchen",
+  "description": "Inventory, recipe ideas, and grocery orders for your kitchen.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff9f2",
+  "theme_color": "#2f6b3f",
+  "categories": ["food", "lifestyle", "productivity"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
