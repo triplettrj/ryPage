@@ -1149,8 +1149,8 @@
 <body>
   <!-- Update banner — shown once per version, dismissed on tap -->
   <div id="updateBanner" style="display:none; background:#1565c0; color:white; padding:10px 16px; font-size:13px; align-items:center; justify-content:space-between; gap:8px;">
-    <span>✨ <strong>Update:</strong> Barcode scanner improved — better iOS detection!</span>
-    <button onclick="document.getElementById('updateBanner').style.display='none'; localStorage.setItem('seenUpdate','v10');" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Got it</button>
+    <span>✨ <strong>Update:</strong> Firebase cloud sync + smarter Cook Now view!</span>
+    <button onclick="document.getElementById('updateBanner').style.display='none'; localStorage.setItem('seenUpdate','v11');" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Got it</button>
   </div>
 
   <header>
@@ -2250,7 +2250,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       messagingSenderId: "49025591071",
       appId:             "1:49025591071:web:008418cdb3e7ed7b6db22a"
     };
-    const UPDATE_VERSION = "v10";
+    const UPDATE_VERSION = "v11";
     let state = loadState();
 
     // Show update banner once per version
