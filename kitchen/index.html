@@ -1081,10 +1081,7 @@
         <button class="close-x" data-close="barcodeModal">×</button>
         <h2>📷 Scan barcode</h2>
         <p class="subtitle">Point at the UPC. Good lighting helps.</p>
-        <div id="barcodeVideoWrap" style="position:relative; background:#000; border-radius:12px; overflow:hidden; aspect-ratio: 4 / 3;">
-          <video id="barcodeVideo" style="width:100%; height:100%; object-fit:cover;" playsinline muted></video>
-          <div style="position:absolute; inset:20%; border:2px solid rgba(255,255,255,0.8); border-radius:8px; pointer-events:none;"></div>
-        </div>
+        <div id="barcodeReaderBox" style="border-radius:12px; overflow:hidden;"></div>
         <p id="barcodeStatus" style="text-align:center; color:var(--muted); font-size:13px; margin:10px 0 0;">Loading scanner…</p>
         <div class="btn-row" style="margin-top: 12px;">
           <button class="btn btn-secondary" id="barcodeCancel">Cancel</button>
@@ -2817,8 +2814,6 @@
 
     // Draft state for the one-item close-up review card.
     let closeUpDraft = null;
-    // Barcode scanner state (zxing controls)
-    let barcodeControls = null;
 
     async function handleCloseUpPhoto(file) {
       const scanEl = document.getElementById("scanResult");
@@ -3037,37 +3032,43 @@
       };
     }
 
-    // ---- Barcode scanner (@zxing/browser, CDN on demand) ----
+    // ---- Barcode scanner (html5-qrcode — better iOS Safari support) ----
+    let html5QrScanner = null;
+
     async function openBarcodeScanner() {
       showModal("barcodeModal");
       const statusEl = document.getElementById("barcodeStatus");
       statusEl.textContent = "Loading scanner…";
       try {
-        if (!window.ZXingBrowser) {
-          await loadScript("https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js");
+        if (!window.Html5Qrcode) {
+          await loadScript("https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js");
         }
-        const BrowserMultiFormatReader = window.ZXingBrowser?.BrowserMultiFormatReader;
-        if (!BrowserMultiFormatReader) throw new Error("Scanner library failed to load");
-        const reader = new BrowserMultiFormatReader();
-        const video = document.getElementById("barcodeVideo");
+        // Clear any previous instance
+        const box = document.getElementById("barcodeReaderBox");
+        box.innerHTML = "";
+        html5QrScanner = new Html5Qrcode("barcodeReaderBox");
         statusEl.textContent = "Point at barcode…";
-        barcodeControls = await reader.decodeFromVideoDevice(undefined, video, (result, err, controls) => {
-          if (result) {
-            const code = result.getText();
-            controls.stop();
-            barcodeControls = null;
-            onBarcodeDecoded(code);
-          }
-        });
+        await html5QrScanner.start(
+          { facingMode: "environment" },
+          { fps: 15, qrbox: { width: 250, height: 150 }, aspectRatio: 1.5 },
+          (decodedText) => {
+            closeBarcodeScanner();
+            onBarcodeDecoded(decodedText);
+          },
+          () => { /* scan errors are normal, ignore */ }
+        );
       } catch (err) {
         statusEl.innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(err.message)}</span>`;
       }
     }
 
-    function closeBarcodeScanner() {
-      if (barcodeControls) {
-        try { barcodeControls.stop(); } catch {}
-        barcodeControls = null;
+    async function closeBarcodeScanner() {
+      if (html5QrScanner) {
+        try {
+          if (html5QrScanner.isScanning) await html5QrScanner.stop();
+          html5QrScanner.clear();
+        } catch {}
+        html5QrScanner = null;
       }
       hideModal("barcodeModal");
     }
