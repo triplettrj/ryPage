@@ -3066,53 +3066,67 @@
       };
     }
 
-    // ---- Barcode scanner (html5-qrcode — better iOS Safari support) ----
-    let html5QrScanner = null;
+    // ---- Barcode scanner (Quagga2 — optimised for 1D UPC/EAN on iOS) ----
+    let quaggaRunning = false;
 
     async function openBarcodeScanner() {
       showModal("barcodeModal");
       const statusEl = document.getElementById("barcodeStatus");
       statusEl.textContent = "Loading scanner…";
       try {
-        if (!window.Html5Qrcode) {
-          await loadScript("https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js");
+        if (!window.Quagga) {
+          await loadScript("https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.7.3/dist/quagga.min.js");
         }
-        // Clear any previous instance
         const box = document.getElementById("barcodeReaderBox");
         box.innerHTML = "";
-        // Explicitly include all 1D barcode formats (UPC, EAN, Code128, etc.)
-        const formats = [
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.ITF,
-        ];
-        html5QrScanner = new Html5Qrcode("barcodeReaderBox", { formatsToSupport: formats, verbose: false });
-        statusEl.textContent = "Point barcode at the box…";
-        await html5QrScanner.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 280, height: 100 } },
-          (decodedText) => {
-            closeBarcodeScanner();
-            onBarcodeDecoded(decodedText);
+        // Give Quagga a video + canvas container
+        box.style.cssText = "position:relative; background:#000; border-radius:12px; overflow:hidden; min-height:220px;";
+
+        Quagga.init({
+          inputStream: {
+            type: "LiveStream",
+            target: box,
+            constraints: {
+              facingMode: "environment",
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
           },
-          () => { /* scan errors are normal, ignore */ }
-        );
+          decoder: {
+            readers: ["ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader", "code_128_reader", "code_39_reader"],
+            multiple: false,
+          },
+          locate: true,
+          numOfWorkers: 0, // required for iOS Safari (no SharedArrayBuffer)
+          frequency: 10,
+        }, (err) => {
+          if (err) {
+            statusEl.innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(err.message || String(err))}</span>`;
+            return;
+          }
+          Quagga.start();
+          quaggaRunning = true;
+          statusEl.textContent = "Point camera at barcode…";
+        });
+
+        Quagga.offDetected(); // clear any old listeners
+        Quagga.onDetected((result) => {
+          const code = result?.codeResult?.code;
+          if (!code) return;
+          // Require at least 2 consistent reads to avoid false positives
+          closeBarcodeScanner();
+          onBarcodeDecoded(code);
+        });
+
       } catch (err) {
         statusEl.innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(err.message)}</span>`;
       }
     }
 
     async function closeBarcodeScanner() {
-      if (html5QrScanner) {
-        try {
-          if (html5QrScanner.isScanning) await html5QrScanner.stop();
-          html5QrScanner.clear();
-        } catch {}
-        html5QrScanner = null;
+      if (quaggaRunning) {
+        try { Quagga.stop(); } catch {}
+        quaggaRunning = false;
       }
       hideModal("barcodeModal");
     }
