@@ -2475,17 +2475,20 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       }
     }
 
-    document.getElementById("authBtn").addEventListener("click", () => {
-      if (window._fbUser) showModal("accountModal");
-      else showModal("signInModal");
-    });
-    document.getElementById("googleSignInBtn").addEventListener("click", async () => {
-      hideModal("signInModal");
-      await signInWithGoogle();
-    });
-    document.getElementById("signOutBtn").addEventListener("click", async () => {
-      hideModal("accountModal");
-      await doSignOut();
+    // Auth button wiring — deferred to load so modal HTML exists in DOM
+    window.addEventListener("load", () => {
+      document.getElementById("authBtn").addEventListener("click", () => {
+        if (window._fbUser) showModal("accountModal");
+        else showModal("signInModal");
+      });
+      document.getElementById("googleSignInBtn").addEventListener("click", async () => {
+        hideModal("signInModal");
+        await signInWithGoogle();
+      });
+      document.getElementById("signOutBtn").addEventListener("click", async () => {
+        hideModal("accountModal");
+        await doSignOut();
+      });
     });
 
     // ============================================================
