@@ -2407,7 +2407,7 @@
           <span style="font-size:40px;">📷</span>
           <p style="margin:10px 0 4px; font-weight:600;">Your inventory is empty</p>
           <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your pantry or fridge to get started</p>
-          <button class="btn btn-green" onclick="switchView('scan')" style="width:100%;">📷 Scan your kitchen</button>
+          <button class="btn btn-green" onclick="setView('scan')" style="width:100%;">📷 Scan your kitchen</button>
         `;
         document.getElementById("useSoonWrap").before(banner);
       }
@@ -2613,7 +2613,7 @@
             <span class="big">📦</span>
             <p style="margin:8px 0 4px; font-weight:600;">No items yet</p>
             <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your pantry or fridge to add items</p>
-            <button class="btn btn-green" onclick="switchView('scan')" style="width:100%;">📷 Scan your kitchen</button>
+            <button class="btn btn-green" onclick="setView('scan')" style="width:100%;">📷 Scan your kitchen</button>
           </div>`;
         return;
       }
