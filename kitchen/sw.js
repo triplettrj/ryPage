@@ -1,7 +1,7 @@
 // My Kitchen - Service Worker
-// Cache-first for the app shell so it loads offline.
+// Network-first strategy: always tries to fetch latest, falls back to cache when offline.
 
-const CACHE_VERSION = "my-kitchen-v9";
+const CACHE_VERSION = "my-kitchen-v11";
 const SHELL = [
   "./",
   "./index.html",
@@ -29,24 +29,20 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
-
-  // Network-first for cross-origin (recipes, Instacart, etc. — but we don't call APIs here).
   if (url.origin !== self.location.origin) return;
 
-  // Cache-first for same-origin app shell.
+  // Network-first: fetch fresh copy, cache it, fall back to cache if offline.
   event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req)
-        .then((res) => {
-          // Only cache OK responses
-          if (res && res.status === 200 && res.type === "basic") {
-            const copy = res.clone();
-            caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => caches.match("./index.html"));
-    })
+    fetch(req)
+      .then((res) => {
+        if (res && res.status === 200 && res.type === "basic") {
+          const copy = res.clone();
+          caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
+        }
+        return res;
+      })
+      .catch(() =>
+        caches.match(req).then((cached) => cached || caches.match("./index.html"))
+      )
   );
 });
