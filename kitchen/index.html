@@ -306,6 +306,96 @@
       background: none; border: none; font-size: 18px; color: var(--muted2);
       cursor: pointer; padding: 4px;
     }
+    .inv-item .btn-mini {
+      background: var(--green-light);
+      color: var(--green);
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 0;
+      margin-right: 2px;
+    }
+    .inv-item .btn-mini:active { transform: scale(0.92); }
+    .inv-item.restock { opacity: 0.85; }
+    .inv-item.restock .name { color: var(--muted); }
+
+    /* Shopping list */
+    .shop-row {
+      display: grid;
+      grid-template-columns: 28px 1fr auto 24px;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--card);
+      border-radius: 12px;
+      margin-bottom: 6px;
+      border: 1px solid var(--border);
+    }
+    .shop-row.checked { opacity: 0.55; }
+    .shop-row.checked .shop-name { text-decoration: line-through; }
+    .shop-check {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--green-ring);
+      background: var(--card);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--green);
+    }
+    .shop-row.checked .shop-check {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+    }
+    .shop-name {
+      font-weight: 500;
+      font-size: 14px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .shop-meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .shop-qty {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .shop-del {
+      background: none; border: none; font-size: 18px; color: var(--muted2);
+      cursor: pointer; padding: 0;
+    }
+    .dupe-warn {
+      background: var(--amber-light);
+      color: #7a4a00;
+      border: 1px solid #f0c14b;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    [data-theme="dark"] .dupe-warn { color: var(--amber); border-color: #7a5a00; }
+    .dupe-warn .dupe-actions {
+      display: flex; gap: 8px; margin-top: 8px;
+    }
+    .dupe-warn button {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+    .dupe-warn .dupe-cancel { background: transparent; color: var(--muted); }
+    .dupe-warn .dupe-add { background: var(--amber); color: #000; }
 
     /* FAB */
     .fab {
@@ -927,7 +1017,10 @@
       <h1>🍳 My Kitchen</h1>
       <div class="subtitle" id="headerSubtitle">What can we cook today?</div>
     </div>
-    <button class="header-btn" id="openSettingsBtn" aria-label="Settings">⚙️</button>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="header-btn" id="openShoppingListBtn" aria-label="Shopping list" style="position:relative;">🛒<span id="shopBadge" style="position:absolute; top:-2px; right:-2px; background:var(--red); color:white; font-size:10px; font-weight:700; padding:1px 5px; border-radius:10px; display:none;">0</span></button>
+      <button class="header-btn" id="openSettingsBtn" aria-label="Settings">⚙️</button>
+    </div>
   </header>
 
   <main>
@@ -1132,6 +1225,43 @@
         <button class="btn btn-green" id="imSave">Save</button>
       </div>
       <button class="btn btn-ghost" id="imDelete" style="display:none; margin-top: 6px;">Remove from inventory</button>
+    </div>
+  </div>
+
+  <!-- Shopping list modal -->
+  <div class="modal-backdrop" id="shoppingListModal">
+    <div class="modal">
+      <button class="close-x" data-close="shoppingListModal">×</button>
+      <h2>🛒 Shopping List</h2>
+      <p class="subtitle">Items you're out of, or added manually. Check off as you shop — restored items go back into inventory.</p>
+
+      <div id="shopDupeWarn"></div>
+
+      <div class="field">
+        <label>Add item</label>
+        <div class="row" style="gap:6px;">
+          <input id="shopAddName" type="text" placeholder="Item" autocomplete="off" style="flex:2; min-width:0;" />
+          <input id="shopAddBrand" type="text" placeholder="Brand" autocomplete="off" style="flex:1; min-width:0;" />
+        </div>
+        <div class="row" style="gap:6px; margin-top:6px;">
+          <input id="shopAddQty" type="number" step="1" min="1" placeholder="1" style="flex:1; min-width:0;" />
+          <select id="shopAddUnit" style="flex:1; min-width:0;">
+            <option value="">—</option>
+            <option>piece</option><option>lb</option><option>oz</option>
+            <option>cup</option><option>bag</option><option>jar</option>
+            <option>can</option><option>bottle</option><option>packet</option>
+          </select>
+          <button class="btn btn-green" id="shopAddBtn" style="flex:1;">Add</button>
+        </div>
+      </div>
+
+      <div id="shopListOpen" style="margin-top:8px;"></div>
+      <div id="shopListChecked" style="margin-top:8px;"></div>
+
+      <div class="btn-row" style="flex-direction: column; margin-top: 14px;">
+        <button class="btn btn-primary" id="shopToCart">🛒 Send to Instacart</button>
+        <button class="btn btn-secondary" id="shopClearChecked">Clear checked items</button>
+      </div>
     </div>
   </div>
 
@@ -1694,6 +1824,7 @@
     function defaultState() {
       const seeded = {
         inventory: {},
+        shoppingList: [], // { id, name, brand, qty, unit, reason, checked, addedAt }
         favorites: [],
         history: {}, // recipeId -> ISO date
         mealPlan: {}, // dayName -> recipeId
@@ -1717,7 +1848,7 @@
       };
       // Start empty — no seeded demo inventory.
       // To re-enable demo data, uncomment:
-      // SEED_INVENTORY.forEach(i => { seeded.inventory[normalize(i.name)] = i; });
+      // SEED_INVENTORY.forEach(i => { seeded.inventory[inventoryKey(i)] = i; });
       return seeded;
     }
     function loadState() {
@@ -1725,12 +1856,29 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          // Merge with defaults to guard against missing new keys
           const d = defaultState();
-          return { ...d, ...parsed, settings: { ...d.settings, ...(parsed.settings || {}) } };
+          const merged = { ...d, ...parsed, settings: { ...d.settings, ...(parsed.settings || {}) } };
+          return migrateState(merged);
         }
       } catch (e) {}
       return defaultState();
+    }
+    // Migrate older inventory (name-keyed, no brand-scoped keys) to new format.
+    // Idempotent — safe to run on every load.
+    function migrateState(s) {
+      if (!s.inventory) s.inventory = {};
+      if (!Array.isArray(s.shoppingList)) s.shoppingList = [];
+      const newInv = {};
+      Object.entries(s.inventory).forEach(([oldKey, item]) => {
+        if (!item || typeof item !== "object") return;
+        if (!item.name) item.name = oldKey;
+        if (item.brand == null) item.brand = "";
+        if (!("canonicalName" in item)) item.canonicalName = normalize(item.name);
+        const newKey = inventoryKey(item);
+        newInv[newKey] = item;
+      });
+      s.inventory = newInv;
+      return s;
     }
     function saveState() {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
@@ -1758,7 +1906,292 @@
       if (fracStr) return whole + fracStr;
       return String(whole);
     }
-    function hasIngredient(name) { return !!state.inventory[normalize(name)]; }
+    // Inventory key: brand-aware, so Rao's marinara and Kirkland marinara
+    // are separate entries. No-brand items key by name alone.
+    function inventoryKey(item) {
+      const n = normalize(item.canonicalName || item.name || "");
+      const b = item.brand ? "|" + normalize(item.brand) : "";
+      return n + b;
+    }
+
+    // True if ANY inventory entry matches this canonical name with qty > 0.
+    function hasIngredient(name) {
+      const n = normalize(name);
+      return Object.values(state.inventory).some(i => {
+        if (i.qty === 0) return false;
+        return normalize(i.canonicalName || i.name) === n;
+      });
+    }
+
+    // Find the best inventory entry matching a recipe ingredient name.
+    // Returns the entry object (or undefined). Prefers entries with qty > 0.
+    function findInventoryFor(name) {
+      const n = normalize(name);
+      const matches = Object.values(state.inventory)
+        .filter(i => normalize(i.canonicalName || i.name) === n);
+      return matches.find(i => i.qty > 0) || matches[0];
+    }
+
+    // Units where a recipe calling for "1 X" would meaningfully deplete stock.
+    const TRIVIAL_UNITS = new Set(["tsp","teaspoon","teaspoons","tbsp","tablespoon","tablespoons","pinch","dash","splash","drop","drizzle","sprinkle"]);
+    function isTrivialUnit(u) {
+      return TRIVIAL_UNITS.has(String(u || "").toLowerCase().trim());
+    }
+
+    // ---- Shopping list operations ----
+    function shoppingListMatch(name, brand) {
+      const n = normalize(name);
+      const b = normalize(brand || "");
+      return (state.shoppingList || []).find(s => {
+        if (s.checked) return false;
+        const sn = normalize(s.name);
+        const sb = normalize(s.brand || "");
+        return sn === n && (sb === b || !b || !sb);
+      });
+    }
+    function addToShoppingList(entry, opts = {}) {
+      // entry: {name, brand?, qty?, unit?, reason?}
+      if (!entry || !entry.name) return null;
+      const existing = shoppingListMatch(entry.name, entry.brand);
+      if (existing && !opts.allowDupe) return { duplicate: true, existing };
+      const item = {
+        id: "sl-" + Math.random().toString(36).slice(2, 10),
+        name: entry.name,
+        brand: entry.brand || "",
+        canonicalName: normalize(entry.name),
+        qty: entry.qty != null ? entry.qty : 1,
+        unit: entry.unit || "",
+        reason: entry.reason || "manual",
+        checked: false,
+        addedAt: new Date().toISOString(),
+      };
+      if (!state.shoppingList) state.shoppingList = [];
+      state.shoppingList.push(item);
+      saveState();
+      if (typeof renderShoppingList === "function") renderShoppingList();
+      return { added: true, item };
+    }
+    function autoAddOnDepletion(invItem, reason) {
+      if (!invItem) return;
+      // Don't auto-add if an open (unchecked) line for this item already exists.
+      if (shoppingListMatch(invItem.name, invItem.brand)) return;
+      addToShoppingList({
+        name: invItem.name,
+        brand: invItem.brand || "",
+        qty: 1,
+        unit: invItem.unit || "",
+        reason: reason || "ran out",
+      }, { allowDupe: false });
+      showToast(`Added ${invItem.name}${invItem.brand ? " (" + invItem.brand + ")" : ""} to shopping list`, "Undo", () => {
+        // Undo: pop the last matching entry
+        const idx = (state.shoppingList || []).map(s => s.name).lastIndexOf(invItem.name);
+        if (idx >= 0) { state.shoppingList.splice(idx, 1); saveState(); if (typeof renderShoppingList === "function") renderShoppingList(); }
+      });
+    }
+
+    // ---- Shopping list UI ----
+    function openShoppingList() {
+      renderShoppingList();
+      showModal("shoppingListModal");
+    }
+
+    function updateShopBadge() {
+      const openCount = (state.shoppingList || []).filter(s => !s.checked).length;
+      const badge = document.getElementById("shopBadge");
+      if (!badge) return;
+      if (openCount > 0) {
+        badge.textContent = openCount;
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+    }
+
+    function renderShoppingList() {
+      updateShopBadge();
+      const list = state.shoppingList || [];
+      const open = list.filter(s => !s.checked);
+      const checked = list.filter(s => s.checked);
+
+      const openEl = document.getElementById("shopListOpen");
+      const checkedEl = document.getElementById("shopListChecked");
+      if (!openEl || !checkedEl) return;
+
+      if (!list.length) {
+        openEl.innerHTML = `
+          <div class="card empty-state" style="padding:20px;">
+            <span class="big">✨</span>
+            Your shopping list is empty.<br/>
+            <small>Items will appear here when you run out.</small>
+          </div>`;
+        checkedEl.innerHTML = "";
+        return;
+      }
+
+      const rowHtml = (s) => `
+        <div class="shop-row${s.checked ? " checked" : ""}" data-id="${escapeHtml(s.id)}">
+          <button class="shop-check" data-action="toggle" aria-label="${s.checked ? "Uncheck" : "Check off"}">${s.checked ? "✓" : ""}</button>
+          <div style="min-width:0;">
+            <div class="shop-name">${escapeHtml(s.name)}${s.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(s.brand)}</span>` : ""}</div>
+            <div class="shop-meta">${escapeHtml(s.reason || "manual")}</div>
+          </div>
+          <div class="shop-qty">${formatQty(s.qty) || "1"}${s.unit ? " " + escapeHtml(s.unit) : ""}</div>
+          <button class="shop-del" data-action="remove" aria-label="Remove">×</button>
+        </div>`;
+
+      openEl.innerHTML = open.length
+        ? `<div class="inv-group-title">To buy <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${open.length})</span></div>` + open.map(rowHtml).join("")
+        : `<div class="card empty-state" style="padding:16px;"><small>Nothing to buy right now.</small></div>`;
+
+      checkedEl.innerHTML = checked.length
+        ? `<div class="inv-group-title">In cart <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${checked.length})</span></div>` + checked.map(rowHtml).join("")
+        : "";
+
+      // Wire row actions
+      [openEl, checkedEl].forEach(scope => {
+        scope.querySelectorAll(".shop-row").forEach(el => {
+          el.addEventListener("click", (e) => {
+            const action = e.target.dataset.action;
+            if (!action) return;
+            const id = el.dataset.id;
+            const idx = state.shoppingList.findIndex(x => x.id === id);
+            if (idx < 0) return;
+            const s = state.shoppingList[idx];
+            if (action === "toggle") {
+              s.checked = !s.checked;
+              // Checking off restores inventory at qty 1 (default unit from list entry)
+              if (s.checked) {
+                const invItem = {
+                  name: s.name,
+                  brand: s.brand || "",
+                  canonicalName: normalize(s.name),
+                  qty: s.qty || 1,
+                  unit: s.unit || "",
+                  loc: "pantry",
+                  expiry: null,
+                };
+                const key = inventoryKey(invItem);
+                if (state.inventory[key]) {
+                  // existing entry (likely at qty:0): bump it
+                  const prev = state.inventory[key];
+                  prev.qty = (prev.qty || 0) + (s.qty || 1);
+                  if (!prev.unit && invItem.unit) prev.unit = invItem.unit;
+                } else {
+                  state.inventory[key] = invItem;
+                }
+                haptic(10);
+              } else {
+                // Unchecking: roll back the inventory bump (best-effort)
+                const key = inventoryKey({canonicalName: s.canonicalName || s.name, brand: s.brand});
+                const inv = state.inventory[key];
+                if (inv) {
+                  inv.qty = Math.max(0, (inv.qty || 0) - (s.qty || 1));
+                }
+              }
+              saveState(); renderShoppingList(); renderInventory();
+            } else if (action === "remove") {
+              const removed = state.shoppingList.splice(idx, 1)[0];
+              saveState(); renderShoppingList();
+              showToast(`Removed ${removed.name}`, "Undo", () => {
+                state.shoppingList.splice(idx, 0, removed);
+                saveState(); renderShoppingList();
+              });
+              haptic(10);
+            }
+          });
+        });
+      });
+    }
+
+    // Manual add from the shopping-list modal, with medium-strictness dupe warning.
+    // Dupe triggers on BOTH UPC-exact (same brand + canonicalName) AND canonicalName-only (cross-brand).
+    function handleShopManualAdd() {
+      const nameEl = document.getElementById("shopAddName");
+      const brandEl = document.getElementById("shopAddBrand");
+      const qtyEl = document.getElementById("shopAddQty");
+      const unitEl = document.getElementById("shopAddUnit");
+      const name = (nameEl.value || "").trim();
+      if (!name) { nameEl.focus(); return; }
+      const brand = (brandEl.value || "").trim();
+      const qty = qtyEl.value ? Number(qtyEl.value) : 1;
+      const unit = unitEl.value || "";
+
+      const entry = { name, brand, qty, unit, reason: "manual" };
+
+      // Dupe detection:
+      // 1. Already in shopping list (unchecked) — same canonicalName, any brand
+      const existingOnList = (state.shoppingList || []).find(s =>
+        !s.checked && normalize(s.name) === normalize(name)
+      );
+      // 2. Already in inventory (in stock, qty > 0) — same canonicalName, any brand
+      const existingInInv = Object.values(state.inventory).find(i =>
+        (i.qty || 0) > 0 && normalize(i.canonicalName || i.name) === normalize(name)
+      );
+
+      if (existingOnList || existingInInv) {
+        const reasons = [];
+        if (existingOnList) reasons.push(`already on the list${existingOnList.brand ? ` as "${existingOnList.brand}"` : ""}`);
+        if (existingInInv) reasons.push(`already in your ${existingInInv.loc || "inventory"}${existingInInv.brand ? ` (${existingInInv.brand})` : ""}`);
+        showDupeWarn(reasons.join(" · "), entry);
+        return;
+      }
+
+      doShopAdd(entry);
+    }
+
+    function showDupeWarn(msg, entry) {
+      const el = document.getElementById("shopDupeWarn");
+      el.innerHTML = `
+        <div class="dupe-warn">
+          <strong>⚠️ Already have this?</strong><br/>
+          ${escapeHtml(entry.name)}${entry.brand ? ` (${escapeHtml(entry.brand)})` : ""} — ${escapeHtml(msg)}.
+          <div class="dupe-actions">
+            <button class="dupe-cancel" data-act="cancel">Cancel</button>
+            <button class="dupe-add" data-act="add">Add anyway</button>
+          </div>
+        </div>`;
+      el.querySelector('[data-act="cancel"]').addEventListener("click", () => {
+        el.innerHTML = "";
+      });
+      el.querySelector('[data-act="add"]').addEventListener("click", () => {
+        el.innerHTML = "";
+        doShopAdd(entry);
+      });
+    }
+
+    function doShopAdd(entry) {
+      addToShoppingList(entry, { allowDupe: true });
+      document.getElementById("shopAddName").value = "";
+      document.getElementById("shopAddBrand").value = "";
+      document.getElementById("shopAddQty").value = "";
+      document.getElementById("shopAddUnit").value = "";
+      document.getElementById("shopAddName").focus();
+      haptic(10);
+    }
+
+    function clearCheckedShopItems() {
+      const before = state.shoppingList || [];
+      const cleared = before.filter(s => s.checked);
+      if (!cleared.length) { showToast("No checked items to clear"); return; }
+      state.shoppingList = before.filter(s => !s.checked);
+      saveState(); renderShoppingList();
+      showToast(`Cleared ${cleared.length} item${cleared.length === 1 ? "" : "s"}`, "Undo", () => {
+        state.shoppingList = state.shoppingList.concat(cleared);
+        saveState(); renderShoppingList();
+      });
+    }
+
+    function sendShoppingListToCart() {
+      const open = (state.shoppingList || []).filter(s => !s.checked);
+      if (!open.length) { showToast("Nothing to order yet"); return; }
+      const items = open.map(s => ({
+        name: s.brand ? `${s.name} (${s.brand})` : s.name,
+        qty: s.qty || 1,
+        unit: s.unit || "",
+      }));
+      hideModal("shoppingListModal");
+      startCart(items, "shopping-list", "Shopping list");
+    }
 
     function allRecipes() {
       return [...RECIPES, ...(state.customRecipes || [])];
@@ -2110,8 +2543,8 @@
     // ============================================================
     function renderInventory() {
       const container = document.getElementById("inventoryList");
-      const items = Object.values(state.inventory);
-      if (items.length === 0) {
+      const allItems = Object.entries(state.inventory);
+      if (allItems.length === 0) {
         container.innerHTML = `
           <div class="card empty-state">
             <span class="big">📦</span>
@@ -2120,29 +2553,41 @@
           </div>`;
         return;
       }
+
+      // Split: in-stock (qty > 0 or qty null) vs need-to-restock (qty === 0)
+      const stocked = [];
+      const restock = [];
+      allItems.forEach(([k, i]) => {
+        const entry = { key: k, item: i };
+        if (i.qty === 0) restock.push(entry);
+        else stocked.push(entry);
+      });
+
+      let html = "";
+
+      // In-stock grouped by location
       const grouped = {};
-      items.forEach(i => {
-        const loc = i.loc || "pantry";
+      stocked.forEach(({key, item}) => {
+        const loc = item.loc || "pantry";
         if (!grouped[loc]) grouped[loc] = [];
-        grouped[loc].push(i);
+        grouped[loc].push({key, item});
       });
       const order = ["pantry","fridge","freezer","counter"];
-      container.innerHTML = order.filter(loc => grouped[loc]).map(loc => {
+      html += order.filter(loc => grouped[loc]).map(loc => {
         const meta = LOCATION_META[loc];
-        const rows = grouped[loc].sort((a,b) => a.name.localeCompare(b.name)).map(i => {
-          const qtyText = formatQty(i.qty) + (i.unit ? " " + i.unit : "");
-          const key = normalize(i.name);
+        const rows = grouped[loc].sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
+          const qtyText = formatQty(item.qty) + (item.unit ? " " + item.unit : "");
           const badges = [];
-          if (isExpired(i)) badges.push(`<span class="badge expired">expired</span>`);
-          else if (i.expiry) {
-            const diff = (new Date(i.expiry).getTime() - Date.now()) / (24*3600*1000);
+          if (isExpired(item)) badges.push(`<span class="badge expired">expired</span>`);
+          else if (item.expiry) {
+            const diff = (new Date(item.expiry).getTime() - Date.now()) / (24*3600*1000);
             if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
           }
-          if (isLowStock(i)) badges.push(`<span class="badge low">low</span>`);
+          if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
           return `
-            <div class="inv-item" data-key="${key}">
+            <div class="inv-item" data-key="${escapeHtml(key)}">
               <div class="icon">${meta.icon}</div>
-              <div class="name">${i.name}${i.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(i.brand)}</span>` : ""}</div>
+              <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
               <div class="badges">${badges.join("")}</div>
               <div class="qty">${qtyText}</div>
               <button class="delete" data-action="delete" aria-label="Delete">×</button>
@@ -2151,19 +2596,61 @@
         return `<div class="inv-group-title">${meta.icon} ${meta.title} <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${grouped[loc].length})</span></div>${rows}`;
       }).join("");
 
+      // Need to restock section
+      if (restock.length) {
+        const rows = restock.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
+          return `
+            <div class="inv-item restock" data-key="${escapeHtml(key)}">
+              <div class="icon" style="background:var(--red-light);">🛒</div>
+              <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
+              <div class="badges"><span class="badge expired" style="background:var(--red-light); color:var(--red);">out</span></div>
+              <button class="btn-mini" data-action="restock" aria-label="Mark as restocked">↺</button>
+              <button class="delete" data-action="delete" aria-label="Delete">×</button>
+            </div>`;
+        }).join("");
+        html += `<div class="inv-group-title" style="color:var(--red);">🛒 Need to restock <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${restock.length})</span></div>${rows}`;
+      }
+
+      container.innerHTML = html;
+
       container.querySelectorAll(".inv-item").forEach(el => {
         el.addEventListener("click", (e) => {
-          if (e.target.dataset.action === "delete") {
-            const k = el.dataset.key;
+          const action = e.target.dataset.action;
+          const k = el.dataset.key;
+          if (action === "delete") {
             const removed = state.inventory[k];
             delete state.inventory[k];
+            // Also remove any open shopping-list entry for it
+            const shopIdx = (state.shoppingList || []).findIndex(s => !s.checked && inventoryKey({canonicalName: s.canonicalName || s.name, brand: s.brand}) === k);
+            let removedShop = null;
+            if (shopIdx >= 0) { removedShop = state.shoppingList.splice(shopIdx, 1)[0]; }
             saveState(); renderInventory();
             showToast(`Removed ${removed.name}`, "Undo", () => {
-              state.inventory[k] = removed; saveState(); renderInventory();
+              state.inventory[k] = removed;
+              if (removedShop) state.shoppingList.splice(shopIdx, 0, removedShop);
+              saveState(); renderInventory();
+            });
+            haptic(10);
+          } else if (action === "restock") {
+            // Quick restock from "Need to restock" row: set qty back to 1, remove from shopping list
+            const item = state.inventory[k];
+            if (!item) return;
+            const prev = { ...item };
+            item.qty = 1;
+            const shopIdx = (state.shoppingList || []).findIndex(s => !s.checked && inventoryKey({canonicalName: s.canonicalName || s.name, brand: s.brand}) === k);
+            let removedShop = null;
+            if (shopIdx >= 0) removedShop = state.shoppingList.splice(shopIdx, 1)[0];
+            saveState(); renderInventory();
+            if (typeof renderShoppingList === "function") renderShoppingList();
+            showToast(`${item.name} back in stock`, "Undo", () => {
+              state.inventory[k] = prev;
+              if (removedShop) state.shoppingList.splice(shopIdx, 0, removedShop);
+              saveState(); renderInventory();
+              if (typeof renderShoppingList === "function") renderShoppingList();
             });
             haptic(10);
           } else {
-            openItem(el.dataset.key);
+            openItem(k);
           }
         });
       });
@@ -2189,22 +2676,32 @@
       if (!name) { alert("Item needs a name"); return; }
       const qtyStr = document.getElementById("imQty").value;
       const expiry = document.getElementById("imExpiry").value || null;
+      const newQty = qtyStr === "" ? null : Number(qtyStr);
+      const prev = editingItemKey ? state.inventory[editingItemKey] : null;
       const item = {
         name,
         brand: document.getElementById("imBrand").value.trim(),
-        qty: qtyStr ? Number(qtyStr) : null,
+        canonicalName: normalize(name),
+        qty: newQty,
         unit: document.getElementById("imUnit").value,
         loc: document.getElementById("imLoc").value,
         expiry,
       };
-      if (editingItemKey && editingItemKey !== normalize(name)) {
+      const newKey = inventoryKey(item);
+      if (editingItemKey && editingItemKey !== newKey) {
         delete state.inventory[editingItemKey];
       }
-      state.inventory[normalize(name)] = item;
+      state.inventory[newKey] = item;
       saveState();
       hideModal("itemModal");
       renderInventory();
       haptic(10);
+      // Auto-add to shopping list if user manually set qty to 0
+      // (either a new item created at 0, or an existing item whose qty went from >0 → 0).
+      if (newQty === 0) {
+        const wentToZero = !prev || (prev.qty == null || prev.qty > 0);
+        if (wentToZero) autoAddOnDepletion(item, "ran out");
+      }
     }
     function deleteItem() {
       if (editingItemKey) {
@@ -2500,14 +2997,17 @@
       if (!selected.length) { alert("Nothing selected. Check the items you want to keep."); return; }
       selected.forEach(i => {
         const name = i.name.trim();
-        state.inventory[normalize(name)] = {
+        const brand = (i.brand || "").trim();
+        const item = {
           name,
-          brand: i.brand || "",
+          brand,
+          canonicalName: normalize(name),
           qty: i.qty,
           unit: i.unit || "",
           loc,
           expiry: null,
         };
+        state.inventory[inventoryKey(item)] = item;
       });
       saveState();
       document.getElementById("scanResult").innerHTML = `
@@ -2552,23 +3052,49 @@
       if (!openRecipeId) return;
       const r = getRecipe(openRecipeId);
       if (!r) return;
-      // Subtract 1 of each ingredient from inventory (only decrement, don't remove)
+      // Subtract 1 of each ingredient from inventory; track which entries depleted
+      // to qty:0 so we can auto-add to shopping list (unless the recipe unit is
+      // trivial like tsp/tbsp — 1 tsp of oil doesn't actually empty a bottle).
       const removed = [];
-      r.ingredients.forEach(i => {
-        const key = normalize(i.name);
-        const inv = state.inventory[key];
-        if (inv) {
-          removed.push({ key, before: { ...inv } });
-          if (inv.qty != null && inv.qty > 1) inv.qty = Math.max(0, inv.qty - 1);
-          else delete state.inventory[key];
+      const depletedToAutoAdd = [];
+      r.ingredients.forEach(ing => {
+        const inv = findInventoryFor(ing.name);
+        if (!inv) return;
+        removed.push({ key: inventoryKey(inv), before: { ...inv } });
+        if (inv.qty != null && inv.qty > 1) {
+          inv.qty = Math.max(0, inv.qty - 1);
+        } else {
+          // Would deplete to 0. Keep the entry at qty:0 (Need to restock)
+          // instead of deleting, so inventory keeps the product identity.
+          inv.qty = 0;
+          if (!isTrivialUnit(ing.unit)) depletedToAutoAdd.push(inv);
         }
       });
       state.history[r.id] = new Date().toISOString();
       saveState();
-      showToast(`Logged ${r.name}`, "Undo", () => {
+      // Auto-add depleted items to the shopping list (one toast per cook session)
+      depletedToAutoAdd.forEach(inv => {
+        if (!shoppingListMatch(inv.name, inv.brand)) {
+          addToShoppingList({
+            name: inv.name, brand: inv.brand || "", qty: 1,
+            unit: inv.unit || "", reason: `ran out cooking ${r.name}`,
+          }, { allowDupe: false });
+        }
+      });
+      const addedCount = depletedToAutoAdd.length;
+      const toastMsg = addedCount
+        ? `Logged ${r.name} · added ${addedCount} to shopping list`
+        : `Logged ${r.name}`;
+      showToast(toastMsg, "Undo", () => {
         removed.forEach(({key, before}) => { state.inventory[key] = before; });
         delete state.history[r.id];
-        saveState(); renderCook();
+        // Roll back auto-adds
+        depletedToAutoAdd.forEach(inv => {
+          const idx = (state.shoppingList || []).findIndex(s => !s.checked && normalize(s.name) === normalize(inv.name) && normalize(s.brand) === normalize(inv.brand || ""));
+          if (idx >= 0) state.shoppingList.splice(idx, 1);
+        });
+        saveState(); renderCook(); renderInventory();
+        if (typeof renderShoppingList === "function") renderShoppingList();
       });
       haptic(20);
     }
@@ -3031,6 +3557,11 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       else if (currentView === "cook") openCustom();
     });
     document.getElementById("openSettingsBtn").addEventListener("click", openSettings);
+    document.getElementById("openShoppingListBtn").addEventListener("click", openShoppingList);
+    document.getElementById("shopAddBtn").addEventListener("click", handleShopManualAdd);
+    document.getElementById("shopAddName").addEventListener("keydown", (e) => { if (e.key === "Enter") handleShopManualAdd(); });
+    document.getElementById("shopToCart").addEventListener("click", sendShoppingListToCart);
+    document.getElementById("shopClearChecked").addEventListener("click", clearCheckedShopItems);
 
     document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => hideModal(b.dataset.close)));
     document.querySelectorAll(".modal-backdrop").forEach(m => {
@@ -3248,6 +3779,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     applyTheme();
     wireSettings();
     setView("cook");
+    updateShopBadge();
 
     // Service worker registration (offline support)
     if ("serviceWorker" in navigator) {
