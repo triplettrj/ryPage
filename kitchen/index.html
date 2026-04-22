@@ -610,6 +610,58 @@
     .btn-green { background: var(--green); color: white; }
     .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
     .btn-ghost { background: transparent; color: var(--green); }
+
+    /* ✨ AI-powered button style */
+    .btn-ai {
+      background: linear-gradient(135deg, #7c3aed, #a855f7, #6366f1);
+      color: white;
+      border: none;
+      position: relative;
+      overflow: hidden;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+    }
+    .btn-ai::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 60%);
+      pointer-events: none;
+    }
+    .btn-ai:active { opacity: 0.85; transform: scale(0.97); }
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    .btn-ai .ai-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.25);
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 1px 5px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    /* AI scan dropzone */
+    .scan-dropzone-ai {
+      background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(99,102,241,0.08));
+      border: 2px dashed #a855f7;
+    }
+    .scan-dropzone-ai:hover, .scan-dropzone-ai:active {
+      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(99,102,241,0.15));
+    }
+    /* AI tab indicator */
+    .tab-btn.ai-tab .tab-icon { position: relative; }
+    .tab-btn.ai-tab .tab-icon::after {
+      content: "✨";
+      font-size: 8px;
+      position: absolute;
+      top: -4px;
+      right: -6px;
+    }
+    .tab-btn.ai-tab.active { color: #7c3aed; }
     .btn-red { background: var(--red); color: white; }
     .btn-row { display: flex; gap: 8px; margin-top: 6px; }
     .btn-row > .btn { flex: 1; }
@@ -1058,7 +1110,7 @@
         <h2>📍 Kitchen Layout</h2>
         <p class="subtitle">Define your storage areas and shelves, or let Claude build it from a photo.</p>
         <label style="display:block; width:100%; margin-bottom:8px;">
-          <div class="btn btn-secondary" style="width:100%; text-align:center; cursor:pointer;">📸 Scan area to auto-build layout</div>
+          <div class="btn btn-ai" style="width:100%; text-align:center; cursor:pointer;">📸 Scan photo to build layout<span class="ai-badge">AI</span></div>
           <input id="layoutScanInput" type="file" accept="image/*" capture="environment" style="display:none;" />
         </label>
         <div id="layoutScanStatus" style="font-size:13px; color:var(--muted); text-align:center; margin-bottom:8px; min-height:18px;"></div>
@@ -1072,7 +1124,7 @@
       <div class="section-title"><h2>This week's meals</h2></div>
       <div class="plan-grid" id="planGrid"></div>
       <div style="display:flex; gap:8px; flex-wrap: wrap;">
-        <button class="btn btn-green" id="autoPlanWeek" style="flex:1; min-width: 140px;">✨ Auto-plan my week</button>
+        <button class="btn btn-ai" id="autoPlanWeek" style="flex:1; min-width: 140px;">✨ Auto-plan my week<span class="ai-badge">AI</span></button>
         <button class="btn btn-primary" id="generatePlanList" style="flex:1; min-width: 140px;">🛒 Shopping list</button>
       </div>
     </div>
@@ -1083,16 +1135,16 @@
         <strong>Tip:</strong> For best matching, snap one item up close. Claude reads the label. Tap 📷 Scan barcode to lock in the exact product.
       </div>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-        <label class="scan-dropzone" for="scanOneInput" style="padding: 18px 10px;">
+        <label class="scan-dropzone scan-dropzone-ai" for="scanOneInput" style="padding: 18px 10px;">
           <span class="big">📸</span>
-          <h3 style="margin:4px 0 2px; font-size:15px;">One item</h3>
-          <p style="font-size:11px; margin:0;">Close-up of a label</p>
+          <h3 style="margin:4px 0 2px; font-size:15px;">One item <span style="background:#a855f7; color:white; font-size:9px; font-weight:700; border-radius:4px; padding:1px 5px; vertical-align:middle; letter-spacing:.4px;">AI</span></h3>
+          <p style="font-size:11px; margin:0; color:#7c3aed;">Claude reads the label</p>
           <input id="scanOneInput" type="file" accept="image/*" capture="environment" />
         </label>
-        <label class="scan-dropzone" for="scanInput" style="padding: 18px 10px;">
+        <label class="scan-dropzone scan-dropzone-ai" for="scanInput" style="padding: 18px 10px;">
           <span class="big">🗄️</span>
-          <h3 style="margin:4px 0 2px; font-size:15px;">Whole shelf</h3>
-          <p style="font-size:11px; margin:0;">Bulk capture</p>
+          <h3 style="margin:4px 0 2px; font-size:15px;">Whole shelf <span style="background:#a855f7; color:white; font-size:9px; font-weight:700; border-radius:4px; padding:1px 5px; vertical-align:middle; letter-spacing:.4px;">AI</span></h3>
+          <p style="font-size:11px; margin:0; color:#7c3aed;">Claude identifies all items</p>
           <input id="scanInput" type="file" accept="image/*" capture="environment" />
         </label>
       </div>
@@ -1137,8 +1189,8 @@
     <button class="tab-btn active" data-view="cook"><span class="tab-icon">🍲</span><span>Cook</span></button>
     <button class="tab-btn" data-view="inventory"><span class="tab-icon">📦</span><span>Inv</span></button>
     <button class="tab-btn" data-view="plan"><span class="tab-icon">📅</span><span>Plan</span></button>
-    <button class="tab-btn" data-view="scan"><span class="tab-icon">📷</span><span>Scan</span></button>
-    <button class="tab-btn" data-view="ask"><span class="tab-icon">💬</span><span>Ask</span></button>
+    <button class="tab-btn ai-tab" data-view="scan"><span class="tab-icon">📷</span><span>Scan</span></button>
+    <button class="tab-btn ai-tab" data-view="ask"><span class="tab-icon">✨</span><span>Ask AI</span></button>
   </nav>
 
   <!-- Recipe detail modal -->
@@ -2612,7 +2664,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           <span style="font-size:40px;">📷</span>
           <p style="margin:10px 0 4px; font-weight:600;">Your inventory is empty</p>
           <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your pantry or fridge to get started</p>
-          <button class="btn btn-green" onclick="setView('scan')" style="width:100%;">📷 Scan your kitchen</button>
+          <button class="btn btn-ai" onclick="setView('scan')" style="width:100%;">📸 Scan your kitchen with AI<span class="ai-badge">AI</span></button>
         `;
         document.getElementById("useSoonWrap").before(banner);
       }
@@ -2818,7 +2870,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
             <span class="big">📦</span>
             <p style="margin:8px 0 4px; font-weight:600;">No items yet</p>
             <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your pantry or fridge to add items</p>
-            <button class="btn btn-green" onclick="setView('scan')" style="width:100%;">📷 Scan your kitchen</button>
+            <button class="btn btn-ai" onclick="setView('scan')" style="width:100%;">📸 Scan your kitchen with AI<span class="ai-badge">AI</span></button>
           </div>`;
         return;
       }
