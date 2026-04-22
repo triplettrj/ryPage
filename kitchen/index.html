@@ -1045,7 +1045,21 @@
 
     <!-- INVENTORY VIEW -->
     <div class="view" id="viewInventory">
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button class="btn btn-secondary" id="manageLayoutBtn" style="flex:1;">📍 Manage Layout</button>
+      </div>
       <div id="inventoryList"></div>
+    </div>
+
+    <!-- Layout Manager Modal -->
+    <div class="modal-backdrop" id="layoutModal">
+      <div class="modal" style="max-height:85vh; overflow-y:auto;">
+        <button class="close-x" data-close="layoutModal">×</button>
+        <h2>📍 Kitchen Layout</h2>
+        <p class="subtitle">Define your storage areas and shelves.</p>
+        <div id="layoutAreaList"></div>
+        <button class="btn btn-green" id="addAreaBtn" style="width:100%; margin-top:12px;">+ Add Area</button>
+      </div>
     </div>
 
     <!-- PLAN VIEW -->
@@ -1238,13 +1252,12 @@
         </div>
       </div>
       <div class="field">
-        <label>Where is it?</label>
-        <select id="imLoc">
-          <option value="pantry">Pantry</option>
-          <option value="fridge">Fridge</option>
-          <option value="freezer">Freezer</option>
-          <option value="counter">Counter</option>
-        </select>
+        <label>Storage area</label>
+        <select id="imArea"></select>
+      </div>
+      <div class="field" id="imSectionField">
+        <label>Shelf / section</label>
+        <select id="imSection"></select>
       </div>
       <div class="field">
         <label>Expires (optional)</label>
@@ -1833,6 +1846,107 @@
     ];
 
     // ============================================================
+    // KITCHEN LAYOUT
+    // ============================================================
+    function genId() { return "s" + Math.random().toString(36).slice(2, 9); }
+
+    function defaultLayout() {
+      return [
+        { id: "area-pantry",  name: "Pantry",  icon: "🗄️",  sections: [
+          { id: genId(), name: "Top Shelf" },
+          { id: genId(), name: "Middle Shelf" },
+          { id: genId(), name: "Bottom Shelf" },
+        ]},
+        { id: "area-fridge",  name: "Fridge",  icon: "🧊",  sections: [
+          { id: genId(), name: "Top Shelf" },
+          { id: genId(), name: "Middle Shelf" },
+          { id: genId(), name: "Bottom Shelf" },
+          { id: genId(), name: "Crisper Drawer" },
+          { id: genId(), name: "Door" },
+        ]},
+        { id: "area-freezer", name: "Freezer", icon: "❄️",  sections: [
+          { id: genId(), name: "Top" },
+          { id: genId(), name: "Bottom" },
+        ]},
+        { id: "area-counter", name: "Counter", icon: "🍞",  sections: [
+          { id: genId(), name: "Counter" },
+        ]},
+      ];
+    }
+
+    function getLayout() {
+      if (!state.layout || !state.layout.length) state.layout = defaultLayout();
+      return state.layout;
+    }
+
+    function findSection(sectionId) {
+      for (const area of getLayout()) {
+        for (const sec of area.sections) {
+          if (sec.id === sectionId) return { area, sec };
+        }
+      }
+      return null;
+    }
+
+    function renderLayoutModal() {
+      const layout = getLayout();
+      const areaHtml = layout.map((area, ai) => `
+        <div class="card" style="margin-bottom:10px; padding:14px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span style="font-size:22px;">${area.icon}</span>
+            <input class="layout-area-name" data-ai="${ai}" value="${escapeHtml(area.name)}"
+              style="flex:1; font-weight:600; font-size:15px; border:none; background:transparent; color:var(--text); outline:none; border-bottom:1px solid var(--border); padding-bottom:2px;" />
+            <button class="btn-mini" style="color:var(--red);" data-action="del-area" data-ai="${ai}">✕</button>
+          </div>
+          <div class="layout-sections" data-ai="${ai}">
+            ${area.sections.map((sec, si) => `
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                <span style="color:var(--muted); font-size:16px;">↳</span>
+                <input class="layout-sec-name" data-ai="${ai}" data-si="${si}" value="${escapeHtml(sec.name)}"
+                  style="flex:1; font-size:13px; border:1px solid var(--border); border-radius:7px; padding:6px 9px; background:var(--bg); color:var(--text);" />
+                <button class="btn-mini" style="color:var(--red);" data-action="del-sec" data-ai="${ai}" data-si="${si}">✕</button>
+              </div>`).join("")}
+          </div>
+          <button class="btn btn-secondary" data-action="add-sec" data-ai="${ai}" style="width:100%; margin-top:4px; font-size:13px; padding:6px;">+ Add shelf</button>
+        </div>`).join("");
+      document.getElementById("layoutAreaList").innerHTML = areaHtml;
+
+      // Wire inputs to update state live
+      document.querySelectorAll(".layout-area-name").forEach(el => {
+        el.addEventListener("input", () => {
+          state.layout[+el.dataset.ai].name = el.value;
+          saveState();
+        });
+      });
+      document.querySelectorAll(".layout-sec-name").forEach(el => {
+        el.addEventListener("input", () => {
+          state.layout[+el.dataset.ai].sections[+el.dataset.si].name = el.value;
+          saveState();
+        });
+      });
+      document.querySelectorAll("[data-action='del-area']").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const ai = +btn.dataset.ai;
+          if (state.layout[ai].sections.length && !confirm(`Delete "${state.layout[ai].name}" and all its shelves?`)) return;
+          state.layout.splice(ai, 1);
+          saveState(); renderLayoutModal();
+        });
+      });
+      document.querySelectorAll("[data-action='del-sec']").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.layout[+btn.dataset.ai].sections.splice(+btn.dataset.si, 1);
+          saveState(); renderLayoutModal();
+        });
+      });
+      document.querySelectorAll("[data-action='add-sec']").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.layout[+btn.dataset.ai].sections.push({ id: genId(), name: "New Shelf" });
+          saveState(); renderLayoutModal();
+        });
+      });
+    }
+
+    // ============================================================
     // STATE
     // ============================================================
     const STORAGE_KEY = "myKitchen:v2";
@@ -1869,6 +1983,7 @@
         mealPlan: {}, // dayName -> recipeId
         customRecipes: [],
         chatHistory: [], // {role: "user"|"assistant", content: string, ts: ISO}
+        layout: defaultLayout(),
         settings: {
           theme: "system",
           haptic: true,
@@ -1907,6 +2022,7 @@
     function migrateState(s) {
       if (!s.inventory) s.inventory = {};
       if (!Array.isArray(s.shoppingList)) s.shoppingList = [];
+      if (!Array.isArray(s.layout) || !s.layout.length) s.layout = defaultLayout();
       const newInv = {};
       Object.entries(s.inventory).forEach(([oldKey, item]) => {
         if (!item || typeof item !== "object") return;
@@ -2618,61 +2734,82 @@
         return;
       }
 
-      // Split: in-stock (qty > 0 or qty null) vs need-to-restock (qty === 0)
+      // Split: in-stock vs need-to-restock
       const stocked = [];
       const restock = [];
       allItems.forEach(([k, i]) => {
-        const entry = { key: k, item: i };
-        if (i.qty === 0) restock.push(entry);
-        else stocked.push(entry);
+        (i.qty === 0 ? restock : stocked).push({ key: k, item: i });
       });
 
+      const layout = getLayout();
       let html = "";
 
-      // In-stock grouped by location
-      const grouped = {};
-      stocked.forEach(({key, item}) => {
-        const loc = item.loc || "pantry";
-        if (!grouped[loc]) grouped[loc] = [];
-        grouped[loc].push({key, item});
+      function itemRow(key, item, areaIcon) {
+        const qtyText = formatQty(item.qty) + (item.unit ? " " + item.unit : "");
+        const badges = [];
+        if (isExpired(item)) badges.push(`<span class="badge expired">expired</span>`);
+        else if (item.expiry) {
+          const diff = (new Date(item.expiry).getTime() - Date.now()) / (24*3600*1000);
+          if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
+        }
+        if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
+        return `
+          <div class="inv-item" data-key="${escapeHtml(key)}">
+            <div class="icon">${areaIcon}</div>
+            <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
+            <div class="badges">${badges.join("")}</div>
+            <div class="qty">${qtyText}</div>
+            <button class="delete" data-action="delete" aria-label="Delete">×</button>
+          </div>`;
+      }
+
+      // Group stocked items by area → section
+      layout.forEach(area => {
+        const areaItems = stocked.filter(({item}) => item.areaId === area.id);
+        // Also catch legacy items that used item.loc matching area name
+        const legacyItems = stocked.filter(({item}) => !item.areaId && (item.loc || "pantry").toLowerCase() === area.name.toLowerCase());
+        const allAreaItems = [...areaItems, ...legacyItems];
+        if (!allAreaItems.length) return;
+
+        html += `<div class="inv-group-title">${area.icon} ${escapeHtml(area.name)} <span style="color:var(--muted2); font-weight:500; text-transform:none;">(${allAreaItems.length})</span></div>`;
+
+        // Group by section
+        area.sections.forEach(sec => {
+          const secItems = allAreaItems.filter(({item}) => item.sectionId === sec.id);
+          if (!secItems.length) return;
+          html += `<div style="font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin:8px 0 4px 4px;">↳ ${escapeHtml(sec.name)}</div>`;
+          html += secItems.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => itemRow(key, item, area.icon)).join("");
+        });
+
+        // Items with no section assigned
+        const unassigned = allAreaItems.filter(({item}) => !item.sectionId || !area.sections.find(s => s.id === item.sectionId));
+        if (unassigned.length) {
+          html += `<div style="font-size:11px; color:var(--muted2); font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin:8px 0 4px 4px;">↳ Unassigned</div>`;
+          html += unassigned.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => itemRow(key, item, area.icon)).join("");
+        }
       });
-      const order = ["pantry","fridge","freezer","counter"];
-      html += order.filter(loc => grouped[loc]).map(loc => {
-        const meta = LOCATION_META[loc];
-        const rows = grouped[loc].sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
-          const qtyText = formatQty(item.qty) + (item.unit ? " " + item.unit : "");
-          const badges = [];
-          if (isExpired(item)) badges.push(`<span class="badge expired">expired</span>`);
-          else if (item.expiry) {
-            const diff = (new Date(item.expiry).getTime() - Date.now()) / (24*3600*1000);
-            if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
-          }
-          if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
-          return `
-            <div class="inv-item" data-key="${escapeHtml(key)}">
-              <div class="icon">${meta.icon}</div>
-              <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
-              <div class="badges">${badges.join("")}</div>
-              <div class="qty">${qtyText}</div>
-              <button class="delete" data-action="delete" aria-label="Delete">×</button>
-            </div>`;
-        }).join("");
-        return `<div class="inv-group-title">${meta.icon} ${meta.title} <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${grouped[loc].length})</span></div>${rows}`;
-      }).join("");
+
+      // Items not matching any layout area
+      const orphans = stocked.filter(({item}) => {
+        if (item.areaId) return !layout.find(a => a.id === item.areaId);
+        return !layout.find(a => a.name.toLowerCase() === (item.loc || "pantry").toLowerCase());
+      });
+      if (orphans.length) {
+        html += `<div class="inv-group-title">📦 Other</div>`;
+        html += orphans.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => itemRow(key, item, "📦")).join("");
+      }
 
       // Need to restock section
       if (restock.length) {
-        const rows = restock.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
-          return `
+        const rows = restock.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => `
             <div class="inv-item restock" data-key="${escapeHtml(key)}">
               <div class="icon" style="background:var(--red-light);">🛒</div>
               <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
               <div class="badges"><span class="badge expired" style="background:var(--red-light); color:var(--red);">out</span></div>
               <button class="btn-mini" data-action="restock" aria-label="Mark as restocked">↺</button>
               <button class="delete" data-action="delete" aria-label="Delete">×</button>
-            </div>`;
-        }).join("");
-        html += `<div class="inv-group-title" style="color:var(--red);">🛒 Need to restock <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${restock.length})</span></div>${rows}`;
+            </div>`).join("");
+        html += `<div class="inv-group-title" style="color:var(--red);">🛒 Need to restock <span style="color:var(--muted2); font-weight:500; text-transform:none;">(${restock.length})</span></div>${rows}`;
       }
 
       container.innerHTML = html;
@@ -2720,6 +2857,21 @@
       });
     }
 
+    function populateAreaSelect(selectedAreaId, selectedSectionId) {
+      const layout = getLayout();
+      const areaEl = document.getElementById("imArea");
+      const secEl = document.getElementById("imSection");
+      areaEl.innerHTML = layout.map(a => `<option value="${a.id}">${a.icon} ${escapeHtml(a.name)}</option>`).join("");
+      areaEl.value = selectedAreaId || layout[0]?.id || "";
+      function updateSections() {
+        const area = layout.find(a => a.id === areaEl.value);
+        secEl.innerHTML = area ? area.sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("") : "";
+        if (selectedSectionId) secEl.value = selectedSectionId;
+      }
+      updateSections();
+      areaEl.onchange = updateSections;
+    }
+
     function openItem(key) {
       editingItemKey = key;
       const item = key ? state.inventory[key] : null;
@@ -2728,9 +2880,10 @@
       document.getElementById("imBrand").value = item && item.brand ? item.brand : "";
       document.getElementById("imQty").value = item && item.qty != null ? item.qty : "";
       document.getElementById("imUnit").value = item && item.unit ? item.unit : "";
-      document.getElementById("imLoc").value = item ? item.loc : "pantry";
       document.getElementById("imExpiry").value = item && item.expiry ? item.expiry : "";
       document.getElementById("imDelete").style.display = item ? "inline-flex" : "none";
+      // Populate area + section
+      populateAreaSelect(item?.areaId, item?.sectionId);
       showModal("itemModal");
       if (!item) setTimeout(() => document.getElementById("imName").focus(), 50);
     }
@@ -2748,7 +2901,9 @@
         canonicalName: normalize(name),
         qty: newQty,
         unit: document.getElementById("imUnit").value,
-        loc: document.getElementById("imLoc").value,
+        areaId: document.getElementById("imArea").value,
+        sectionId: document.getElementById("imSection").value,
+        loc: getLayout().find(a => a.id === document.getElementById("imArea").value)?.name.toLowerCase() || "pantry",
         expiry,
         upc: (prev && prev.upc) ? prev.upc : "",
       };
@@ -2906,13 +3061,12 @@
             <p id="cuUpcHint" style="color:var(--muted); font-size:11px; margin:4px 0 0;"></p>
           </div>
           <div class="field">
-            <label>Where does it go?</label>
-            <select id="cuLoc">
-              <option value="pantry">Pantry</option>
-              <option value="fridge">Fridge</option>
-              <option value="freezer">Freezer</option>
-              <option value="counter">Counter</option>
-            </select>
+            <label>Storage area</label>
+            <select id="cuArea">${getLayout().map(a => `<option value="${a.id}">${a.icon} ${escapeHtml(a.name)}</option>`).join("")}</select>
+          </div>
+          <div class="field">
+            <label>Shelf / section</label>
+            <select id="cuSection"></select>
           </div>
           <div id="cuDupeWarn"></div>
           <button class="btn btn-green" id="cuSave" style="width:100%;">Save to inventory</button>
@@ -2934,7 +3088,17 @@
       syncField("cuUpc", "upc");
       document.getElementById("cuQty").addEventListener("input", (e) => { closeUpDraft.qty = e.target.value ? Number(e.target.value) : null; });
       document.getElementById("cuUnit").addEventListener("change", (e) => { closeUpDraft.unit = e.target.value; });
-      document.getElementById("cuLoc").addEventListener("change", (e) => { closeUpDraft.loc = e.target.value; });
+      // Wire area → section cascade for close-up scan
+      function updateCuSections() {
+        const areaId = document.getElementById("cuArea").value;
+        const area = getLayout().find(a => a.id === areaId);
+        document.getElementById("cuSection").innerHTML = area ? area.sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("") : "";
+        closeUpDraft.areaId = areaId;
+        closeUpDraft.sectionId = document.getElementById("cuSection").value;
+      }
+      updateCuSections();
+      document.getElementById("cuArea").addEventListener("change", updateCuSections);
+      document.getElementById("cuSection").addEventListener("change", (e) => { closeUpDraft.sectionId = e.target.value; });
 
       document.getElementById("cuScanBarcode").addEventListener("click", openBarcodeScanner);
       document.getElementById("cuSave").addEventListener("click", saveCloseUpItem);
@@ -3181,7 +3345,9 @@
       const qtyEl = document.getElementById("cuQty");
       const unitEl = document.getElementById("cuUnit");
       const upcEl = document.getElementById("cuUpc");
-      const locEl = document.getElementById("cuLoc");
+      const areaId = document.getElementById("cuArea")?.value || getLayout()[0]?.id || "";
+      const sectionId = document.getElementById("cuSection")?.value || "";
+      const areaName = getLayout().find(a => a.id === areaId)?.name?.toLowerCase() || "pantry";
       const name = (nameEl.value || "").trim();
       if (!name) { nameEl.focus(); alert("Name is required."); return; }
       const upc = (upcEl.value || "").replace(/\D/g, "");
@@ -3193,7 +3359,9 @@
         canonicalName: canonical,
         qty: qtyEl.value ? Number(qtyEl.value) : 1,
         unit: unitEl.value || "",
-        loc: locEl.value || "pantry",
+        loc: areaName,
+        areaId,
+        sectionId,
         expiry: null,
         upc: upc || "",
       };
@@ -3300,16 +3468,24 @@
           <div class="scan-summary" id="scanSummary"></div>
           <button class="btn btn-ghost" id="addScanItem" style="width:100%;">+ Add another item</button>
           <div class="field" style="margin-top:12px;">
-            <label>Where do these go?</label>
-            <select id="bulkLoc">
-              <option value="pantry">Pantry</option>
-              <option value="fridge">Fridge</option>
-              <option value="freezer">Freezer</option>
-              <option value="counter">Counter</option>
-            </select>
+            <label>Storage area</label>
+            <select id="bulkArea">${getLayout().map(a => `<option value="${a.id}">${a.icon} ${escapeHtml(a.name)}</option>`).join("")}</select>
+          </div>
+          <div class="field">
+            <label>Shelf / section</label>
+            <select id="bulkSection"></select>
           </div>
           <button class="btn btn-green" id="bulkSave" style="width:100%;">Add selected to inventory</button>
         </div>`;
+
+      // Wire bulk area → section cascade
+      function updateBulkSections() {
+        const areaId = document.getElementById("bulkArea").value;
+        const area = getLayout().find(a => a.id === areaId);
+        document.getElementById("bulkSection").innerHTML = area ? area.sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("") : "";
+      }
+      updateBulkSections();
+      document.getElementById("bulkArea").addEventListener("change", updateBulkSections);
 
       // Reset draft
       scanDraftItems = [];
@@ -3495,7 +3671,9 @@
     }
 
     function saveScannedItems() {
-      const loc = document.getElementById("bulkLoc").value;
+      const areaId = document.getElementById("bulkArea")?.value || getLayout()[0]?.id || "";
+      const sectionId = document.getElementById("bulkSection")?.value || "";
+      const areaName = getLayout().find(a => a.id === areaId)?.name?.toLowerCase() || "pantry";
       const selected = scanDraftItems.filter(i => i.included && (i.name || "").trim());
       if (!selected.length) { alert("Nothing selected. Check the items you want to keep."); return; }
       selected.forEach(i => {
@@ -3507,7 +3685,9 @@
           canonicalName: normalize(name),
           qty: i.qty,
           unit: i.unit || "",
-          loc,
+          loc: areaName,
+          areaId,
+          sectionId,
           expiry: null,
         };
         state.inventory[inventoryKey(item)] = item;
@@ -4060,6 +4240,16 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       else if (currentView === "cook") openCustom();
     });
     document.getElementById("openSettingsBtn").addEventListener("click", openSettings);
+    document.getElementById("manageLayoutBtn").addEventListener("click", () => {
+      renderLayoutModal();
+      showModal("layoutModal");
+    });
+    document.getElementById("addAreaBtn").addEventListener("click", () => {
+      const icons = ["🗄️","🧊","❄️","🍞","🧺","🚪","🍷","☕"];
+      const icon = icons[state.layout.length % icons.length];
+      state.layout.push({ id: "area-" + genId(), name: "New Area", icon, sections: [{ id: genId(), name: "Shelf 1" }] });
+      saveState(); renderLayoutModal();
+    });
     document.getElementById("openShoppingListBtn").addEventListener("click", openShoppingList);
     document.getElementById("shopAddBtn").addEventListener("click", handleShopManualAdd);
     document.getElementById("shopAddName").addEventListener("keydown", (e) => { if (e.key === "Enter") handleShopManualAdd(); });
