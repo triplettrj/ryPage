@@ -1671,7 +1671,9 @@
           },
         },
       };
-      SEED_INVENTORY.forEach(i => { seeded.inventory[normalize(i.name)] = i; });
+      // Start empty — no seeded demo inventory.
+      // To re-enable demo data, uncomment:
+      // SEED_INVENTORY.forEach(i => { seeded.inventory[normalize(i.name)] = i; });
       return seeded;
     }
     function loadState() {
