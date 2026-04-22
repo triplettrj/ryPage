@@ -605,6 +605,46 @@
       max-height: 260px; object-fit: cover;
     }
 
+    /* Scan confirmation cards */
+    .scan-item-card {
+      display: grid;
+      grid-template-columns: 28px 1fr 24px;
+      gap: 8px;
+      align-items: start;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      transition: opacity 0.15s;
+    }
+    .scan-item-card.excluded { opacity: 0.4; }
+    .scan-item-card.excluded .scan-fields input,
+    .scan-item-card.excluded .scan-fields select { text-decoration: line-through; }
+    .scan-item-card input[type="checkbox"] {
+      width: 20px; height: 20px; margin-top: 8px; accent-color: var(--green); cursor: pointer;
+    }
+    .scan-fields { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .scan-fields .name-row {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .scan-fields input, .scan-fields select {
+      width: 100%; padding: 7px 9px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--text);
+      font-size: 14px; font-family: inherit;
+    }
+    .scan-fields .item-name-input { font-weight: 600; }
+    .scan-fields .brand-input { font-size: 13px; color: var(--muted); }
+    .scan-fields .qty-row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 6px; }
+    .scan-remove-btn {
+      background: transparent; border: 0; color: var(--muted); font-size: 22px;
+      line-height: 1; cursor: pointer; padding: 4px; border-radius: 6px;
+    }
+    .scan-remove-btn:hover { background: var(--red-light); color: var(--red); }
+    .scan-summary {
+      font-size: 13px; color: var(--muted); margin: 8px 2px;
+    }
+
     .info-banner {
       background: var(--amber-light);
       border: 1px solid #ffe082;
@@ -1056,6 +1096,10 @@
       <div class="field">
         <label>Item</label>
         <input id="imName" type="text" placeholder="e.g. Ground beef" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>Brand (optional)</label>
+        <input id="imBrand" type="text" placeholder="e.g. Rao's, Planters" autocomplete="off" />
       </div>
       <div class="field">
         <label>Quantity & unit</label>
@@ -2098,7 +2142,7 @@
           return `
             <div class="inv-item" data-key="${key}">
               <div class="icon">${meta.icon}</div>
-              <div class="name">${i.name}</div>
+              <div class="name">${i.name}${i.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(i.brand)}</span>` : ""}</div>
               <div class="badges">${badges.join("")}</div>
               <div class="qty">${qtyText}</div>
               <button class="delete" data-action="delete" aria-label="Delete">×</button>
@@ -2130,6 +2174,7 @@
       const item = key ? state.inventory[key] : null;
       document.getElementById("imTitle").textContent = item ? "Edit item" : "Add item";
       document.getElementById("imName").value = item ? item.name : "";
+      document.getElementById("imBrand").value = item && item.brand ? item.brand : "";
       document.getElementById("imQty").value = item && item.qty != null ? item.qty : "";
       document.getElementById("imUnit").value = item && item.unit ? item.unit : "";
       document.getElementById("imLoc").value = item ? item.loc : "pantry";
@@ -2146,6 +2191,7 @@
       const expiry = document.getElementById("imExpiry").value || null;
       const item = {
         name,
+        brand: document.getElementById("imBrand").value.trim(),
         qty: qtyStr ? Number(qtyStr) : null,
         unit: document.getElementById("imUnit").value,
         loc: document.getElementById("imLoc").value,
@@ -2234,17 +2280,27 @@
       });
     }
 
+    // In-memory list of items being reviewed in the Scan tab.
+    // Shape per item: { included: bool, name, brand, qty, unit }
+    let scanDraftItems = [];
+
     function renderScanResult(dataUrl) {
       const container = document.getElementById("scanResult");
       const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
       container.innerHTML = `
         <img class="preview-img" src="${dataUrl}" alt="Captured photo" />
         <div class="card">
-          <h3 style="margin:0 0 4px;">What's in this photo?</h3>
-          <p style="color:var(--muted); font-size:12px; margin:0 0 10px;">${hasKey ? "Claude is identifying items… you can edit the list before saving." : "Type each item on a new line. Leading numbers are quantities."}</p>
-          <div class="field"><textarea id="bulkItems" placeholder="Ground beef&#10;Yellow onion&#10;2 tomatoes">${hasKey ? "Analyzing photo with Claude…" : ""}</textarea></div>
-          <div class="field">
-            <label>Where?</label>
+          <h3 style="margin:0 0 4px;">Review each item</h3>
+          <p style="color:var(--muted); font-size:12px; margin:0 0 12px;">
+            ${hasKey
+              ? "Claude is identifying items… uncheck any you don't want, fix names/brands/amounts, then save."
+              : "Add a Claude API key in Settings to auto-identify. For now, add items below manually."}
+          </p>
+          <div id="scanItemsList"></div>
+          <div class="scan-summary" id="scanSummary"></div>
+          <button class="btn btn-ghost" id="addScanItem" style="width:100%;">+ Add another item</button>
+          <div class="field" style="margin-top:12px;">
+            <label>Where do these go?</label>
             <select id="bulkLoc">
               <option value="pantry">Pantry</option>
               <option value="fridge">Fridge</option>
@@ -2252,28 +2308,120 @@
               <option value="counter">Counter</option>
             </select>
           </div>
-          <button class="btn btn-green" id="bulkSave">Add all to inventory</button>
-        </div>
-        ${hasKey ? "" : `<div class="info-banner" style="margin-top:10px;"><strong>Tip:</strong> Add a Claude API key in Settings to auto-identify items from photos.</div>`}`;
-      document.getElementById("bulkSave").addEventListener("click", bulkAddItems);
+          <button class="btn btn-green" id="bulkSave" style="width:100%;">Add selected to inventory</button>
+        </div>`;
 
+      // Reset draft
+      scanDraftItems = [];
       if (hasKey) {
+        // Insert a single "Analyzing…" placeholder while Claude processes.
+        document.getElementById("scanItemsList").innerHTML = `
+          <div class="card" style="text-align:center; padding:16px;">
+            <p style="margin:0;">🔍 Claude is looking at your photo…</p>
+          </div>`;
         analyzePhotoWithClaude(dataUrl).then((items) => {
-          const ta = document.getElementById("bulkItems");
-          if (!ta) return;
-          if (items && items.length) {
-            ta.value = items.join("\n");
-            haptic(10);
-          } else {
-            ta.value = "";
-            ta.placeholder = "Claude didn't find any items. Add them manually.";
-          }
+          scanDraftItems = items.map(i => ({ included: true, ...i }));
+          if (!scanDraftItems.length) scanDraftItems.push(emptyScanItem());
+          renderScanItemsList();
+          haptic(10);
         }).catch((err) => {
-          const ta = document.getElementById("bulkItems");
-          if (!ta) return;
-          ta.value = "";
-          ta.placeholder = `Error: ${err.message}. Add items manually.`;
+          document.getElementById("scanItemsList").innerHTML = `
+            <div class="card" style="background:var(--red-light);">
+              <p style="margin:0; color:var(--red);"><strong>Scan failed.</strong></p>
+              <p style="margin:6px 0 0; font-size:13px; color:var(--red);">${escapeHtml(err.message)}</p>
+              <p style="margin:8px 0 0; font-size:13px;">You can still add items manually below.</p>
+            </div>`;
+          scanDraftItems = [emptyScanItem()];
+          // Re-render fields below the error banner
+          const listEl = document.createElement("div");
+          listEl.id = "scanItemsListManual";
+          document.getElementById("scanItemsList").appendChild(listEl);
+          renderScanItemsList("scanItemsListManual");
         });
+      } else {
+        scanDraftItems = [emptyScanItem()];
+        renderScanItemsList();
+      }
+
+      document.getElementById("addScanItem").addEventListener("click", () => {
+        scanDraftItems.push(emptyScanItem());
+        renderScanItemsList();
+        // Focus the new row's name field
+        setTimeout(() => {
+          const all = document.querySelectorAll(".scan-item-card .item-name-input");
+          if (all.length) all[all.length - 1].focus();
+        }, 50);
+      });
+      document.getElementById("bulkSave").addEventListener("click", saveScannedItems);
+    }
+
+    function emptyScanItem() {
+      return { included: true, name: "", brand: "", qty: null, unit: "" };
+    }
+
+    function renderScanItemsList(targetId) {
+      const listEl = document.getElementById(targetId || "scanItemsList");
+      if (!listEl) return;
+      const unitOptions = ["","oz","fl oz","lb","g","kg","cup","tbsp","tsp","piece","can","bottle","jar","bag","box","packet","bunch","head"];
+      listEl.innerHTML = scanDraftItems.map((i, idx) => `
+        <div class="scan-item-card ${i.included ? "" : "excluded"}" data-idx="${idx}">
+          <input type="checkbox" class="include-cb" ${i.included ? "checked" : ""} aria-label="Include" />
+          <div class="scan-fields">
+            <div class="name-row">
+              <input type="text" class="item-name-input" placeholder="Item name" value="${escapeHtml(i.name || "")}" />
+              <input type="text" class="brand-input" placeholder="Brand (optional)" value="${escapeHtml(i.brand || "")}" />
+            </div>
+            <div class="qty-row">
+              <input type="number" class="qty-input" step="0.25" min="0" placeholder="Qty" value="${i.qty != null ? i.qty : ""}" />
+              <select class="unit-input">
+                ${unitOptions.map(u => `<option value="${u}" ${i.unit === u ? "selected" : ""}>${u || "— unit —"}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+          <button class="scan-remove-btn" data-action="remove" aria-label="Remove">×</button>
+        </div>
+      `).join("");
+      updateScanSummary();
+
+      // Wire per-row events
+      listEl.querySelectorAll(".scan-item-card").forEach(card => {
+        const idx = Number(card.dataset.idx);
+        card.querySelector(".include-cb").addEventListener("change", (e) => {
+          scanDraftItems[idx].included = e.target.checked;
+          card.classList.toggle("excluded", !e.target.checked);
+          updateScanSummary();
+        });
+        card.querySelector(".item-name-input").addEventListener("input", (e) => {
+          scanDraftItems[idx].name = e.target.value;
+        });
+        card.querySelector(".brand-input").addEventListener("input", (e) => {
+          scanDraftItems[idx].brand = e.target.value;
+        });
+        card.querySelector(".qty-input").addEventListener("input", (e) => {
+          const v = e.target.value;
+          scanDraftItems[idx].qty = v === "" ? null : Number(v);
+        });
+        card.querySelector(".unit-input").addEventListener("change", (e) => {
+          scanDraftItems[idx].unit = e.target.value;
+        });
+        card.querySelector('[data-action="remove"]').addEventListener("click", () => {
+          scanDraftItems.splice(idx, 1);
+          if (!scanDraftItems.length) scanDraftItems.push(emptyScanItem());
+          renderScanItemsList(targetId);
+        });
+      });
+    }
+
+    function updateScanSummary() {
+      const sum = document.getElementById("scanSummary");
+      if (!sum) return;
+      const total = scanDraftItems.length;
+      const picked = scanDraftItems.filter(i => i.included && (i.name || "").trim()).length;
+      sum.textContent = `${picked} of ${total} item${total === 1 ? "" : "s"} selected`;
+      const btn = document.getElementById("bulkSave");
+      if (btn) {
+        btn.textContent = picked ? `Add ${picked} to inventory` : "Add selected to inventory";
+        btn.disabled = picked === 0;
       }
     }
 
@@ -2284,6 +2432,23 @@
       if (!match) throw new Error("Bad image format");
       const mediaType = match[1];
       const b64 = match[2];
+      const prompt = [
+        "Identify every kitchen food item visible in this photo.",
+        "",
+        "For each item, return a JSON object with these fields:",
+        '- "name": generic item name, lowercase, short (e.g. "marinara sauce", "peanuts", "rice vinegar")',
+        '- "brand": brand name if clearly readable on a label (e.g. "Rao\'s", "Planters", "Marukan"); use empty string "" if unclear',
+        '- "qty": numeric quantity if visible on the label or by counting items (e.g. 24 for "24 oz", 3 for three apples); use null if unknown',
+        '- "unit": unit of measure if visible (e.g. "oz", "fl oz", "lb", "piece", "jar", "can", "bottle", "bag", "box"); use empty string "" if unknown',
+        "",
+        "Rules:",
+        "- Include only food / drink / cooking ingredients. Ignore bubble wrap, plastic bags, containers, cookware.",
+        "- One entry per distinct item. If you see 3 apples, that's one entry with qty:3, unit:\"piece\".",
+        "- Do not guess brands or sizes you can't actually see.",
+        "",
+        "Return ONLY a JSON array. No prose. No markdown fences. Example:",
+        '[{"name":"marinara sauce","brand":"Rao\'s","qty":24,"unit":"oz"},{"name":"peanuts","brand":"Planters","qty":null,"unit":"box"}]',
+      ].join("\n");
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -2294,12 +2459,12 @@
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-5",
-          max_tokens: 800,
+          max_tokens: 1500,
           messages: [{
             role: "user",
             content: [
               { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
-              { type: "text", text: "List every kitchen food item you see in this photo, one per line. Use simple names like 'ground beef', 'yellow onion', '2 tomatoes'. Include a leading quantity ONLY if you can clearly count individual pieces. No bullet points, no extra text — just the plain list of items." },
+              { type: "text", text: prompt },
             ],
           }],
         }),
@@ -2311,27 +2476,48 @@
       }
       const data = await res.json();
       const text = (data.content || []).map(c => c.text || "").join("\n");
-      return text.split("\n").map(l => l.replace(/^[-•*\d.)\s]+/, "").trim()).filter(Boolean);
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        // Fallback: treat each non-empty line as a plain name
+        return text.split("\n").map(l => l.replace(/^[-•*\d.)\s]+/, "").trim()).filter(Boolean)
+          .map(name => ({ name, brand: "", qty: null, unit: "" }));
+      }
+      let parsed;
+      try { parsed = JSON.parse(jsonMatch[0]); }
+      catch (e) { throw new Error("Claude returned invalid JSON"); }
+      if (!Array.isArray(parsed)) throw new Error("Claude didn't return a list");
+      return parsed.map(p => ({
+        name: String(p.name || "").trim(),
+        brand: String(p.brand || "").trim(),
+        qty: (p.qty == null || p.qty === "" || isNaN(Number(p.qty))) ? null : Number(p.qty),
+        unit: String(p.unit || "").trim(),
+      })).filter(i => i.name);
     }
-    function bulkAddItems() {
-      const text = document.getElementById("bulkItems").value;
+
+    function saveScannedItems() {
       const loc = document.getElementById("bulkLoc").value;
-      const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-      if (!lines.length) { alert("Type at least one item"); return; }
-      lines.forEach(line => {
-        const m = line.match(/^(\d+(?:\.\d+)?)\s+(.+)$/);
-        const name = m ? m[2] : line;
-        const qty = m ? Number(m[1]) : null;
-        state.inventory[normalize(name)] = { name, qty, unit: "", loc, expiry: null };
+      const selected = scanDraftItems.filter(i => i.included && (i.name || "").trim());
+      if (!selected.length) { alert("Nothing selected. Check the items you want to keep."); return; }
+      selected.forEach(i => {
+        const name = i.name.trim();
+        state.inventory[normalize(name)] = {
+          name,
+          brand: i.brand || "",
+          qty: i.qty,
+          unit: i.unit || "",
+          loc,
+          expiry: null,
+        };
       });
       saveState();
       document.getElementById("scanResult").innerHTML = `
         <div class="card empty-state" style="background:var(--green-light);">
           <span class="big">✅</span>
-          Added ${lines.length} item${lines.length === 1 ? "" : "s"} to your ${loc}.<br/>
+          Added ${selected.length} item${selected.length === 1 ? "" : "s"} to your ${loc}.<br/>
           <small>Check the Inventory tab to review.</small>
         </div>`;
       haptic(15);
+      renderInventory();
     }
 
     // ============================================================
