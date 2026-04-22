@@ -1056,9 +1056,14 @@
       <div class="modal" style="max-height:85vh; overflow-y:auto;">
         <button class="close-x" data-close="layoutModal">×</button>
         <h2>📍 Kitchen Layout</h2>
-        <p class="subtitle">Define your storage areas and shelves.</p>
+        <p class="subtitle">Define your storage areas and shelves, or let Claude build it from a photo.</p>
+        <label style="display:block; width:100%; margin-bottom:8px;">
+          <div class="btn btn-secondary" style="width:100%; text-align:center; cursor:pointer;">📸 Scan area to auto-build layout</div>
+          <input id="layoutScanInput" type="file" accept="image/*" capture="environment" style="display:none;" />
+        </label>
+        <div id="layoutScanStatus" style="font-size:13px; color:var(--muted); text-align:center; margin-bottom:8px; min-height:18px;"></div>
         <div id="layoutAreaList"></div>
-        <button class="btn btn-green" id="addAreaBtn" style="width:100%; margin-top:12px;">+ Add Area</button>
+        <button class="btn btn-green" id="addAreaBtn" style="width:100%; margin-top:12px;">+ Add Area manually</button>
       </div>
     </div>
 
@@ -1944,6 +1949,90 @@
           saveState(); renderLayoutModal();
         });
       });
+    }
+
+    async function scanLayoutFromPhoto(file) {
+      const statusEl = document.getElementById("layoutScanStatus");
+      const key = state.settings.claudeKey?.trim();
+      if (!key) {
+        statusEl.textContent = "⚠️ Add your Claude API key in Settings first.";
+        return;
+      }
+      statusEl.textContent = "📸 Processing photo…";
+      try {
+        const rawDataUrl = await blobToDataUrl(file);
+        const jpegDataUrl = await normalizeImageToJpeg(rawDataUrl);
+        const base64 = jpegDataUrl.split(",")[1];
+
+        statusEl.textContent = "🤖 Claude is analyzing your storage area…";
+
+        const resp = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": key,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-opus-4-5",
+            max_tokens: 1024,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64 } },
+                { type: "text", text: `Look at this photo of a kitchen storage area (pantry shelf, refrigerator, freezer, cabinet, etc.).
+
+Identify:
+1. What type of area this is (Pantry, Fridge, Freezer, Cabinet, Counter, etc.)
+2. All distinct shelves, drawers, compartments, or sections visible from top to bottom
+
+Return ONLY a JSON object in this exact format, no other text:
+{
+  "areaName": "Pantry",
+  "icon": "🗄️",
+  "sections": ["Top Shelf", "Middle Shelf", "Bottom Shelf"]
+}
+
+Use a fitting emoji icon for the area type. Name shelves descriptively based on what you see (e.g. "Spice Shelf", "Canned Goods", "Produce Drawer", "Door Shelf", "Snack Shelf"). List sections top to bottom.` }
+              ]
+            }]
+          })
+        });
+
+        if (!resp.ok) throw new Error(`API error ${resp.status}`);
+        const data = await resp.json();
+        const text = data.content?.[0]?.text || "";
+        const json = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || "{}");
+
+        if (!json.areaName || !Array.isArray(json.sections) || !json.sections.length) {
+          throw new Error("Couldn't read the layout from that photo. Try a clearer shot.");
+        }
+
+        // Build new area and add to layout
+        const newArea = {
+          id: "area-" + genId(),
+          name: json.areaName,
+          icon: json.icon || "🗄️",
+          sections: json.sections.map(s => ({ id: genId(), name: s }))
+        };
+
+        // Check if area with same name already exists — replace or append
+        const existingIdx = state.layout.findIndex(a => a.name.toLowerCase() === newArea.name.toLowerCase());
+        if (existingIdx >= 0) {
+          if (confirm(`You already have a "${newArea.name}" area. Replace its shelves with what Claude found?`)) {
+            state.layout[existingIdx].sections = newArea.sections;
+          }
+        } else {
+          state.layout.push(newArea);
+        }
+
+        saveState();
+        renderLayoutModal();
+        statusEl.textContent = `✅ Added "${newArea.name}" with ${newArea.sections.length} sections!`;
+      } catch (err) {
+        statusEl.textContent = `❌ ${err.message}`;
+      }
     }
 
     // ============================================================
@@ -4228,6 +4317,13 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       state.settings.hasOnboarded = true; saveState();
       document.getElementById("onboard").classList.remove("show");
     }
+
+    // Layout scan photo input
+    document.getElementById("layoutScanInput").addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (file) scanLayoutFromPhoto(file);
+      e.target.value = "";
+    });
 
     // ============================================================
     // EVENT WIRING
