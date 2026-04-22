@@ -2394,6 +2394,24 @@
       const almost = ranked.filter(r => r.ratio >= 0.5 && r.ratio < 1 && !favSet.has(r.id));
       const far = ranked.filter(r => r.ratio < 0.5 && !favSet.has(r.id));
 
+      // Empty inventory prompt
+      const invCount = Object.keys(state.inventory).length;
+      const emptyBanner = document.getElementById("emptyInvBanner");
+      if (emptyBanner) emptyBanner.remove();
+      if (invCount === 0) {
+        const banner = document.createElement("div");
+        banner.id = "emptyInvBanner";
+        banner.className = "card";
+        banner.style = "text-align:center; padding:24px 16px; margin-bottom:12px;";
+        banner.innerHTML = `
+          <span style="font-size:40px;">📷</span>
+          <p style="margin:10px 0 4px; font-weight:600;">Your inventory is empty</p>
+          <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your pantry or fridge to get started</p>
+          <button class="btn btn-green" onclick="switchView('scan')" style="width:100%;">📷 Scan your kitchen</button>
+        `;
+        document.getElementById("useSoonWrap").before(banner);
+      }
+
       const soonItems = expiringSoon();
       document.getElementById("useSoonWrap").innerHTML = soonItems.length ? `
         <div class="section-title"><h2>Use soon</h2><span class="count">${soonItems.length}</span></div>
@@ -2591,10 +2609,11 @@
       const allItems = Object.entries(state.inventory);
       if (allItems.length === 0) {
         container.innerHTML = `
-          <div class="card empty-state">
+          <div class="card empty-state" style="padding:28px 16px;">
             <span class="big">📦</span>
-            Your inventory is empty.<br/>
-            <small>Tap + below to add, or use the Scan tab.</small>
+            <p style="margin:8px 0 4px; font-weight:600;">No items yet</p>
+            <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your pantry or fridge to add items</p>
+            <button class="btn btn-green" onclick="switchView('scan')" style="width:100%;">📷 Scan your kitchen</button>
           </div>`;
         return;
       }
