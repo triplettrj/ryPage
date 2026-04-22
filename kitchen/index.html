@@ -3080,11 +3080,21 @@
         // Clear any previous instance
         const box = document.getElementById("barcodeReaderBox");
         box.innerHTML = "";
-        html5QrScanner = new Html5Qrcode("barcodeReaderBox");
-        statusEl.textContent = "Point at barcode…";
+        // Explicitly include all 1D barcode formats (UPC, EAN, Code128, etc.)
+        const formats = [
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.ITF,
+        ];
+        html5QrScanner = new Html5Qrcode("barcodeReaderBox", { formatsToSupport: formats, verbose: false });
+        statusEl.textContent = "Point barcode at the box…";
         await html5QrScanner.start(
           { facingMode: "environment" },
-          { fps: 15, qrbox: { width: 250, height: 150 }, aspectRatio: 1.5 },
+          { fps: 10, qrbox: { width: 280, height: 100 } },
           (decodedText) => {
             closeBarcodeScanner();
             onBarcodeDecoded(decodedText);
