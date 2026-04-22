@@ -404,6 +404,49 @@
     .dupe-warn .dupe-cancel { background: transparent; color: var(--muted); }
     .dupe-warn .dupe-add { background: var(--amber); color: #000; }
 
+    /* Batch Scan */
+    .bs-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 6px;
+    }
+    .bs-item-name { font-weight: 600; font-size: 14px; line-height: 1.3; }
+    .bs-item-brand { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .bs-qty-row { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .bs-qty-btn {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 17px; line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bs-qty-btn:active { background: var(--green-light); }
+    .bs-qty-val { font-weight: 700; font-size: 15px; min-width: 22px; text-align: center; }
+    .bs-remove-btn {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      border: none;
+      background: var(--red-light);
+      color: var(--red);
+      font-size: 13px; font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bs-item-loading { opacity: .6; }
+    .bs-new-flash { animation: bsFlash .4s; }
+    @keyframes bsFlash { from { background: var(--green-light); } to { background: var(--card); } }
+
     /* FAB */
     .fab {
       position: fixed;
@@ -1155,7 +1198,8 @@
           <input id="scanInput" type="file" accept="image/*" capture="environment" />
         </label>
       </div>
-      <button class="btn btn-secondary" id="scanBarcodeBtn" style="width:100%; margin-bottom:12px;">📷 Scan barcode only</button>
+      <button class="btn btn-secondary" id="scanBarcodeBtn" style="width:100%; margin-bottom:8px;">📷 Scan barcode only</button>
+      <button class="btn btn-green" id="batchScanBtn" style="width:100%; margin-bottom:12px;">📦 Scan a shelf <span style="font-size:11px; opacity:.75; margin-left:4px;">scan many at once</span></button>
       <div id="scanResult"></div>
     </div>
 
@@ -1171,6 +1215,58 @@
           <button class="btn btn-secondary" id="barcodeCancel">Cancel</button>
           <button class="btn btn-green" id="barcodeManual">Type UPC instead</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Batch Scan Modal -->
+    <div class="modal-backdrop" id="batchScanModal">
+      <div class="modal">
+
+        <!-- Step 1: Pick location -->
+        <div id="bsStep1">
+          <button class="close-x" id="bsClose1">×</button>
+          <h2>📦 Scan a Shelf</h2>
+          <p class="subtitle">Pick where these items are stored, then scan them one by one.</p>
+          <div class="field">
+            <label>Storage area</label>
+            <select id="bsArea"></select>
+          </div>
+          <div class="field">
+            <label>Shelf / Section</label>
+            <select id="bsSection"></select>
+          </div>
+          <div class="btn-row" style="margin-top:16px;">
+            <button class="btn btn-secondary" id="bsCancelStep1">Cancel</button>
+            <button class="btn btn-green" id="bsStartBtn">📷 Start Scanning →</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Active scanning -->
+        <div id="bsStep2" style="display:none;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <div style="flex:1; min-width:0;">
+              <div id="bsLocationLabel" style="font-weight:700; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+              <div id="bsCount" style="font-size:12px; color:var(--muted);">0 items scanned</div>
+            </div>
+            <button class="btn btn-green" id="bsDoneBtn" style="flex-shrink:0; min-width:90px;">Done ✓</button>
+          </div>
+          <div id="bsScannerBox" style="border-radius:12px; overflow:hidden; background:#000; min-height:200px; position:relative;"></div>
+          <p id="bsScanStatus" style="text-align:center; font-size:12px; color:var(--muted); margin:8px 0 4px;">Loading scanner…</p>
+          <div id="bsScannedList" style="margin-top:4px;"></div>
+        </div>
+
+        <!-- Step 3: Review before saving -->
+        <div id="bsStep3" style="display:none;">
+          <button class="close-x" id="bsClose3">×</button>
+          <h2>✅ Review Items</h2>
+          <p class="subtitle" id="bsReviewSubtitle"></p>
+          <div id="bsReviewList"></div>
+          <div class="btn-row" style="margin-top:14px;">
+            <button class="btn btn-secondary" id="bsBackBtn">← Scan more</button>
+            <button class="btn btn-green" id="bsSaveAllBtn">💾 Save All</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -3479,6 +3575,298 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       }
     }
 
+    // ─── BATCH SCAN ──────────────────────────────────────────────────────────────
+
+    let batchItems = [];
+    let batchQuaggaRunning = false;
+    let batchAreaId = "";
+    let batchSectionId = "";
+    let batchLastScan = {}; // debounce: { upc: timestamp }
+
+    function openBatchScan() {
+      batchItems = [];
+      batchLastScan = {};
+      const layout = getLayout();
+      const areaEl = document.getElementById("bsArea");
+      areaEl.innerHTML = layout.map(a => `<option value="${a.id}">${a.icon} ${escapeHtml(a.name)}</option>`).join("");
+      function updateBsSections() {
+        const area = layout.find(a => a.id === areaEl.value);
+        document.getElementById("bsSection").innerHTML = area
+          ? area.sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")
+          : "<option value=''>—</option>";
+      }
+      updateBsSections();
+      areaEl.onchange = updateBsSections;
+      document.getElementById("bsStep1").style.display = "";
+      document.getElementById("bsStep2").style.display = "none";
+      document.getElementById("bsStep3").style.display = "none";
+      showModal("batchScanModal");
+    }
+
+    async function startBatchScanning() {
+      const layout = getLayout();
+      batchAreaId = document.getElementById("bsArea").value;
+      batchSectionId = document.getElementById("bsSection").value;
+      const area = layout.find(a => a.id === batchAreaId);
+      const section = area?.sections.find(s => s.id === batchSectionId);
+      const locLabel = `${area?.icon || "📦"} ${area?.name || "Pantry"}${section ? " › " + section.name : ""}`;
+      document.getElementById("bsLocationLabel").textContent = locLabel;
+      document.getElementById("bsCount").textContent = "0 items scanned";
+      document.getElementById("bsScannedList").innerHTML = "";
+      document.getElementById("bsStep1").style.display = "none";
+      document.getElementById("bsStep2").style.display = "";
+      document.getElementById("bsScanStatus").textContent = "Loading scanner…";
+      try {
+        if (!window.Quagga) {
+          await loadScript("https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.7.3/dist/quagga.min.js");
+        }
+        const box = document.getElementById("bsScannerBox");
+        box.innerHTML = "";
+        Quagga.init({
+          inputStream: {
+            type: "LiveStream",
+            target: box,
+            constraints: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+          },
+          decoder: {
+            readers: ["ean_reader","ean_8_reader","upc_reader","upc_e_reader","code_128_reader","code_39_reader"],
+            multiple: false,
+          },
+          locate: true,
+          numOfWorkers: 0,
+          frequency: 10,
+        }, (err) => {
+          if (err) {
+            document.getElementById("bsScanStatus").innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(String(err))}</span>`;
+            return;
+          }
+          Quagga.start();
+          batchQuaggaRunning = true;
+          document.getElementById("bsScanStatus").textContent = "Point camera at a barcode…";
+        });
+        Quagga.offDetected();
+        Quagga.onDetected((result) => {
+          const code = result?.codeResult?.code;
+          if (!code) return;
+          const now = Date.now();
+          if (batchLastScan[code] && now - batchLastScan[code] < 2500) return; // debounce
+          batchLastScan[code] = now;
+          addBatchItem(code);
+        });
+      } catch (err) {
+        document.getElementById("bsScanStatus").innerHTML = `<span style="color:var(--red);">Error: ${escapeHtml(err.message)}</span>`;
+      }
+    }
+
+    async function addBatchItem(code) {
+      // Already in this batch? Increment qty instead.
+      const existing = batchItems.find(i => i.upc === code);
+      if (existing) {
+        existing.qty = (existing.qty || 1) + 1;
+        haptic(10);
+        showToast(`+1 ${existing.name || code}`);
+        renderBatchQueue();
+        return;
+      }
+      const item = {
+        id: Date.now() + Math.random(),
+        upc: code,
+        name: "",
+        brand: "",
+        qty: 1,
+        unit: "",
+        areaId: batchAreaId,
+        sectionId: batchSectionId,
+        loc: getLayout().find(a => a.id === batchAreaId)?.name?.toLowerCase() || "pantry",
+        canonicalName: "",
+        status: "loading",
+      };
+      batchItems.push(item);
+      haptic(15);
+      renderBatchQueue();
+      document.getElementById("bsScanStatus").textContent = `Got ${code} — looking up…`;
+      try {
+        const info = await lookupUpc(code);
+        if (info) {
+          item.name = info.name || info.canonicalName || code;
+          item.brand = info.brand || "";
+          item.unit = info.unit || "";
+          item.canonicalName = info.canonicalName || normalize(item.name);
+          item.status = "done";
+          showToast(`✓ ${item.brand ? item.brand + " · " : ""}${item.name}`);
+        } else {
+          item.name = "Unknown — tap to edit";
+          item.canonicalName = normalize(code);
+          item.status = "failed";
+          showToast(`UPC ${code} not in catalog`);
+        }
+      } catch {
+        item.name = "Unknown — tap to edit";
+        item.canonicalName = normalize(code);
+        item.status = "failed";
+      }
+      renderBatchQueue();
+      document.getElementById("bsScanStatus").textContent = "Point camera at next barcode…";
+      document.getElementById("bsCount").textContent = `${batchItems.length} item${batchItems.length !== 1 ? "s" : ""} scanned`;
+    }
+
+    function renderBatchQueue() {
+      const list = document.getElementById("bsScannedList");
+      if (!list) return;
+      document.getElementById("bsCount").textContent = `${batchItems.length} item${batchItems.length !== 1 ? "s" : ""} scanned`;
+      if (!batchItems.length) { list.innerHTML = ""; return; }
+      list.innerHTML = batchItems.map((item, idx) => `
+        <div class="bs-item${item.status === "loading" ? " bs-item-loading" : " bs-new-flash"}" data-idx="${idx}">
+          <div style="flex:1; min-width:0; overflow:hidden;">
+            <div class="bs-item-name">${item.status === "loading" ? `🔍 ${escapeHtml(item.upc)}…` : escapeHtml(item.name || item.upc)}</div>
+            ${item.brand ? `<div class="bs-item-brand">${escapeHtml(item.brand)}</div>` : ""}
+            ${item.status === "failed" ? `<div class="bs-item-brand" style="color:var(--amber);">⚠️ Not found — tap name to edit</div>` : ""}
+          </div>
+          <div class="bs-qty-row">
+            <button class="bs-qty-btn" data-action="dec" data-idx="${idx}">−</button>
+            <span class="bs-qty-val">${item.qty}</span>
+            <button class="bs-qty-btn" data-action="inc" data-idx="${idx}">+</button>
+          </div>
+          <button class="bs-remove-btn" data-action="remove" data-idx="${idx}" title="Remove">✕</button>
+        </div>
+      `).reverse().join(""); // newest on top
+      list.querySelectorAll("[data-action]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.dataset.idx);
+          const act = btn.dataset.action;
+          if (act === "inc") { batchItems[idx].qty++; renderBatchQueue(); }
+          else if (act === "dec") { batchItems[idx].qty = Math.max(1, batchItems[idx].qty - 1); renderBatchQueue(); }
+          else if (act === "remove") { batchItems.splice(idx, 1); renderBatchQueue(); }
+        });
+      });
+      // Tapping name on "failed" items lets user rename inline
+      list.querySelectorAll(".bs-item").forEach(el => {
+        const idx = Number(el.dataset.idx);
+        if (batchItems[idx]?.status === "failed") {
+          el.querySelector(".bs-item-name").addEventListener("click", () => {
+            const newName = prompt("Edit item name:", batchItems[idx].name === "Unknown — tap to edit" ? "" : batchItems[idx].name);
+            if (newName && newName.trim()) {
+              batchItems[idx].name = newName.trim();
+              batchItems[idx].canonicalName = normalize(newName.trim());
+              batchItems[idx].status = "done";
+              renderBatchQueue();
+            }
+          });
+        }
+      });
+    }
+
+    function stopBatchQuagga() {
+      if (batchQuaggaRunning) {
+        try { Quagga.stop(); } catch {}
+        batchQuaggaRunning = false;
+      }
+    }
+
+    function showBatchReview() {
+      stopBatchQuagga();
+      if (!batchItems.length) { showToast("No items scanned yet — point camera at barcodes first."); return; }
+      const layout = getLayout();
+      const area = layout.find(a => a.id === batchAreaId);
+      const section = area?.sections.find(s => s.id === batchSectionId);
+      const readyCount = batchItems.filter(i => i.status !== "loading").length;
+      document.getElementById("bsReviewSubtitle").textContent =
+        `${readyCount} item${readyCount !== 1 ? "s" : ""} → ${area?.icon || "📦"} ${area?.name || "Pantry"}${section ? " › " + section.name : ""}`;
+      document.getElementById("bsStep2").style.display = "none";
+      document.getElementById("bsStep3").style.display = "";
+      renderBatchReview();
+    }
+
+    function renderBatchReview() {
+      const list = document.getElementById("bsReviewList");
+      if (!batchItems.length) { list.innerHTML = `<p style="color:var(--muted); text-align:center; padding:20px 0;">No items to save.</p>`; return; }
+      list.innerHTML = batchItems.map((item, idx) => `
+        <div class="bs-item" data-idx="${idx}">
+          <div style="flex:1; min-width:0; overflow:hidden;">
+            <div class="bs-item-name">${item.status === "failed" ? "✏️ " : ""}${escapeHtml(item.name || item.upc)}</div>
+            ${item.brand ? `<div class="bs-item-brand">${escapeHtml(item.brand)}</div>` : ""}
+            <div class="bs-item-brand" style="font-size:11px; color:var(--muted2);">${escapeHtml(item.upc)}</div>
+          </div>
+          <div class="bs-qty-row">
+            <button class="bs-qty-btn" data-action="dec" data-idx="${idx}">−</button>
+            <span class="bs-qty-val">${item.qty}</span>
+            <button class="bs-qty-btn" data-action="inc" data-idx="${idx}">+</button>
+          </div>
+          <button class="bs-remove-btn" data-action="remove" data-idx="${idx}" title="Remove">✕</button>
+        </div>
+      `).join("");
+      list.querySelectorAll("[data-action]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.dataset.idx);
+          const act = btn.dataset.action;
+          if (act === "inc") { batchItems[idx].qty++; renderBatchReview(); }
+          else if (act === "dec") { batchItems[idx].qty = Math.max(1, batchItems[idx].qty - 1); renderBatchReview(); }
+          else if (act === "remove") { batchItems.splice(idx, 1); renderBatchReview(); }
+        });
+      });
+      // Tap name to edit on review screen too
+      list.querySelectorAll(".bs-item").forEach(el => {
+        const idx = Number(el.dataset.idx);
+        el.querySelector(".bs-item-name").addEventListener("click", () => {
+          const cur = batchItems[idx];
+          const newName = prompt("Edit item name:", cur.name === "Unknown — tap to edit" ? "" : cur.name);
+          if (newName && newName.trim()) {
+            batchItems[idx].name = newName.trim();
+            batchItems[idx].canonicalName = normalize(newName.trim());
+            batchItems[idx].status = "done";
+            renderBatchReview();
+          }
+        });
+      });
+      document.getElementById("bsSaveAllBtn").textContent = `💾 Save All (${batchItems.length})`;
+    }
+
+    function saveAllBatch() {
+      let saved = 0, merged = 0;
+      batchItems.forEach(item => {
+        const name = (item.name || "").trim();
+        if (!name || name === "Unknown — tap to edit") return;
+        const inv = {
+          name,
+          brand: item.brand || "",
+          canonicalName: item.canonicalName || normalize(name),
+          qty: item.qty || 1,
+          unit: item.unit || "",
+          loc: item.loc,
+          areaId: item.areaId,
+          sectionId: item.sectionId,
+          expiry: null,
+          upc: item.upc || "",
+        };
+        const key = inventoryKey(inv);
+        if (state.inventory[key]) {
+          state.inventory[key].qty = (state.inventory[key].qty || 0) + inv.qty;
+          merged++;
+        } else {
+          state.inventory[key] = inv;
+          saved++;
+        }
+      });
+      saveState();
+      hideModal("batchScanModal");
+      renderInventory();
+      haptic(20);
+      const skipped = batchItems.length - saved - merged;
+      let msg = `✅ Saved ${saved} new`;
+      if (merged) msg += `, updated ${merged}`;
+      if (skipped) msg += ` (${skipped} unnamed skipped)`;
+      showToast(msg);
+      batchItems = [];
+    }
+
+    function closeBatchScan() {
+      stopBatchQuagga();
+      hideModal("batchScanModal");
+      batchItems = [];
+    }
+
+    // ─── END BATCH SCAN ──────────────────────────────────────────────────────────
+
     async function handleBarcodeOnly() {
       // Fires when the user taps "Scan barcode only" on the Scan tab (no photo first).
       // Opens the scanner. If a match is found, pre-fills a close-up review card.
@@ -4421,7 +4809,12 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
 
     document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => hideModal(b.dataset.close)));
     document.querySelectorAll(".modal-backdrop").forEach(m => {
-      m.addEventListener("click", (e) => { if (e.target === m) hideModal(m.id); });
+      m.addEventListener("click", (e) => {
+        if (e.target === m) {
+          if (m.id === "batchScanModal") { closeBatchScan(); return; }
+          hideModal(m.id);
+        }
+      });
     });
 
     // Search
@@ -4580,6 +4973,50 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       renderCloseUpReview("");
       openBarcodeScanner();
     });
+
+    // Batch scan button
+    document.getElementById("batchScanBtn").addEventListener("click", openBatchScan);
+    document.getElementById("bsClose1").addEventListener("click", closeBatchScan);
+    document.getElementById("bsCancelStep1").addEventListener("click", closeBatchScan);
+    document.getElementById("bsStartBtn").addEventListener("click", startBatchScanning);
+    document.getElementById("bsDoneBtn").addEventListener("click", showBatchReview);
+    document.getElementById("bsClose3").addEventListener("click", closeBatchScan);
+    document.getElementById("bsBackBtn").addEventListener("click", () => {
+      // Go back to scanning — restart camera but keep items already scanned
+      document.getElementById("bsStep3").style.display = "none";
+      document.getElementById("bsStep2").style.display = "";
+      // Re-init Quagga into the scanner box (items array is preserved)
+      (async () => {
+        document.getElementById("bsScanStatus").textContent = "Restarting camera…";
+        try {
+          if (!window.Quagga) await loadScript("https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.7.3/dist/quagga.min.js");
+          const box = document.getElementById("bsScannerBox");
+          box.innerHTML = "";
+          Quagga.init({
+            inputStream: { type: "LiveStream", target: box, constraints: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } },
+            decoder: { readers: ["ean_reader","ean_8_reader","upc_reader","upc_e_reader","code_128_reader","code_39_reader"], multiple: false },
+            locate: true, numOfWorkers: 0, frequency: 10,
+          }, (err) => {
+            if (err) { document.getElementById("bsScanStatus").innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(String(err))}</span>`; return; }
+            Quagga.start();
+            batchQuaggaRunning = true;
+            document.getElementById("bsScanStatus").textContent = "Point camera at a barcode…";
+          });
+          Quagga.offDetected();
+          Quagga.onDetected((result) => {
+            const code = result?.codeResult?.code;
+            if (!code) return;
+            const now = Date.now();
+            if (batchLastScan[code] && now - batchLastScan[code] < 2500) return;
+            batchLastScan[code] = now;
+            addBatchItem(code);
+          });
+        } catch (err) {
+          document.getElementById("bsScanStatus").innerHTML = `<span style="color:var(--red);">Error: ${escapeHtml(err.message)}</span>`;
+        }
+      })();
+    });
+    document.getElementById("bsSaveAllBtn").addEventListener("click", saveAllBatch);
 
     // Barcode modal cancel / manual entry
     document.getElementById("barcodeCancel").addEventListener("click", closeBarcodeScanner);
