@@ -3482,68 +3482,156 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       };
     }
 
-    // ---- Barcode scanner (Quagga2 — optimised for 1D UPC/EAN on iOS) ----
-    let quaggaRunning = false;
+    // ─── UNIFIED SCANNER (BarcodeDetector → ZXing fallback) ─────────────────────
+    // Two-strategy scanner:
+    //   1. Native BarcodeDetector API  — Chrome/Android, very fast, no library needed
+    //   2. ZXing @zxing/library        — iOS Safari, Firefox, everything else
+    // Both strategies support single-shot (stops after first scan) and
+    // continuous mode (batch scanning — keeps running until teardownScanner()).
+
+    let nativeScanRAF = null;    // rAF handle for BarcodeDetector loop
+    let nativeScanStream = null; // MediaStream for BarcodeDetector path
+    let scannerControls = null;  // ZXing IScannerControls
+    let scannerReader = null;    // ZXing BrowserMultiFormatReader instance
+
+    async function initScanner(containerEl, statusEl, onCode, { continuous = false } = {}) {
+      await teardownScanner();
+      containerEl.innerHTML = "";
+      containerEl.style.cssText = "position:relative; background:#000; border-radius:12px; overflow:hidden; min-height:220px;";
+      if (statusEl) statusEl.textContent = "Starting camera…";
+
+      // ── Path 1: Native BarcodeDetector (Chrome, Android WebView) ──────────────
+      if ("BarcodeDetector" in window) {
+        try {
+          let formats = ["ean_13","ean_8","upc_a","upc_e","code_128","code_39","itf"];
+          try {
+            const sup = await BarcodeDetector.getSupportedFormats();
+            const filtered = formats.filter(f => sup.includes(f));
+            if (filtered.length) formats = filtered;
+          } catch {}
+          const detector = new BarcodeDetector({ formats });
+
+          // Try exact environment first, fall back to ideal
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { exact: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+          }).catch(() => navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+          }));
+          nativeScanStream = stream;
+
+          const video = document.createElement("video");
+          video.setAttribute("playsinline", "true");
+          video.setAttribute("autoplay", "true");
+          video.muted = true;
+          video.style.cssText = "width:100%; height:auto; display:block;";
+          video.srcObject = stream;
+          containerEl.appendChild(video);
+          await video.play();
+          if (statusEl) statusEl.textContent = "Point camera at barcode…";
+
+          let lastCode = "", lastTime = 0;
+          const loop = async () => {
+            if (!nativeScanStream) return;
+            if (video.readyState >= 2) {
+              try {
+                const results = await detector.detect(video);
+                if (results.length) {
+                  const code = results[0].rawValue;
+                  const now = Date.now();
+                  if (code && (code !== lastCode || now - lastTime > 2000)) {
+                    lastCode = code; lastTime = now;
+                    haptic(15);
+                    onCode(code);
+                    if (!continuous) { await teardownScanner(); return; }
+                  }
+                }
+              } catch {}
+            }
+            nativeScanRAF = requestAnimationFrame(loop);
+          };
+          nativeScanRAF = requestAnimationFrame(loop);
+          return;
+        } catch {
+          // BarcodeDetector failed — fall through to ZXing
+          await teardownScanner();
+          containerEl.innerHTML = "";
+          containerEl.style.cssText = "position:relative; background:#000; border-radius:12px; overflow:hidden; min-height:220px;";
+        }
+      }
+
+      // ── Path 2: ZXing (iOS Safari, Firefox, anything without BarcodeDetector) ──
+      if (statusEl) statusEl.textContent = "Loading scanner…";
+      if (!window.ZXing) {
+        await loadScript("https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js");
+      }
+      const hints = new Map([
+        [ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+          ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
+          ZXing.BarcodeFormat.UPC_A,  ZXing.BarcodeFormat.UPC_E,
+          ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39, ZXing.BarcodeFormat.ITF,
+        ]],
+        [ZXing.DecodeHintType.TRY_HARDER, true],
+      ]);
+      const reader = new ZXing.BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 200 });
+      scannerReader = reader;
+
+      const video = document.createElement("video");
+      video.setAttribute("playsinline", "true");
+      video.muted = true;
+      video.style.cssText = "width:100%; height:auto; display:block;";
+      containerEl.appendChild(video);
+
+      // Pick rear camera by label (critical for iOS where default may be front)
+      let deviceId;
+      try {
+        const devices = await reader.listVideoInputDevices();
+        const back = devices.find(d => /back|rear|environment/i.test(d.label));
+        deviceId = back?.deviceId || (devices.length > 1 ? devices[devices.length - 1].deviceId : undefined);
+      } catch {}
+
+      if (statusEl) statusEl.textContent = "Point camera at barcode…";
+      let lastCode = "", lastTime = 0;
+      scannerControls = await reader.decodeFromVideoDevice(deviceId, video, (result) => {
+        if (!result) return;
+        const code = result.getText();
+        const now = Date.now();
+        if (code && (code !== lastCode || now - lastTime > 2000)) {
+          lastCode = code; lastTime = now;
+          haptic(15);
+          onCode(code);
+          if (!continuous && scannerControls) {
+            try { scannerControls.stop(); } catch {}
+            scannerControls = null;
+          }
+        }
+      });
+    }
+
+    async function teardownScanner() {
+      if (nativeScanRAF)   { cancelAnimationFrame(nativeScanRAF); nativeScanRAF = null; }
+      if (nativeScanStream){ nativeScanStream.getTracks().forEach(t => t.stop()); nativeScanStream = null; }
+      if (scannerControls) { try { scannerControls.stop(); } catch {}; scannerControls = null; }
+      if (scannerReader)   { try { scannerReader.reset(); } catch {};  scannerReader = null; }
+    }
+
+    // ── Single-item barcode scanner (used by the main barcode modal) ────────────
 
     async function openBarcodeScanner() {
       showModal("barcodeModal");
       const statusEl = document.getElementById("barcodeStatus");
-      statusEl.textContent = "Loading scanner…";
+      const box = document.getElementById("barcodeReaderBox");
       try {
-        if (!window.Quagga) {
-          await loadScript("https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.7.3/dist/quagga.min.js");
-        }
-        const box = document.getElementById("barcodeReaderBox");
-        box.innerHTML = "";
-        // Give Quagga a video + canvas container
-        box.style.cssText = "position:relative; background:#000; border-radius:12px; overflow:hidden; min-height:220px;";
-
-        Quagga.init({
-          inputStream: {
-            type: "LiveStream",
-            target: box,
-            constraints: {
-              facingMode: "environment",
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-          },
-          decoder: {
-            readers: ["ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader", "code_128_reader", "code_39_reader"],
-            multiple: false,
-          },
-          locate: true,
-          numOfWorkers: 0, // required for iOS Safari (no SharedArrayBuffer)
-          frequency: 10,
-        }, (err) => {
-          if (err) {
-            statusEl.innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(err.message || String(err))}</span>`;
-            return;
-          }
-          Quagga.start();
-          quaggaRunning = true;
-          statusEl.textContent = "Point camera at barcode…";
-        });
-
-        Quagga.offDetected(); // clear any old listeners
-        Quagga.onDetected((result) => {
-          const code = result?.codeResult?.code;
-          if (!code) return;
-          // Require at least 2 consistent reads to avoid false positives
-          closeBarcodeScanner();
+        await initScanner(box, statusEl, (code) => {
+          hideModal("barcodeModal");
           onBarcodeDecoded(code);
-        });
-
+        }, { continuous: false });
       } catch (err) {
-        statusEl.innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(err.message)}</span>`;
+        statusEl.innerHTML = `<span style="color:var(--red);">Camera error: ${escapeHtml(err.message || String(err))}</span>`;
       }
     }
 
     async function closeBarcodeScanner() {
-      if (quaggaRunning) {
-        try { Quagga.stop(); } catch {}
-        quaggaRunning = false;
-      }
+      await teardownScanner();
       hideModal("barcodeModal");
     }
 
@@ -3578,7 +3666,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     // ─── BATCH SCAN ──────────────────────────────────────────────────────────────
 
     let batchItems = [];
-    let batchQuaggaRunning = false;
     let batchAreaId = "";
     let batchSectionId = "";
     let batchLastScan = {}; // debounce: { upc: timestamp }
@@ -3615,46 +3702,17 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       document.getElementById("bsScannedList").innerHTML = "";
       document.getElementById("bsStep1").style.display = "none";
       document.getElementById("bsStep2").style.display = "";
-      document.getElementById("bsScanStatus").textContent = "Loading scanner…";
+      const box = document.getElementById("bsScannerBox");
+      const statusEl = document.getElementById("bsScanStatus");
       try {
-        if (!window.Quagga) {
-          await loadScript("https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.7.3/dist/quagga.min.js");
-        }
-        const box = document.getElementById("bsScannerBox");
-        box.innerHTML = "";
-        Quagga.init({
-          inputStream: {
-            type: "LiveStream",
-            target: box,
-            constraints: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
-          },
-          decoder: {
-            readers: ["ean_reader","ean_8_reader","upc_reader","upc_e_reader","code_128_reader","code_39_reader"],
-            multiple: false,
-          },
-          locate: true,
-          numOfWorkers: 0,
-          frequency: 10,
-        }, (err) => {
-          if (err) {
-            document.getElementById("bsScanStatus").innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(String(err))}</span>`;
-            return;
-          }
-          Quagga.start();
-          batchQuaggaRunning = true;
-          document.getElementById("bsScanStatus").textContent = "Point camera at a barcode…";
-        });
-        Quagga.offDetected();
-        Quagga.onDetected((result) => {
-          const code = result?.codeResult?.code;
-          if (!code) return;
+        await initScanner(box, statusEl, (code) => {
           const now = Date.now();
-          if (batchLastScan[code] && now - batchLastScan[code] < 2500) return; // debounce
+          if (batchLastScan[code] && now - batchLastScan[code] < 2500) return;
           batchLastScan[code] = now;
           addBatchItem(code);
-        });
+        }, { continuous: true });
       } catch (err) {
-        document.getElementById("bsScanStatus").innerHTML = `<span style="color:var(--red);">Error: ${escapeHtml(err.message)}</span>`;
+        statusEl.innerHTML = `<span style="color:var(--red);">Camera error: ${escapeHtml(err.message || String(err))}</span>`;
       }
     }
 
@@ -3756,15 +3814,8 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       });
     }
 
-    function stopBatchQuagga() {
-      if (batchQuaggaRunning) {
-        try { Quagga.stop(); } catch {}
-        batchQuaggaRunning = false;
-      }
-    }
-
     function showBatchReview() {
-      stopBatchQuagga();
+      teardownScanner();
       if (!batchItems.length) { showToast("No items scanned yet — point camera at barcodes first."); return; }
       const layout = getLayout();
       const area = layout.find(a => a.id === batchAreaId);
@@ -3860,7 +3911,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     }
 
     function closeBatchScan() {
-      stopBatchQuagga();
+      teardownScanner();
       hideModal("batchScanModal");
       batchItems = [];
     }
@@ -4985,36 +5036,17 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       // Go back to scanning — restart camera but keep items already scanned
       document.getElementById("bsStep3").style.display = "none";
       document.getElementById("bsStep2").style.display = "";
-      // Re-init Quagga into the scanner box (items array is preserved)
-      (async () => {
-        document.getElementById("bsScanStatus").textContent = "Restarting camera…";
-        try {
-          if (!window.Quagga) await loadScript("https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.7.3/dist/quagga.min.js");
-          const box = document.getElementById("bsScannerBox");
-          box.innerHTML = "";
-          Quagga.init({
-            inputStream: { type: "LiveStream", target: box, constraints: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } },
-            decoder: { readers: ["ean_reader","ean_8_reader","upc_reader","upc_e_reader","code_128_reader","code_39_reader"], multiple: false },
-            locate: true, numOfWorkers: 0, frequency: 10,
-          }, (err) => {
-            if (err) { document.getElementById("bsScanStatus").innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(String(err))}</span>`; return; }
-            Quagga.start();
-            batchQuaggaRunning = true;
-            document.getElementById("bsScanStatus").textContent = "Point camera at a barcode…";
-          });
-          Quagga.offDetected();
-          Quagga.onDetected((result) => {
-            const code = result?.codeResult?.code;
-            if (!code) return;
-            const now = Date.now();
-            if (batchLastScan[code] && now - batchLastScan[code] < 2500) return;
-            batchLastScan[code] = now;
-            addBatchItem(code);
-          });
-        } catch (err) {
-          document.getElementById("bsScanStatus").innerHTML = `<span style="color:var(--red);">Error: ${escapeHtml(err.message)}</span>`;
-        }
-      })();
+      const bsBox = document.getElementById("bsScannerBox");
+      const bsStatus = document.getElementById("bsScanStatus");
+      bsStatus.textContent = "Restarting camera…";
+      initScanner(bsBox, bsStatus, (code) => {
+        const now = Date.now();
+        if (batchLastScan[code] && now - batchLastScan[code] < 2500) return;
+        batchLastScan[code] = now;
+        addBatchItem(code);
+      }, { continuous: true }).catch(err => {
+        bsStatus.innerHTML = `<span style="color:var(--red);">Error: ${escapeHtml(err.message)}</span>`;
+      });
     });
     document.getElementById("bsSaveAllBtn").addEventListener("click", saveAllBatch);
 
