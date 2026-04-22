@@ -1055,15 +1055,42 @@
     <!-- SCAN VIEW -->
     <div class="view" id="viewScan">
       <div class="info-banner">
-        <strong>Tip:</strong> Take a clear photo of one shelf at a time. Once you add a Claude API key, the app will auto-identify items. For now, type them in after capturing.
+        <strong>Tip:</strong> For best matching, snap one item up close. Claude reads the label. Tap 📷 Scan barcode to lock in the exact product.
       </div>
-      <label class="scan-dropzone" for="scanInput">
-        <span class="big">📷</span>
-        <h3>Snap your pantry or fridge</h3>
-        <p>Tap here — opens your camera</p>
-        <input id="scanInput" type="file" accept="image/*" capture="environment" />
-      </label>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+        <label class="scan-dropzone" for="scanOneInput" style="padding: 18px 10px;">
+          <span class="big">📸</span>
+          <h3 style="margin:4px 0 2px; font-size:15px;">One item</h3>
+          <p style="font-size:11px; margin:0;">Close-up of a label</p>
+          <input id="scanOneInput" type="file" accept="image/*" capture="environment" />
+        </label>
+        <label class="scan-dropzone" for="scanInput" style="padding: 18px 10px;">
+          <span class="big">🗄️</span>
+          <h3 style="margin:4px 0 2px; font-size:15px;">Whole shelf</h3>
+          <p style="font-size:11px; margin:0;">Bulk capture</p>
+          <input id="scanInput" type="file" accept="image/*" capture="environment" />
+        </label>
+      </div>
+      <button class="btn btn-secondary" id="scanBarcodeBtn" style="width:100%; margin-bottom:12px;">📷 Scan barcode only</button>
       <div id="scanResult"></div>
+    </div>
+
+    <!-- Barcode scanner modal -->
+    <div class="modal-backdrop" id="barcodeModal">
+      <div class="modal">
+        <button class="close-x" data-close="barcodeModal">×</button>
+        <h2>📷 Scan barcode</h2>
+        <p class="subtitle">Point at the UPC. Good lighting helps.</p>
+        <div id="barcodeVideoWrap" style="position:relative; background:#000; border-radius:12px; overflow:hidden; aspect-ratio: 4 / 3;">
+          <video id="barcodeVideo" style="width:100%; height:100%; object-fit:cover;" playsinline muted></video>
+          <div style="position:absolute; inset:20%; border:2px solid rgba(255,255,255,0.8); border-radius:8px; pointer-events:none;"></div>
+        </div>
+        <p id="barcodeStatus" style="text-align:center; color:var(--muted); font-size:13px; margin:10px 0 0;">Loading scanner…</p>
+        <div class="btn-row" style="margin-top: 12px;">
+          <button class="btn btn-secondary" id="barcodeCancel">Cancel</button>
+          <button class="btn btn-green" id="barcodeManual">Type UPC instead</button>
+        </div>
+      </div>
     </div>
 
     <!-- ASK VIEW -->
@@ -1874,6 +1901,7 @@
         if (!item.name) item.name = oldKey;
         if (item.brand == null) item.brand = "";
         if (!("canonicalName" in item)) item.canonicalName = normalize(item.name);
+        if (!("upc" in item)) item.upc = "";
         const newKey = inventoryKey(item);
         newInv[newKey] = item;
       });
@@ -1909,6 +1937,11 @@
     // Inventory key: brand-aware, so Rao's marinara and Kirkland marinara
     // are separate entries. No-brand items key by name alone.
     function inventoryKey(item) {
+      // UPC (when present) is the most stable product identifier.
+      if (item && item.upc) {
+        const u = String(item.upc).replace(/\D/g, "");
+        if (u) return "upc:" + u;
+      }
       const n = normalize(item.canonicalName || item.name || "");
       const b = item.brand ? "|" + normalize(item.brand) : "";
       return n + b;
@@ -2686,6 +2719,7 @@
         unit: document.getElementById("imUnit").value,
         loc: document.getElementById("imLoc").value,
         expiry,
+        upc: (prev && prev.upc) ? prev.upc : "",
       };
       const newKey = inventoryKey(item);
       if (editingItemKey && editingItemKey !== newKey) {
@@ -2777,7 +2811,417 @@
       });
     }
 
-    // In-memory list of items being reviewed in the Scan tab.
+    // ============================================================
+    // PHASE 2: Single-item close-up capture, barcode scan, UPC lookup
+    // ============================================================
+
+    // Draft state for the one-item close-up review card.
+    let closeUpDraft = null;
+    // Barcode scanner state (zxing controls)
+    let barcodeControls = null;
+
+    async function handleCloseUpPhoto(file) {
+      const scanEl = document.getElementById("scanResult");
+      scanEl.innerHTML = `<div class="card" style="text-align:center;"><p style="margin:0;">📸 Processing photo…</p></div>`;
+      try {
+        const rawDataUrl = await blobToDataUrl(file);
+        const jpegDataUrl = await normalizeImageToJpeg(rawDataUrl);
+        renderCloseUpReview(jpegDataUrl);
+      } catch (err) {
+        scanEl.innerHTML = `<div class="card" style="background:var(--red-light);"><p style="margin:0; color:var(--red);"><strong>Couldn't read that photo.</strong></p><p style="margin:6px 0 0; font-size:13px; color:var(--red);">${escapeHtml(err.message)}</p></div>`;
+      }
+    }
+
+    function renderCloseUpReview(dataUrl) {
+      const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
+      closeUpDraft = { dataUrl, name: "", brand: "", canonicalName: "", qty: null, unit: "", upc: "", loc: "pantry", size: "" };
+
+      const container = document.getElementById("scanResult");
+      container.innerHTML = `
+        <img class="preview-img" src="${dataUrl}" alt="Captured" />
+        <div class="card">
+          <h3 style="margin:0 0 4px;">Confirm this item</h3>
+          <p id="closeUpStatus" style="color:var(--muted); font-size:12px; margin:0 0 12px;">
+            ${hasKey ? "🔍 Claude is reading the label…" : "Add a Claude API key in Settings to auto-identify. For now, type the details."}
+          </p>
+          <div class="field">
+            <label>Name</label>
+            <input id="cuName" type="text" placeholder="e.g. marinara sauce" />
+          </div>
+          <div class="field">
+            <label>Brand</label>
+            <input id="cuBrand" type="text" placeholder="e.g. Rao's" />
+          </div>
+          <div class="field">
+            <label>Canonical name <span style="color:var(--muted); font-weight:400;">(for recipe matching — e.g. "marinara sauce" matches recipes that call for marinara)</span></label>
+            <input id="cuCanonical" type="text" placeholder="marinara sauce" />
+          </div>
+          <div class="field">
+            <label>Size on label</label>
+            <div class="row">
+              <input id="cuQty" type="number" step="0.25" min="0" placeholder="24" />
+              <select id="cuUnit">
+                <option value="">—</option>
+                <option>oz</option><option>fl oz</option><option>lb</option><option>g</option><option>kg</option>
+                <option>cup</option><option>tbsp</option><option>tsp</option>
+                <option>piece</option><option>jar</option><option>bottle</option><option>can</option><option>bag</option><option>box</option><option>packet</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>UPC <span style="color:var(--muted); font-weight:400;">(unique product code)</span></label>
+            <div class="row">
+              <input id="cuUpc" type="text" inputmode="numeric" placeholder="e.g. 041129102244" style="flex:1;" />
+              <button class="btn btn-secondary" id="cuScanBarcode" style="flex:0 0 auto;">📷 Scan</button>
+            </div>
+            <p id="cuUpcHint" style="color:var(--muted); font-size:11px; margin:4px 0 0;"></p>
+          </div>
+          <div class="field">
+            <label>Where does it go?</label>
+            <select id="cuLoc">
+              <option value="pantry">Pantry</option>
+              <option value="fridge">Fridge</option>
+              <option value="freezer">Freezer</option>
+              <option value="counter">Counter</option>
+            </select>
+          </div>
+          <div id="cuDupeWarn"></div>
+          <button class="btn btn-green" id="cuSave" style="width:100%;">Save to inventory</button>
+        </div>`;
+
+      // Wire inputs → draft
+      const syncField = (id, key) => {
+        document.getElementById(id).addEventListener("input", (e) => {
+          closeUpDraft[key] = e.target.value;
+          if (key === "name" && !closeUpDraft.canonicalName) {
+            document.getElementById("cuCanonical").value = normalize(e.target.value);
+            closeUpDraft.canonicalName = normalize(e.target.value);
+          }
+        });
+      };
+      syncField("cuName", "name");
+      syncField("cuBrand", "brand");
+      syncField("cuCanonical", "canonicalName");
+      syncField("cuUpc", "upc");
+      document.getElementById("cuQty").addEventListener("input", (e) => { closeUpDraft.qty = e.target.value ? Number(e.target.value) : null; });
+      document.getElementById("cuUnit").addEventListener("change", (e) => { closeUpDraft.unit = e.target.value; });
+      document.getElementById("cuLoc").addEventListener("change", (e) => { closeUpDraft.loc = e.target.value; });
+
+      document.getElementById("cuScanBarcode").addEventListener("click", openBarcodeScanner);
+      document.getElementById("cuSave").addEventListener("click", saveCloseUpItem);
+
+      if (hasKey) {
+        analyzeOneItemWithClaude(dataUrl).then((info) => {
+          applyCloseUpInfo(info, "Claude");
+          document.getElementById("closeUpStatus").textContent = "✓ Claude filled in what it could read. Fix anything wrong, then save.";
+        }).catch((err) => {
+          document.getElementById("closeUpStatus").innerHTML = `<span style="color:var(--red);">Scan failed: ${escapeHtml(err.message)}.</span> Fill in manually below.`;
+        });
+      }
+    }
+
+    function applyCloseUpInfo(info, sourceLabel) {
+      if (!info || !closeUpDraft) return;
+      const setIfEmpty = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (!el.value && val != null && val !== "") {
+          el.value = val;
+          el.dispatchEvent(new Event("input"));
+          el.dispatchEvent(new Event("change"));
+        }
+      };
+      setIfEmpty("cuName", info.name);
+      setIfEmpty("cuBrand", info.brand);
+      setIfEmpty("cuCanonical", info.canonicalName || (info.name ? normalize(info.name) : ""));
+      if (info.qty != null) setIfEmpty("cuQty", info.qty);
+      setIfEmpty("cuUnit", info.unit);
+      if (info.upc) setIfEmpty("cuUpc", info.upc);
+      const hint = document.getElementById("cuUpcHint");
+      if (hint && info.upc && sourceLabel) hint.textContent = `UPC from ${sourceLabel}`;
+    }
+
+    async function analyzeOneItemWithClaude(dataUrl) {
+      const key = (state.settings.claudeKey || "").trim();
+      if (!key) throw new Error("No API key set");
+      const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
+      if (!match) throw new Error("Bad image format");
+      const mediaType = match[1];
+      const b64 = match[2];
+      const prompt = [
+        "This is a close-up photo of ONE kitchen item. Read the label carefully.",
+        "",
+        "Return a single JSON object with these fields:",
+        '- "name": specific product name from the label, lowercase (e.g. "marinara sauce", "sea salt", "rice vinegar")',
+        '- "brand": brand as printed on the label (e.g. "Rao\'s Homemade", "Diamond Crystal"); empty string "" if unclear',
+        '- "canonicalName": the generic ingredient name that recipes would use, lowercase (e.g. "marinara sauce", "salt", "rice vinegar")',
+        '- "qty": numeric net weight/volume from the label (e.g. 24 for "24 oz"); null if unreadable',
+        '- "unit": unit on the label — one of: oz, fl oz, lb, g, kg, cup, piece, jar, bottle, can, bag, box, packet; empty string "" if unreadable',
+        '- "upc": 12- or 13-digit UPC/EAN barcode if visible; empty string "" otherwise',
+        "",
+        "Rules:",
+        "- Do NOT guess values you can't actually see on the label.",
+        "- canonicalName should be generic so recipes match. e.g. \"Rao's Homemade Marinara\" → canonicalName \"marinara sauce\".",
+        '- Return ONLY the JSON object, no prose, no markdown fences.',
+        '',
+        'Example: {"name":"marinara sauce","brand":"Rao\'s Homemade","canonicalName":"marinara sauce","qty":24,"unit":"oz","upc":"715365110012"}',
+      ].join("\n");
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5",
+          max_tokens: 600,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
+              { type: "text", text: prompt },
+            ],
+          }],
+        }),
+      });
+      if (!res.ok) {
+        let detail = "";
+        try { const j = await res.json(); detail = j.error?.message || ""; } catch {}
+        throw new Error(`Claude API ${res.status}${detail ? ": " + detail : ""}`);
+      }
+      const data = await res.json();
+      const text = (data.content || []).map(c => c.text || "").join("\n");
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Claude didn't return structured data");
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        name: String(parsed.name || "").trim(),
+        brand: String(parsed.brand || "").trim(),
+        canonicalName: String(parsed.canonicalName || "").trim().toLowerCase(),
+        qty: (parsed.qty == null || parsed.qty === "" || isNaN(Number(parsed.qty))) ? null : Number(parsed.qty),
+        unit: String(parsed.unit || "").trim(),
+        upc: String(parsed.upc || "").trim().replace(/\D/g, ""),
+      };
+    }
+
+    // ---- OpenFoodFacts lookup ----
+    async function lookupUpc(upc) {
+      const cleaned = String(upc || "").trim().replace(/\D/g, "");
+      if (!cleaned || cleaned.length < 8) throw new Error("UPC must be 8–14 digits");
+      const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cleaned)}.json?fields=product_name,brands,quantity,product_quantity,product_quantity_unit,categories_tags,generic_name`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`OpenFoodFacts ${res.status}`);
+      const data = await res.json();
+      if (data.status !== 1 || !data.product) return null;
+      const p = data.product;
+      // Parse size from "quantity" string like "24 oz" or "500 g"
+      let qty = null, unit = "";
+      if (p.product_quantity && p.product_quantity_unit) {
+        qty = Number(p.product_quantity);
+        unit = p.product_quantity_unit.toLowerCase();
+      } else if (p.quantity) {
+        const m = String(p.quantity).match(/([\d.]+)\s*([a-zA-Z]+)/);
+        if (m) { qty = Number(m[1]); unit = m[2].toLowerCase(); }
+      }
+      const name = (p.generic_name || p.product_name || "").trim();
+      const brand = (p.brands || "").split(",")[0].trim();
+      return {
+        name: name.toLowerCase(),
+        brand,
+        canonicalName: normalize(name),
+        qty,
+        unit,
+        upc: cleaned,
+      };
+    }
+
+    // ---- Barcode scanner (@zxing/browser, CDN on demand) ----
+    async function openBarcodeScanner() {
+      showModal("barcodeModal");
+      const statusEl = document.getElementById("barcodeStatus");
+      statusEl.textContent = "Loading scanner…";
+      try {
+        if (!window.ZXingBrowser) {
+          await loadScript("https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/zxing-browser.min.js");
+        }
+        const BrowserMultiFormatReader = window.ZXingBrowser?.BrowserMultiFormatReader;
+        if (!BrowserMultiFormatReader) throw new Error("Scanner library failed to load");
+        const reader = new BrowserMultiFormatReader();
+        const video = document.getElementById("barcodeVideo");
+        statusEl.textContent = "Point at barcode…";
+        barcodeControls = await reader.decodeFromVideoDevice(undefined, video, (result, err, controls) => {
+          if (result) {
+            const code = result.getText();
+            controls.stop();
+            barcodeControls = null;
+            onBarcodeDecoded(code);
+          }
+        });
+      } catch (err) {
+        statusEl.innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(err.message)}</span>`;
+      }
+    }
+
+    function closeBarcodeScanner() {
+      if (barcodeControls) {
+        try { barcodeControls.stop(); } catch {}
+        barcodeControls = null;
+      }
+      hideModal("barcodeModal");
+    }
+
+    async function onBarcodeDecoded(code) {
+      const statusEl = document.getElementById("barcodeStatus");
+      statusEl.textContent = `Got ${code}. Looking up…`;
+      haptic(20);
+      // If close-up flow is active, set the UPC field immediately
+      if (closeUpDraft) {
+        const upcEl = document.getElementById("cuUpc");
+        if (upcEl) { upcEl.value = code; upcEl.dispatchEvent(new Event("input")); }
+      }
+      try {
+        const info = await lookupUpc(code);
+        if (info) {
+          applyCloseUpInfo(info, "OpenFoodFacts");
+          const hint = document.getElementById("cuUpcHint");
+          if (hint) hint.textContent = `✓ Matched ${info.brand || "product"} via OpenFoodFacts`;
+          showToast("Product found via OpenFoodFacts");
+        } else {
+          showToast("UPC captured — no catalog match found");
+          const hint = document.getElementById("cuUpcHint");
+          if (hint) hint.textContent = `UPC ${code} — not in OpenFoodFacts, fill in details manually`;
+        }
+      } catch (err) {
+        showToast(`Lookup failed: ${err.message}`);
+      } finally {
+        closeBarcodeScanner();
+      }
+    }
+
+    async function handleBarcodeOnly() {
+      // Fires when the user taps "Scan barcode only" on the Scan tab (no photo first).
+      // Opens the scanner. If a match is found, pre-fills a close-up review card.
+      closeUpDraft = { dataUrl: "", name: "", brand: "", canonicalName: "", qty: null, unit: "", upc: "", loc: "pantry", size: "" };
+      // Make sure the scan result area has a placeholder so applyCloseUpInfo has DOM to target
+      const container = document.getElementById("scanResult");
+      container.innerHTML = "";
+      // Open scanner; when a UPC is decoded, we'll render the review card
+      const origOnDecode = onBarcodeDecoded;
+      // Temporarily override to render review card first
+      window._pendingBarcodeFromScanTab = true;
+      openBarcodeScanner();
+    }
+
+    function saveCloseUpItem() {
+      if (!closeUpDraft) return;
+      const nameEl = document.getElementById("cuName");
+      const brandEl = document.getElementById("cuBrand");
+      const canonicalEl = document.getElementById("cuCanonical");
+      const qtyEl = document.getElementById("cuQty");
+      const unitEl = document.getElementById("cuUnit");
+      const upcEl = document.getElementById("cuUpc");
+      const locEl = document.getElementById("cuLoc");
+      const name = (nameEl.value || "").trim();
+      if (!name) { nameEl.focus(); alert("Name is required."); return; }
+      const upc = (upcEl.value || "").replace(/\D/g, "");
+      const canonical = (canonicalEl.value || "").trim().toLowerCase() || normalize(name);
+
+      const item = {
+        name,
+        brand: (brandEl.value || "").trim(),
+        canonicalName: canonical,
+        qty: qtyEl.value ? Number(qtyEl.value) : 1,
+        unit: unitEl.value || "",
+        loc: locEl.value || "pantry",
+        expiry: null,
+        upc: upc || "",
+      };
+
+      // Dupe detection: UPC match OR canonicalName+brand match
+      const dupe = findInventoryDupe(item);
+      if (dupe) {
+        const warnEl = document.getElementById("cuDupeWarn");
+        const reason = dupe.upc && dupe.upc === item.upc
+          ? `Same UPC already in your ${dupe.loc || "inventory"}`
+          : `Same item/brand already in your ${dupe.loc || "inventory"}`;
+        warnEl.innerHTML = `
+          <div class="dupe-warn">
+            <strong>⚠️ Already have this?</strong><br/>
+            ${escapeHtml(reason)}. Current qty: ${formatQty(dupe.qty) || "0"}${dupe.unit ? " " + escapeHtml(dupe.unit) : ""}.
+            <div class="dupe-actions">
+              <button class="dupe-cancel" data-act="cancel">Cancel</button>
+              <button class="dupe-add" data-act="increment">+1 to existing</button>
+              <button class="dupe-add" data-act="add" style="background:var(--green); color:white;">Add as new</button>
+            </div>
+          </div>`;
+        warnEl.querySelector('[data-act="cancel"]').addEventListener("click", () => { warnEl.innerHTML = ""; });
+        warnEl.querySelector('[data-act="increment"]').addEventListener("click", () => {
+          dupe.qty = (dupe.qty || 0) + (item.qty || 1);
+          if (item.upc && !dupe.upc) dupe.upc = item.upc;
+          saveState(); warnEl.innerHTML = "";
+          finishCloseUpSave(`Bumped ${dupe.name} to ${formatQty(dupe.qty)}${dupe.unit ? " " + dupe.unit : ""}`);
+        });
+        warnEl.querySelector('[data-act="add"]').addEventListener("click", () => {
+          warnEl.innerHTML = "";
+          commitCloseUp(item, true);
+        });
+        return;
+      }
+
+      commitCloseUp(item, false);
+    }
+
+    function commitCloseUp(item, allowDupe) {
+      const key = inventoryKey(item);
+      state.inventory[key] = item;
+      saveState();
+      // If this product was on the shopping list (by UPC or canonical+brand), remove it
+      const slIdx = (state.shoppingList || []).findIndex(s => {
+        if (s.checked) return false;
+        if (item.upc && s.upc && s.upc === item.upc) return true;
+        return normalize(s.canonicalName || s.name) === item.canonicalName && normalize(s.brand || "") === normalize(item.brand || "");
+      });
+      if (slIdx >= 0) state.shoppingList.splice(slIdx, 1);
+      saveState();
+      finishCloseUpSave(`Added ${item.name}${item.brand ? " (" + item.brand + ")" : ""} to ${item.loc}`);
+    }
+
+    function finishCloseUpSave(msg) {
+      closeUpDraft = null;
+      const container = document.getElementById("scanResult");
+      container.innerHTML = `
+        <div class="card empty-state" style="background:var(--green-light);">
+          <span class="big">✅</span>
+          ${escapeHtml(msg)}.<br/>
+          <small>Snap another item above, or check the Inventory tab.</small>
+        </div>`;
+      renderInventory();
+      if (typeof renderShoppingList === "function") renderShoppingList();
+      haptic(15);
+    }
+
+    function findInventoryDupe(item) {
+      const entries = Object.values(state.inventory || {});
+      // 1. UPC-exact match
+      if (item.upc) {
+        const byUpc = entries.find(i => i.upc && i.upc === item.upc);
+        if (byUpc) return byUpc;
+      }
+      // 2. canonicalName + brand match
+      const cn = normalize(item.canonicalName || item.name);
+      const bn = normalize(item.brand || "");
+      return entries.find(i => {
+        const icn = normalize(i.canonicalName || i.name);
+        const ibn = normalize(i.brand || "");
+        return icn === cn && ibn === bn;
+      });
+    }
+
+    // ---- END Phase 2 additions ----
+
+    // In-memory list of items being reviewed in the Scan tab (bulk / whole-shelf mode).
     // Shape per item: { included: bool, name, brand, qty, unit }
     let scanDraftItems = [];
 
@@ -3710,7 +4154,30 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     document.getElementById("crSave").addEventListener("click", saveCustom);
     document.getElementById("crCancel").addEventListener("click", () => hideModal("customModal"));
 
-    // Scan
+    // Scan — close-up (one item, Phase 2)
+    document.getElementById("scanOneInput").addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) { return; }
+      await handleCloseUpPhoto(file);
+      e.target.value = "";
+    });
+
+    // Scan — standalone barcode button on the Scan tab
+    document.getElementById("scanBarcodeBtn").addEventListener("click", () => {
+      // Render an empty close-up review card so the decoded UPC has somewhere to land
+      renderCloseUpReview("");
+      openBarcodeScanner();
+    });
+
+    // Barcode modal cancel / manual entry
+    document.getElementById("barcodeCancel").addEventListener("click", closeBarcodeScanner);
+    document.getElementById("barcodeManual").addEventListener("click", () => {
+      closeBarcodeScanner();
+      const code = prompt("Enter UPC (8–14 digits):");
+      if (code && /\d/.test(code)) onBarcodeDecoded(code.replace(/\D/g, ""));
+    });
+
+    // Scan — bulk / whole-shelf (legacy)
     document.getElementById("scanInput").addEventListener("change", async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;

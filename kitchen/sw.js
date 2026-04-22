@@ -1,7 +1,7 @@
 // My Kitchen - Service Worker
 // Cache-first for the app shell so it loads offline.
 
-const CACHE_VERSION = "my-kitchen-v8";
+const CACHE_VERSION = "my-kitchen-v9";
 const SHELL = [
   "./",
   "./index.html",
