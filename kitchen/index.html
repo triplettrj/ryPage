@@ -146,7 +146,7 @@
     main {
       max-width: 640px;
       margin: 0 auto;
-      padding: 12px 12px 20px;
+      padding: 12px 12px calc(88px + env(safe-area-inset-bottom));
     }
     .view { display: none; }
     .view.active { display: block; animation: fadeIn 0.15s; }
@@ -1508,6 +1508,7 @@
           <button class="btn btn-secondary" id="shopCopyList" style="flex:1;">📋 Copy list</button>
         </div>
         <button class="btn btn-secondary" id="shopClearChecked">Clear checked items</button>
+        <button class="btn btn-secondary" id="shopClearAll" style="color:var(--red);">Clear entire list</button>
       </div>
     </div>
   </div>
@@ -5218,6 +5219,17 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       catch (e) { alert(text); }
     });
     document.getElementById("shopClearChecked").addEventListener("click", clearCheckedShopItems);
+    document.getElementById("shopClearAll").addEventListener("click", () => {
+      const all = state.shoppingList || [];
+      if (!all.length) { showToast("List is already empty"); return; }
+      if (!confirm(`Clear all ${all.length} item${all.length !== 1 ? "s" : ""} from the shopping list?`)) return;
+      state.shoppingList = [];
+      saveState(); renderShoppingList();
+      showToast("Shopping list cleared", "Undo", () => {
+        state.shoppingList = all;
+        saveState(); renderShoppingList();
+      });
+    });
 
     document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => hideModal(b.dataset.close)));
     document.querySelectorAll(".modal-backdrop").forEach(m => {
