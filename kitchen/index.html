@@ -10,6 +10,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <!-- Capacitor bridge — injected automatically in native builds, no-op on web -->
+  <script>window.Capacitor = window.Capacitor || {};</script>
+  <!-- Firebase SDK (compat) — loaded async so it never blocks first paint -->
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <meta name="theme-color" content="#2e7d32" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0d2f0e" media="(prefers-color-scheme: dark)" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -19,10 +25,6 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%B3%3C/text%3E%3C/svg%3E" />
   <link rel="apple-touch-icon" href="icon.svg" />
   <title>My Kitchen</title>
-  <!-- Firebase SDK (compat) — loaded async so it never blocks first paint -->
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
     :root {
       --green: #2e7d32;
@@ -1149,9 +1151,87 @@
       font-weight: 700; margin-left: 12px;
       cursor: pointer; font-size: 13px;
     }
+
+    /* ── Native barcode scanner overlay (Capacitor only) ─────────────────────── */
+    body.cap-scanning,
+    body.cap-scanning html { background: transparent !important; }
+    body.cap-scanning > *:not(#nativeScanOverlay) { visibility: hidden; }
+    body.cap-scanning #nativeScanOverlay { visibility: visible; display: flex !important; }
+
+    #nativeScanOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: transparent;
+    }
+    #nativeScanOverlay.active { display: flex; }
+
+    .native-scan-frame {
+      width: 260px;
+      height: 180px;
+      border: 3px solid white;
+      border-radius: 18px;
+      box-shadow: 0 0 0 4000px rgba(0,0,0,0.45);
+      position: relative;
+    }
+    .native-scan-frame::before,
+    .native-scan-frame::after {
+      content: "";
+      position: absolute;
+      width: 30px; height: 30px;
+      border-color: var(--green);
+      border-style: solid;
+    }
+    .native-scan-frame::before { top: -3px; left: -3px; border-width: 4px 0 0 4px; border-radius: 14px 0 0 0; }
+    .native-scan-frame::after  { bottom: -3px; right: -3px; border-width: 0 4px 4px 0; border-radius: 0 0 14px 0; }
+
+    .native-scan-line {
+      position: absolute;
+      left: 10px; right: 10px;
+      height: 2px;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: scanLine 2s ease-in-out infinite;
+    }
+    @keyframes scanLine {
+      0%, 100% { top: 10px; }
+      50% { top: calc(100% - 12px); }
+    }
+    .native-scan-label {
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 20px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+    .native-scan-cancel {
+      margin-top: 24px;
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.5);
+      color: white;
+      border-radius: 30px;
+      padding: 10px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
   </style>
 </head>
 <body>
+  <!-- Native barcode scanner overlay (Capacitor only — transparent over camera) -->
+  <div id="nativeScanOverlay">
+    <div class="native-scan-frame">
+      <div class="native-scan-line"></div>
+    </div>
+    <p class="native-scan-label">Point at a barcode</p>
+    <button class="native-scan-cancel" id="nativeScanCancelBtn">Cancel</button>
+  </div>
+
   <!-- Update banner — shown once per version, dismissed on tap -->
   <div id="updateBanner" style="display:none; background:#1565c0; color:white; padding:10px 16px; font-size:13px; align-items:center; justify-content:space-between; gap:8px;">
     <span>✨ <strong>Update:</strong> Shopping list is now your cart — order on Instacart, print, or copy from there!</span>
@@ -1676,13 +1756,6 @@
           </div>
           <span style="color: var(--green); font-size: 18px;">⬆</span>
         </div>
-        <div class="settings-row" id="loadDemoBtn" style="cursor:pointer;">
-          <div class="label-wrap">
-            <div style="color: var(--blue);">Load demo inventory</div>
-            <div class="label-sub">Fills pantry with sample items to preview Cook Now &amp; Missing views</div>
-          </div>
-          <span style="color: var(--blue); font-size: 18px;">🧪</span>
-        </div>
         <div class="settings-row" id="resetBtn" style="cursor:pointer;">
           <div class="label-wrap">
             <div style="color: var(--red);">Reset all data</div>
@@ -2048,8 +2121,6 @@
       { name: "Carrots",           qty: 5,   unit: "",        loc: "fridge" },
       { name: "Ground turkey",     qty: 1,   unit: "lb",      loc: "freezer" },
       { name: "Frozen peas",       qty: 1,   unit: "bag",     loc: "freezer" },
-      // Extra items so Chicken Parmesan shows exactly 4 missing
-      { name: "Parmesan cheese",   qty: 1,   unit: "cup",     loc: "fridge" },
     ];
 
     const LOCATION_META = {
@@ -2325,8 +2396,9 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           },
         },
       };
-      // Seed demo inventory for new users
-      SEED_INVENTORY.forEach(i => { seeded.inventory[inventoryKey(i)] = i; });
+      // Start empty — no seeded demo inventory.
+      // To re-enable demo data, uncomment:
+      // SEED_INVENTORY.forEach(i => { seeded.inventory[inventoryKey(i)] = i; });
       return seeded;
     }
     function loadState() {
@@ -2382,11 +2454,13 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         _fbAuth = firebase.auth();
         _fbDb   = firebase.firestore();
 
+        // Enable offline persistence (IndexedDB cache — app works without internet)
         _fbDb.enablePersistence({ synchronizeTabs: true }).catch(err => {
           if (err.code !== "failed-precondition" && err.code !== "unimplemented")
             console.warn("Firestore persistence:", err.code);
         });
 
+        // Watch auth state
         _fbAuth.onAuthStateChanged(user => {
           window._fbUser = user;
           updateAuthUI(user);
@@ -2411,7 +2485,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
 
     // Merge two shopping lists by item id.
     // Local items take priority (they may have been added offline/between syncs).
-    // Cloud-only items are appended so nothing from the cloud is lost either.
     function mergeShoppingLists(local, cloud) {
       const result = [...(local || [])];
       const localIds = new Set(result.map(i => i.id).filter(Boolean));
@@ -2421,6 +2494,8 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       return result;
     }
 
+    // Pull cloud state and merge with local — cloud wins on inventory/plan/list,
+    // local wins on settings (theme, claudeKey) and chat history (stays private).
     async function loadCloudState(uid) {
       if (!_fbDb) return;
       setSyncStatus("pending");
@@ -2434,18 +2509,20 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
             ...state,
             ...cloud,
             shoppingList: mergeShoppingLists(state.shoppingList, cloud.shoppingList),
-            settings: { ...cloud.settings, ...state.settings },
-            chatHistory: state.chatHistory,
+            settings: { ...cloud.settings, ...state.settings }, // local settings win (theme, claudeKey)
+            chatHistory: state.chatHistory,                       // keep chat local
           };
           state = migrateState(merged);
           saveState();
-          if (typeof renderInventory    === "function") renderInventory();
-          if (typeof renderCook         === "function") renderCook();
-          if (typeof renderPlan         === "function") renderPlan();
+          // Re-render all views with synced data
+          if (typeof renderInventory  === "function") renderInventory();
+          if (typeof renderCook       === "function") renderCook();
+          if (typeof renderPlan       === "function") renderPlan();
           if (typeof renderShoppingList === "function") renderShoppingList();
           updateShopBadge();
           setSyncStatus("synced");
         } else {
+          // First sign-in ever — push local data up to the cloud
           await syncToCloud();
         }
       } catch (e) {
@@ -2463,6 +2540,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     async function syncToCloud() {
       if (!_fbDb || !window._fbUser) return;
       try {
+        // Never store the Claude API key in the cloud
         const toSave = JSON.parse(JSON.stringify(state));
         if (toSave.settings) toSave.settings.claudeKey = "";
         toSave._syncedAt = firebase.firestore.FieldValue.serverTimestamp();
@@ -2498,9 +2576,10 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           : "👤";
         authBtn.title = user.displayName || user.email;
         if (syncEl) syncEl.style.display = "inline";
-        const av = document.getElementById("accountAvatar");
-        const nm = document.getElementById("accountName");
-        const em = document.getElementById("accountEmail");
+        // Populate account modal
+        const av  = document.getElementById("accountAvatar");
+        const nm  = document.getElementById("accountName");
+        const em  = document.getElementById("accountEmail");
         if (av) av.innerHTML = user.photoURL
           ? `<img src="${user.photoURL}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;" />`
           : "👤";
@@ -2514,7 +2593,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       }
     }
 
-    // Auth button wiring — deferred to load so modal HTML exists in DOM
+    // Wire auth button and sign-in / account modals — deferred so modal HTML exists
     window.addEventListener("load", () => {
       document.getElementById("authBtn").addEventListener("click", () => {
         if (window._fbUser) showModal("accountModal");
@@ -2862,7 +2941,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       });
     }
 
-    // Build a plain-text shopping list from unchecked items
     function buildShopListText() {
       return (state.shoppingList || [])
         .filter(s => !s.checked)
@@ -3077,7 +3155,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       const favSet = new Set(state.favorites);
       const favRecipes = ranked.filter(r => favSet.has(r.id));
       const cookNow = ranked.filter(r => r.ratio === 1 && !favSet.has(r.id));
-      // "Almost" = missing 1–4 ingredients (regardless of ratio — even a 20-ingredient recipe missing 2 is "almost")
       const almost = ranked.filter(r => r.missing.length > 0 && r.missing.length <= 4 && !favSet.has(r.id));
       const far = ranked.filter(r => r.missing.length > 4 && !favSet.has(r.id));
 
@@ -3134,7 +3211,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
             const id = e.target.dataset.id || e.target.closest("[data-action='addmissing']").dataset.id;
             const recipe = recipeMatch(getRecipe(id));
             if (recipe && recipe.missing.length > 0) {
-              startCart(recipe.missing, "recipe", `Missing for ${recipe.name}`, { id: recipe.id, name: recipe.name, emoji: recipe.emoji });
+              startCart(recipe.missing, "recipe", `Missing for ${recipe.name}`);
             }
             return;
           }
@@ -3151,10 +3228,8 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
 
       let statusHtml = "";
       if (r.ratio === 1) {
-        // Cook now — green badge
         statusHtml = `<div class="ready" style="color:var(--green); font-weight:700;">✓ You have everything — cook now!</div>`;
       } else if (r.missing.length <= 4) {
-        // Almost — show exactly what's missing as chips
         const chips = r.missing.map(i =>
           `<span style="display:inline-block; background:var(--red-light); color:var(--red); font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; white-space:nowrap;">${i.name}</span>`
         ).join(" ");
@@ -3275,35 +3350,27 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
 
     // ============================================================
     // CART → SHOPPING LIST
-    // startCart() used to open a separate checklist modal.
-    // Now it just bulk-adds the items to the shopping list and opens it,
-    // so the shopping list is the single place to review, order, and print.
     // ============================================================
-    // recipeRef (optional): { id, name, emoji } — stored on each list item so the
-    // shopping list can show which recipe needs this ingredient.
-    function startCart(items, mode, title, recipeRef) {
+    function startCart(items, mode, title) {
       if (!items || !items.length) { showToast("Nothing to add"); return; }
-      let added = 0;
+      let added = 0, dupes = 0;
       items.forEach(item => {
-        // Enrich with brand/unit from an existing inventory entry (even qty:0 out-of-stock).
-        // This ensures we search for the exact product the user already buys on Instacart.
-        const invMatch = findInventoryFor(item.name);
-        const brand = item.brand || (invMatch && invMatch.brand) || "";
-        const unit  = item.unit  || (invMatch && invMatch.unit)  || "";
         const entry = {
           name: item.name,
-          brand,
+          brand: item.brand || "",
           qty: item.scaledQty != null ? item.scaledQty : (item.qty || 1),
-          unit,
+          unit: item.unit || "",
           reason: title || mode || "added from recipe",
-          recipeEmoji: recipeRef ? recipeRef.emoji : (mode === "plan" ? "📅" : ""),
-          recipeName:  recipeRef ? recipeRef.name  : (mode === "plan" ? "Meal Plan" : ""),
         };
         const result = addToShoppingList(entry, { allowDupe: false });
         if (result && result.added) added++;
+        else if (result && result.duplicate) dupes++;
       });
-      if (added > 0) showToast(`Added ${added} item${added !== 1 ? "s" : ""} to your shopping list`);
-      else showToast("Already in your shopping list ✓");
+      if (added > 0) {
+        showToast(`Added ${added} item${added !== 1 ? "s" : ""} to your shopping list`);
+      } else {
+        showToast("Already in your shopping list ✓");
+      }
       openShoppingList();
     }
 
@@ -3854,25 +3921,37 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       };
     }
 
-    // ─── UNIFIED SCANNER (BarcodeDetector → ZXing fallback) ─────────────────────
-    // Two-strategy scanner:
-    //   1. Native BarcodeDetector API  — Chrome/Android, very fast, no library needed
-    //   2. ZXing @zxing/library        — iOS Safari, Firefox, everything else
-    // Both strategies support single-shot (stops after first scan) and
-    // continuous mode (batch scanning — keeps running until teardownScanner()).
+    // ─── UNIFIED SCANNER ─────────────────────────────────────────────────────────
+    // Three-path scanner — picks the best available engine automatically:
+    //   1. Capacitor native (iOS AVFoundation / Android MLKit) — when running as app
+    //   2. BarcodeDetector Web API  — Chrome/Android browser, hardware-accelerated
+    //   3. ZXing @zxing/library     — iOS Safari, Firefox, everything else
+    // All paths support single-shot and continuous (batch) mode.
+
+    const IS_CAPACITOR = !!(window.Capacitor?.isNativePlatform?.());
 
     let nativeScanRAF = null;    // rAF handle for BarcodeDetector loop
     let nativeScanStream = null; // MediaStream for BarcodeDetector path
     let scannerControls = null;  // ZXing IScannerControls
     let scannerReader = null;    // ZXing BrowserMultiFormatReader instance
+    let capScanActive = false;   // Capacitor scan in progress
+    let capScanContinuous = false;
+    let capScanCallback = null;
 
     async function initScanner(containerEl, statusEl, onCode, { continuous = false } = {}) {
       await teardownScanner();
-      containerEl.innerHTML = "";
-      containerEl.style.cssText = "position:relative; background:#000; border-radius:12px; overflow:hidden; min-height:220px;";
       if (statusEl) statusEl.textContent = "Starting camera…";
 
-      // ── Path 1: Native BarcodeDetector (Chrome, Android WebView) ──────────────
+      // ── Path 1: Capacitor native (iOS AVFoundation / Android MLKit) ───────────
+      if (IS_CAPACITOR) {
+        await runCapacitorScanner(onCode, continuous);
+        return;
+      }
+
+      containerEl.innerHTML = "";
+      containerEl.style.cssText = "position:relative; background:#000; border-radius:12px; overflow:hidden; min-height:220px;";
+
+      // ── Path 2: Native BarcodeDetector (Chrome, Android WebView) ──────────────
       if ("BarcodeDetector" in window) {
         try {
           let formats = ["ean_13","ean_8","upc_a","upc_e","code_128","code_39","itf"];
@@ -3979,7 +4058,85 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       });
     }
 
+    // ── Capacitor native scanner ──────────────────────────────────────────────────
+    async function runCapacitorScanner(onCode, continuous) {
+      const { BarcodeScanner } = window.Capacitor?.Plugins || {};
+      if (!BarcodeScanner) {
+        showToast("Barcode scanner not available on this device.");
+        return;
+      }
+
+      // Check / request camera permission
+      let permStatus;
+      try { permStatus = await BarcodeScanner.checkPermission({ force: false }); }
+      catch(e) { showToast("Scanner error: " + (e.message || e)); return; }
+
+      if (permStatus.denied || permStatus.restricted) {
+        showToast("Camera access denied — enable it in Settings → Privacy → Camera");
+        BarcodeScanner.openAppSettings?.();
+        return;
+      }
+      if (!permStatus.granted) {
+        const req = await BarcodeScanner.checkPermission({ force: true });
+        if (!req.granted) { showToast("Camera permission required to scan barcodes."); return; }
+      }
+
+      // Prepare AVFoundation camera session before hiding the WebView
+      try { await BarcodeScanner.prepare(); } catch {}
+
+      capScanActive = true;
+      capScanContinuous = continuous;
+      capScanCallback = onCode;
+
+      // Make WebView transparent so native camera layer shows through (v3 API)
+      await BarcodeScanner.hideBackground();
+      document.body.classList.add("cap-scanning");
+      document.getElementById("nativeScanOverlay").classList.add("active");
+
+      const doScan = async () => {
+        if (!capScanActive) return;
+        try {
+          const result = await BarcodeScanner.startScan({
+            targetedFormats: ["EAN_13","EAN_8","UPC_A","UPC_E","CODE_128","CODE_39","ITF"],
+          });
+          if (!capScanActive) return; // cancelled while scanning
+          if (result.hasContent) {
+            haptic(15);
+            onCode(result.content);
+            if (continuous && capScanActive) {
+              // Brief pause so the user can see the toast, then keep scanning
+              setTimeout(doScan, 600);
+            } else {
+              stopCapacitorScanner();
+            }
+          } else {
+            // startScan returned without content = user hit back / cancelled
+            stopCapacitorScanner();
+          }
+        } catch {
+          stopCapacitorScanner();
+        }
+      };
+      doScan();
+    }
+
+    function stopCapacitorScanner() {
+      if (!capScanActive) return;
+      capScanActive = false;
+      try {
+        const { BarcodeScanner } = window.Capacitor?.Plugins || {};
+        if (BarcodeScanner) {
+          BarcodeScanner.stopScan({ resolveScan: true });
+          BarcodeScanner.showBackground(); // v3 API (was showWebViewBackground in v1/v2)
+        }
+      } catch {}
+      document.body.classList.remove("cap-scanning");
+      document.getElementById("nativeScanOverlay").classList.remove("active");
+      capScanCallback = null;
+    }
+
     async function teardownScanner() {
+      if (IS_CAPACITOR) { stopCapacitorScanner(); return; }
       if (nativeScanRAF)   { cancelAnimationFrame(nativeScanRAF); nativeScanRAF = null; }
       if (nativeScanStream){ nativeScanStream.getTracks().forEach(t => t.stop()); nativeScanStream = null; }
       if (scannerControls) { try { scannerControls.stop(); } catch {}; scannerControls = null; }
@@ -3989,12 +4146,14 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     // ── Single-item barcode scanner (used by the main barcode modal) ────────────
 
     async function openBarcodeScanner() {
-      showModal("barcodeModal");
+      // In Capacitor, the native scanner takes over the full screen —
+      // no need to show our custom modal at all.
+      if (!IS_CAPACITOR) showModal("barcodeModal");
       const statusEl = document.getElementById("barcodeStatus");
       const box = document.getElementById("barcodeReaderBox");
       try {
         await initScanner(box, statusEl, (code) => {
-          hideModal("barcodeModal");
+          if (!IS_CAPACITOR) hideModal("barcodeModal");
           onBarcodeDecoded(code);
         }, { continuous: false });
       } catch (err) {
@@ -4816,36 +4975,14 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         r.ingredients.forEach(i => {
           if (!hasIngredient(i.name)) {
             const k = normalize(i.name);
-            if (!missing[k]) {
-              const invMatch = findInventoryFor(i.name);
-              missing[k] = {
-                name: i.name,
-                brand: (invMatch && invMatch.brand) || "",
-                unit: i.unit || (invMatch && invMatch.unit) || "",
-                qty: 0,
-                recipes: [],
-              };
-            }
+            if (!missing[k]) missing[k] = { name: i.name, qty: 0, unit: i.unit };
             missing[k].qty += (i.qty || 1);
-            missing[k].recipes.push(r.name);
           }
         });
       });
       const items = Object.values(missing);
-      if (!items.length) { showToast("Your meal plan is fully stocked!"); return; }
-      let added = 0;
-      items.forEach(item => {
-        const recipeLabel = [...new Set(item.recipes)].join(", ");
-        const result = addToShoppingList({
-          name: item.name, brand: item.brand, qty: item.qty, unit: item.unit,
-          reason: `Meal plan · ${recipeLabel}`,
-          recipeEmoji: "📅", recipeName: recipeLabel,
-        }, { allowDupe: false });
-        if (result && result.added) added++;
-      });
-      if (added > 0) showToast(`Added ${added} item${added !== 1 ? "s" : ""} to your shopping list`);
-      else showToast("Already in your shopping list ✓");
-      openShoppingList();
+      if (!items.length) { alert("Your meal plan is fully stocked already!"); return; }
+      startCart(items, "plan", "Shopping list from plan");
     }
 
     // ============================================================
@@ -5186,17 +5323,6 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       document.getElementById("exportBtn").addEventListener("click", exportData);
       document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
       document.getElementById("importFile").addEventListener("change", importData);
-      document.getElementById("loadDemoBtn").addEventListener("click", () => {
-        if (confirm("Load demo inventory? This adds sample pantry items on top of what you already have.")) {
-          SEED_INVENTORY.forEach(i => {
-            const key = inventoryKey(i);
-            if (!state.inventory[key]) state.inventory[key] = { ...i, canonicalName: normalize(i.name), brand: "", upc: "" };
-          });
-          saveState(); renderCook(); renderInventory();
-          hideModal("settingsModal"); showToast("Demo inventory loaded — check the Cook tab!");
-        }
-      });
-
       document.getElementById("resetBtn").addEventListener("click", () => {
         if (confirm("Reset everything? This clears inventory, plan, favorites, and custom recipes.")) {
           state = defaultState(); saveState(); applyTheme(); renderCook(); renderInventory(); renderPlan();
@@ -5354,7 +5480,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const items = scaledFor(r).filter(i => !i.have);
       if (items.length === 0) { alert("You already have everything!"); return; }
       hideModal("recipeModal");
-      startCart(items, "recipe", `Shopping for ${r.name}`, { id: r.id, name: r.name, emoji: r.emoji });
+      startCart(items, "recipe", `Shopping for ${r.name}`);
     });
     document.getElementById("rmShopAll").addEventListener("click", () => {
       const r = getRecipe(openRecipeId);
@@ -5434,7 +5560,6 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const url = "https://claude.ai/new?q=" + encodeURIComponent(prompt);
       const opened = window.open(url, "_blank");
       if (!opened) {
-        // Popup blocked — guide user to paste manually
         showToast(copied
           ? "Popup blocked · list copied to clipboard — open claude.ai and paste it!"
           : "Popup blocked · open claude.ai and describe what you need"
@@ -5500,6 +5625,12 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     });
 
     // Batch scan button
+    // Native scan overlay cancel button
+    document.getElementById("nativeScanCancelBtn").addEventListener("click", () => {
+      stopCapacitorScanner();
+      hideModal("barcodeModal");
+    });
+
     document.getElementById("batchScanBtn").addEventListener("click", openBatchScan);
     document.getElementById("bsClose1").addEventListener("click", closeBatchScan);
     document.getElementById("bsCancelStep1").addEventListener("click", closeBatchScan);
