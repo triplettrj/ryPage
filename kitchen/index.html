@@ -413,6 +413,11 @@
       background: none; border: none; font-size: 18px; color: var(--muted2);
       cursor: pointer; padding: 0;
     }
+    .shop-find-btn {
+      font-size: 14px; text-decoration: none; opacity: 0.55;
+      transition: opacity .15s;
+    }
+    .shop-find-btn:hover { opacity: 1; }
     .dupe-warn {
       background: var(--amber-light);
       color: #7a4a00;
@@ -1149,8 +1154,8 @@
 <body>
   <!-- Update banner — shown once per version, dismissed on tap -->
   <div id="updateBanner" style="display:none; background:#1565c0; color:white; padding:10px 16px; font-size:13px; align-items:center; justify-content:space-between; gap:8px;">
-    <span>✨ <strong>Update:</strong> Shopping list bug fixed + smarter Instacart ordering!</span>
-    <button onclick="document.getElementById('updateBanner').style.display='none'; localStorage.setItem('seenUpdate','v12');" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Got it</button>
+    <span>✨ <strong>Update:</strong> Shopping list is now your cart — order on Instacart, print, or copy from there!</span>
+    <button onclick="document.getElementById('updateBanner').style.display='none'; localStorage.setItem('seenUpdate','v13');" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Got it</button>
   </div>
 
   <header>
@@ -1497,7 +1502,11 @@
       <div id="shopListChecked" style="margin-top:8px;"></div>
 
       <div class="btn-row" style="flex-direction: column; margin-top: 14px;">
-        <button class="btn btn-primary" id="shopToCart">🛒 Send to Instacart</button>
+        <button class="btn btn-primary" id="shopOrderInstacart">🛒 Order on Instacart</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary" id="shopPrint" style="flex:1;">🖨️ Print list</button>
+          <button class="btn btn-secondary" id="shopCopyList" style="flex:1;">📋 Copy list</button>
+        </div>
         <button class="btn btn-secondary" id="shopClearChecked">Clear checked items</button>
       </div>
     </div>
@@ -2259,7 +2268,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       messagingSenderId: "49025591071",
       appId:             "1:49025591071:web:008418cdb3e7ed7b6db22a"
     };
-    const UPDATE_VERSION = "v12";
+    const UPDATE_VERSION = "v13";
     let state = loadState();
 
     // Show update banner once per version
@@ -2663,16 +2672,22 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         return;
       }
 
-      const rowHtml = (s) => `
+      const rowHtml = (s) => {
+        const searchUrl = `https://www.instacart.com/store/s?k=${encodeURIComponent(s.name + (s.brand ? " " + s.brand : ""))}`;
+        return `
         <div class="shop-row${s.checked ? " checked" : ""}" data-id="${escapeHtml(s.id)}">
           <button class="shop-check" data-action="toggle" aria-label="${s.checked ? "Uncheck" : "Check off"}">${s.checked ? "✓" : ""}</button>
-          <div style="min-width:0;">
+          <div style="min-width:0; flex:1;">
             <div class="shop-name">${escapeHtml(s.name)}${s.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(s.brand)}</span>` : ""}</div>
             <div class="shop-meta">${escapeHtml(s.reason || "manual")}</div>
           </div>
-          <div class="shop-qty">${formatQty(s.qty) || "1"}${s.unit ? " " + escapeHtml(s.unit) : ""}</div>
+          <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+            <div class="shop-qty">${formatQty(s.qty) || "1"}${s.unit ? " " + escapeHtml(s.unit) : ""}</div>
+            ${!s.checked ? `<a href="${searchUrl}" target="_blank" rel="noopener" class="shop-find-btn" title="Find on Instacart">🔍</a>` : ""}
+          </div>
           <button class="shop-del" data-action="remove" aria-label="Remove">×</button>
         </div>`;
+      };
 
       openEl.innerHTML = open.length
         ? `<div class="inv-group-title">To buy <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${open.length})</span></div>` + open.map(rowHtml).join("")
@@ -2816,16 +2831,66 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       });
     }
 
-    function sendShoppingListToCart() {
+    // Build a plain-text shopping list from unchecked items
+    function buildShopListText() {
+      return (state.shoppingList || [])
+        .filter(s => !s.checked)
+        .map(s => {
+          const qty = formatQty(s.qty) || "1";
+          return `• ${qty}${s.unit ? " " + s.unit : ""} ${s.name}${s.brand ? " (" + s.brand + ")" : ""}`.trim();
+        }).join("\n");
+    }
+
+    async function orderShopListViaClaudeChrome() {
       const open = (state.shoppingList || []).filter(s => !s.checked);
-      if (!open.length) { showToast("Nothing to order yet"); return; }
-      const items = open.map(s => ({
-        name: s.brand ? `${s.name} (${s.brand})` : s.name,
-        qty: s.qty || 1,
-        unit: s.unit || "",
-      }));
-      hideModal("shoppingListModal");
-      startCart(items, "shopping-list", "Shopping list");
+      if (!open.length) { showToast("Nothing on the list"); return; }
+      const listText = buildShopListText();
+      const prompt = [
+        "Please open Instacart (instacart.com), pick a store near me, and add every item below to my cart.",
+        "",
+        "Use my default store/address if one is set. Closest match for each item name is fine.",
+        "",
+        "SHOPPING LIST:",
+        listText,
+        "",
+        "Stop at the cart/checkout page so I can review and pay myself. Do NOT place the order or enter payment info."
+      ].join("\n");
+      let copied = false;
+      try { await navigator.clipboard.writeText(listText); copied = true; } catch(e) {}
+      const url = "https://claude.ai/new?q=" + encodeURIComponent(prompt);
+      const opened = window.open(url, "_blank");
+      if (!opened) {
+        showToast(copied ? "Popup blocked · list copied — open claude.ai and paste!" : "Popup blocked · open claude.ai manually");
+      } else {
+        showToast(copied ? "Opened Claude · list also copied to clipboard" : "Opened Claude in a new tab");
+      }
+    }
+
+    function printShoppingList() {
+      const open = (state.shoppingList || []).filter(s => !s.checked);
+      if (!open.length) { showToast("Nothing to print"); return; }
+      const rows = open.map(s => {
+        const qty = formatQty(s.qty) || "1";
+        return `<li style="padding:6px 0; border-bottom:1px solid #eee; font-size:16px;">
+          <span style="display:inline-block; width:24px; height:24px; border:2px solid #333; border-radius:4px; margin-right:10px; vertical-align:middle;"></span>
+          ${qty}${s.unit ? " " + s.unit : ""} <strong>${s.name}</strong>${s.brand ? ` <span style="color:#666;">(${s.brand})</span>` : ""}
+        </li>`;
+      }).join("");
+      const w = window.open("", "_blank");
+      if (!w) { showToast("Allow pop-ups to print"); return; }
+      w.document.write(`<!DOCTYPE html><html><head><title>Shopping List</title>
+        <style>body{font-family:sans-serif;max-width:480px;margin:40px auto;padding:0 20px;}
+        h1{font-size:22px;margin-bottom:4px;}p{color:#666;font-size:13px;margin-bottom:20px;}
+        ul{list-style:none;padding:0;margin:0;}
+        @media print{button{display:none!important;}}</style></head>
+        <body>
+          <h1>🛒 Shopping List</h1>
+          <p>${new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</p>
+          <ul>${rows}</ul>
+          <button onclick="window.print()" style="margin-top:24px;padding:10px 20px;font-size:14px;cursor:pointer;">🖨️ Print</button>
+        </body></html>`);
+      w.document.close();
+      setTimeout(() => w.print(), 300);
     }
 
     function allRecipes() {
@@ -3178,16 +3243,32 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     }
 
     // ============================================================
-    // INSTACART CART
+    // CART → SHOPPING LIST
+    // startCart() used to open a separate checklist modal.
+    // Now it just bulk-adds the items to the shopping list and opens it,
+    // so the shopping list is the single place to review, order, and print.
     // ============================================================
     function startCart(items, mode, title) {
-      checklistItems = items;
-      checklistState = items.map(() => false);
-      cartMode = mode || "recipe";
-      if (title) document.getElementById("cartTitle").textContent = title;
-      else document.getElementById("cartTitle").textContent = "Add to Instacart";
-      renderChecklist();
-      showModal("cartModal");
+      if (!items || !items.length) { showToast("Nothing to add"); return; }
+      let added = 0, dupes = 0;
+      items.forEach(item => {
+        const entry = {
+          name: item.name,
+          brand: item.brand || "",
+          qty: item.scaledQty != null ? item.scaledQty : (item.qty || 1),
+          unit: item.unit || "",
+          reason: title || mode || "added from recipe",
+        };
+        const result = addToShoppingList(entry, { allowDupe: false });
+        if (result && result.added) added++;
+        else if (result && result.duplicate) dupes++;
+      });
+      if (added > 0) {
+        showToast(`Added ${added} item${added !== 1 ? "s" : ""} to your shopping list`);
+      } else {
+        showToast("Already in your shopping list ✓");
+      }
+      openShoppingList();
     }
 
     function renderChecklist() {
@@ -5124,7 +5205,14 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     document.getElementById("openShoppingListBtn").addEventListener("click", openShoppingList);
     document.getElementById("shopAddBtn").addEventListener("click", handleShopManualAdd);
     document.getElementById("shopAddName").addEventListener("keydown", (e) => { if (e.key === "Enter") handleShopManualAdd(); });
-    document.getElementById("shopToCart").addEventListener("click", sendShoppingListToCart);
+    document.getElementById("shopOrderInstacart").addEventListener("click", orderShopListViaClaudeChrome);
+    document.getElementById("shopPrint").addEventListener("click", printShoppingList);
+    document.getElementById("shopCopyList").addEventListener("click", async () => {
+      const text = buildShopListText();
+      if (!text) { showToast("Nothing to copy"); return; }
+      try { await navigator.clipboard.writeText(text); showToast("List copied to clipboard"); }
+      catch (e) { alert(text); }
+    });
     document.getElementById("shopClearChecked").addEventListener("click", clearCheckedShopItems);
 
     document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => hideModal(b.dataset.close)));
