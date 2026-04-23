@@ -2693,7 +2693,10 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           </div>
           <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
             <div class="shop-qty">${formatQty(s.qty) || "1"}${s.unit ? " " + escapeHtml(s.unit) : ""}</div>
-            ${!s.checked ? `<a href="${searchUrl}" target="_blank" rel="noopener" class="shop-find-btn" title="Find on Instacart">🔍</a>` : ""}
+            ${!s.checked
+              ? `<a href="${searchUrl}" target="_blank" rel="noopener" class="shop-find-btn" title="Find on Instacart">🔍</a>`
+              : `<button data-action="putaway" style="font-size:11px; padding:3px 8px; border-radius:8px; border:1px solid var(--green); background:var(--green-light,#e8f5e9); color:var(--green); font-weight:600; cursor:pointer; white-space:nowrap;" title="Add to pantry">📦 Put away</button>`
+            }
           </div>
           <button class="shop-del" data-action="remove" aria-label="Remove">×</button>
         </div>`;
@@ -2704,8 +2707,32 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         : `<div class="card empty-state" style="padding:16px;"><small>Nothing to buy right now.</small></div>`;
 
       checkedEl.innerHTML = checked.length
-        ? `<div class="inv-group-title">In cart <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${checked.length})</span></div>` + checked.map(rowHtml).join("")
+        ? `<div class="inv-group-title" style="display:flex; align-items:center; justify-content:space-between;">
+             <span>Got it ✓ <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${checked.length})</span></span>
+             <button id="shopRestockAll" style="font-size:12px; padding:4px 10px; border-radius:8px; border:1px solid var(--green); background:var(--green-light,#e8f5e9); color:var(--green); font-weight:600; cursor:pointer;">📦 Restock all</button>
+           </div>` + checked.map(rowHtml).join("")
         : "";
+
+      // Helper: add a shopping list item into inventory (used by put-away)
+      function putAwayItem(s) {
+        const invItem = {
+          name: s.name,
+          brand: s.brand || "",
+          canonicalName: normalize(s.name),
+          qty: s.qty || 1,
+          unit: s.unit || "",
+          loc: "pantry",
+          expiry: null,
+        };
+        const key = inventoryKey(invItem);
+        if (state.inventory[key]) {
+          const prev = state.inventory[key];
+          prev.qty = (prev.qty || 0) + (s.qty || 1);
+          if (!prev.unit && invItem.unit) prev.unit = invItem.unit;
+        } else {
+          state.inventory[key] = invItem;
+        }
+      }
 
       // Wire row actions
       [openEl, checkedEl].forEach(scope => {
@@ -2718,37 +2745,17 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
             if (idx < 0) return;
             const s = state.shoppingList[idx];
             if (action === "toggle") {
+              // Just mark got/not got — inventory updated separately via Put away
               s.checked = !s.checked;
-              // Checking off restores inventory at qty 1 (default unit from list entry)
-              if (s.checked) {
-                const invItem = {
-                  name: s.name,
-                  brand: s.brand || "",
-                  canonicalName: normalize(s.name),
-                  qty: s.qty || 1,
-                  unit: s.unit || "",
-                  loc: "pantry",
-                  expiry: null,
-                };
-                const key = inventoryKey(invItem);
-                if (state.inventory[key]) {
-                  // existing entry (likely at qty:0): bump it
-                  const prev = state.inventory[key];
-                  prev.qty = (prev.qty || 0) + (s.qty || 1);
-                  if (!prev.unit && invItem.unit) prev.unit = invItem.unit;
-                } else {
-                  state.inventory[key] = invItem;
-                }
-                haptic(10);
-              } else {
-                // Unchecking: roll back the inventory bump (best-effort)
-                const key = inventoryKey({canonicalName: s.canonicalName || s.name, brand: s.brand});
-                const inv = state.inventory[key];
-                if (inv) {
-                  inv.qty = Math.max(0, (inv.qty || 0) - (s.qty || 1));
-                }
-              }
+              haptic(5);
+              saveState(); renderShoppingList();
+            } else if (action === "putaway") {
+              // Add to inventory and remove from shopping list
+              putAwayItem(s);
+              state.shoppingList.splice(idx, 1);
               saveState(); renderShoppingList(); renderInventory();
+              showToast(`${s.name} added to pantry ✓`);
+              haptic(10);
             } else if (action === "remove") {
               const removed = state.shoppingList.splice(idx, 1)[0];
               saveState(); renderShoppingList();
@@ -2761,6 +2768,20 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           });
         });
       });
+
+      // Restock all checked items at once
+      const restockAllBtn = document.getElementById("shopRestockAll");
+      if (restockAllBtn) {
+        restockAllBtn.addEventListener("click", () => {
+          const toRestock = (state.shoppingList || []).filter(s => s.checked);
+          if (!toRestock.length) return;
+          toRestock.forEach(s => putAwayItem(s));
+          state.shoppingList = (state.shoppingList || []).filter(s => !s.checked);
+          saveState(); renderShoppingList(); renderInventory();
+          showToast(`Restocked ${toRestock.length} item${toRestock.length !== 1 ? "s" : ""} in pantry ✓`);
+          haptic(10);
+        });
+      }
     }
 
     // Manual add from the shopping-list modal, with medium-strictness dupe warning.
