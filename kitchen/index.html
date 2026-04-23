@@ -3896,6 +3896,8 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       if (!cleaned || cleaned.length < 8) throw new Error("UPC must be 8–14 digits");
       const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cleaned)}.json?fields=product_name,brands,quantity,product_quantity,product_quantity_unit,categories_tags,generic_name`;
       const res = await fetch(url);
+      // 404 just means the product isn't in the database — not an error
+      if (res.status === 404) return null;
       if (!res.ok) throw new Error(`OpenFoodFacts ${res.status}`);
       const data = await res.json();
       if (data.status !== 1 || !data.product) return null;
