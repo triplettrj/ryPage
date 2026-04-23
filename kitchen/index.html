@@ -4949,7 +4949,30 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         });
         saveState();
         renderPlan();
-        showToast(`✨ Planned ${applied} meal${applied === 1 ? "" : "s"}`);
+        // Auto-add missing ingredients to the shopping list
+        let addedToList = 0;
+        const missing = {};
+        Object.values(state.mealPlan).forEach(id => {
+          const r = getRecipe(id);
+          if (!r) return;
+          r.ingredients.forEach(i => {
+            if (!hasIngredient(i.name)) {
+              const k = normalize(i.name);
+              if (!missing[k]) missing[k] = { name: i.name, qty: 0, unit: i.unit };
+              missing[k].qty += (i.qty || 1);
+            }
+          });
+        });
+        Object.values(missing).forEach(item => {
+          const result = addToShoppingList({
+            name: item.name, qty: item.qty, unit: item.unit,
+            reason: "meal plan",
+          }, { allowDupe: false });
+          if (result && result.added) addedToList++;
+        });
+        updateShopBadge();
+        const listMsg = addedToList > 0 ? ` · added ${addedToList} item${addedToList !== 1 ? "s" : ""} to shopping list` : " · shopping list already stocked!";
+        showToast(`✨ Planned ${applied} meal${applied === 1 ? "" : "s"}${listMsg}`);
         haptic(20);
       } catch (err) {
         alert(`Auto-plan failed: ${err.message}`);
