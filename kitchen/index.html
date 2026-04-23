@@ -1149,8 +1149,8 @@
 <body>
   <!-- Update banner — shown once per version, dismissed on tap -->
   <div id="updateBanner" style="display:none; background:#1565c0; color:white; padding:10px 16px; font-size:13px; align-items:center; justify-content:space-between; gap:8px;">
-    <span>✨ <strong>Update:</strong> Firebase cloud sync + smarter Cook Now view!</span>
-    <button onclick="document.getElementById('updateBanner').style.display='none'; localStorage.setItem('seenUpdate','v11');" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Got it</button>
+    <span>✨ <strong>Update:</strong> Shopping list bug fixed + smarter Instacart ordering!</span>
+    <button onclick="document.getElementById('updateBanner').style.display='none'; localStorage.setItem('seenUpdate','v12');" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Got it</button>
   </div>
 
   <header>
@@ -1414,7 +1414,7 @@
         <button class="btn btn-secondary" id="orderViaClaudeChrome">🤖 Order via Claude in Chrome</button>
         <button class="btn btn-secondary" id="orderViaAmazon">📦 Order on Amazon Fresh</button>
         <button class="btn btn-secondary" id="copyList">Copy list to clipboard</button>
-        <p class="subtitle" style="margin-top:6px; font-size:12px;">Claude-in-Chrome drives Instacart for you (install the extension first). Amazon Fresh opens each item in a new tab — allow pop-ups.</p>
+        <p class="subtitle" style="margin-top:6px; font-size:12px;">Click <strong>Find</strong> next to each item to search Instacart, add it to your cart, then come back. <strong>Claude in Chrome</strong> automates this for you — needs the extension installed. Amazon Fresh opens each item in a new tab.</p>
       </div>
     </div>
   </div>
@@ -2259,7 +2259,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       messagingSenderId: "49025591071",
       appId:             "1:49025591071:web:008418cdb3e7ed7b6db22a"
     };
-    const UPDATE_VERSION = "v11";
+    const UPDATE_VERSION = "v12";
     let state = loadState();
 
     // Show update banner once per version
@@ -2393,6 +2393,18 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       await _fbAuth.signOut();
     }
 
+    // Merge two shopping lists by item id.
+    // Local items take priority (they may have been added offline/between syncs).
+    // Cloud-only items are appended so nothing from the cloud is lost either.
+    function mergeShoppingLists(local, cloud) {
+      const result = [...(local || [])];
+      const localIds = new Set(result.map(i => i.id).filter(Boolean));
+      (cloud || []).forEach(ci => {
+        if (ci.id && !localIds.has(ci.id)) result.push(ci);
+      });
+      return result;
+    }
+
     async function loadCloudState(uid) {
       if (!_fbDb) return;
       setSyncStatus("pending");
@@ -2400,9 +2412,12 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         const snap = await _fbDb.doc(`users/${uid}/app/state`).get();
         if (snap.exists) {
           const cloud = snap.data();
+          // IMPORTANT: merge shopping lists so locally-added items added between
+          // page-load and this async response are never overwritten by stale cloud data.
           const merged = {
             ...state,
             ...cloud,
+            shoppingList: mergeShoppingLists(state.shoppingList, cloud.shoppingList),
             settings: { ...cloud.settings, ...state.settings },
             chatHistory: state.chatHistory,
           };
@@ -3206,7 +3221,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       const done = checklistState.filter(Boolean).length;
       document.getElementById("progressCount").textContent = `${done} of ${total}`;
       document.getElementById("progressFill").style.width = total ? `${(done/total)*100}%` : "0%";
-      document.getElementById("goToCart").disabled = done === 0;
+      document.getElementById("goToCart").disabled = false; // always enabled — go to cart any time
     }
 
     // ============================================================
@@ -4591,15 +4606,18 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       state.history[r.id] = new Date().toISOString();
       saveState();
       // Auto-add depleted items to the shopping list (one toast per cook session)
+      let addedCount = 0;
       depletedToAutoAdd.forEach(inv => {
         if (!shoppingListMatch(inv.name, inv.brand)) {
-          addToShoppingList({
+          const r2 = addToShoppingList({
             name: inv.name, brand: inv.brand || "", qty: 1,
             unit: inv.unit || "", reason: `ran out cooking ${r.name}`,
           }, { allowDupe: false });
+          if (r2 && r2.added) addedCount++;
         }
       });
-      const addedCount = depletedToAutoAdd.length;
+      // Refresh cook view so this recipe moves out of "Cook right now"
+      if (typeof renderCook === "function") renderCook();
       const toastMsg = addedCount
         ? `Logged ${r.name} · added ${addedCount} to shopping list`
         : `Logged ${r.name}`;
@@ -5202,26 +5220,39 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       }).join("\n");
     }
 
-    // Order via Claude in Chrome: opens claude.ai with a prompt pre-loaded,
-    // instructing Claude to drive Instacart and add every item to the cart.
-    // Relies on the user having Claude in Chrome (the browser-automation
-    // extension) installed and signed in.
-    document.getElementById("orderViaClaudeChrome").addEventListener("click", () => {
+    // Order via Claude in Chrome: copies the shopping list to the clipboard,
+    // then opens claude.ai with a pre-filled prompt so Claude can drive Instacart.
+    // Requires the Claude in Chrome browser extension to be installed.
+    document.getElementById("orderViaClaudeChrome").addEventListener("click", async () => {
       if (!checklistItems.length) { showToast("Nothing on the list"); return; }
       const listText = buildShoppingListText();
       const prompt = [
         "Please open Instacart (instacart.com), pick a store near me, and add every item below to my cart.",
         "",
-        "Use my default store/address if one is set. Use the closest match for each item name (generic brands are fine unless I've specified).",
+        "Use my default store/address if one is set. Use the closest match for each item name (generic brands are fine unless specified).",
         "",
         "SHOPPING LIST:",
         listText,
         "",
-        "When you've finished adding everything, stop at the cart/checkout page so I can review and pay myself. Do NOT place the order or enter payment info."
+        "Stop at the cart/checkout page so I can review and pay myself. Do NOT place the order or enter payment info."
       ].join("\n");
+      // Always copy to clipboard first — fallback if popup is blocked
+      let copied = false;
+      try { await navigator.clipboard.writeText(listText); copied = true; } catch(e) {}
       const url = "https://claude.ai/new?q=" + encodeURIComponent(prompt);
-      window.open(url, "_blank", "noopener");
-      showToast("Opening Claude — make sure Claude in Chrome is installed");
+      const opened = window.open(url, "_blank");
+      if (!opened) {
+        // Popup blocked — guide user to paste manually
+        showToast(copied
+          ? "Popup blocked · list copied to clipboard — open claude.ai and paste it!"
+          : "Popup blocked · open claude.ai and describe what you need"
+        );
+      } else {
+        showToast(copied
+          ? "Opened Claude · list also copied to clipboard as backup"
+          : "Opened Claude — type your list there if the prompt didn't appear"
+        );
+      }
     });
 
     // Order via Amazon Fresh: opens a search tab on Amazon Fresh per item.
