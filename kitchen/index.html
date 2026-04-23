@@ -1189,6 +1189,7 @@
     <div class="view" id="viewInventory">
       <div style="display:flex; gap:8px; margin-bottom:12px;">
         <button class="btn btn-secondary" id="manageLayoutBtn" style="flex:1;">📍 Manage Layout</button>
+        <button class="btn btn-secondary" id="clearPantryBtn" style="color:var(--red);">🗑️ Clear pantry</button>
       </div>
       <div id="inventoryList"></div>
     </div>
@@ -1217,6 +1218,7 @@
         <button class="btn btn-ai" id="autoPlanWeek" style="flex:1; min-width: 140px;">✨ Auto-plan my week<span class="ai-badge">AI</span></button>
         <button class="btn btn-primary" id="generatePlanList" style="flex:1; min-width: 140px;">🛒 Shopping list</button>
       </div>
+      <button class="btn btn-secondary" id="clearWeekBtn" style="width:100%; margin-top:8px; color:var(--red);">🗑️ Clear week</button>
     </div>
 
     <!-- SCAN VIEW -->
@@ -1709,7 +1711,7 @@
         </div>
       </div>
 
-      <div style="text-align:center; padding: 18px 0 6px; color: var(--muted2); font-size: 11px; letter-spacing: .3px;">
+      <div style="text-align:center; padding: 18px 0 6px; color: var(--muted); font-size: 12px; letter-spacing: .3px;">
         My Kitchen · v13 · Built April 22, 2026 at 10:45 PM
       </div>
     </div>
@@ -5220,6 +5222,18 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       else if (currentView === "cook") openCustom();
     });
     document.getElementById("openSettingsBtn").addEventListener("click", openSettings);
+    document.getElementById("clearPantryBtn").addEventListener("click", () => {
+      const count = Object.keys(state.inventory).length;
+      if (!count) { showToast("Pantry is already empty"); return; }
+      if (!confirm(`Clear all ${count} item${count !== 1 ? "s" : ""} from your inventory?`)) return;
+      const backup = { ...state.inventory };
+      state.inventory = {};
+      saveState(); renderInventory(); renderCook();
+      showToast(`Cleared ${count} item${count !== 1 ? "s" : ""}`, "Undo", () => {
+        state.inventory = backup;
+        saveState(); renderInventory(); renderCook();
+      });
+    });
     document.getElementById("manageLayoutBtn").addEventListener("click", () => {
       renderLayoutModal();
       showModal("layoutModal");
@@ -5492,6 +5506,17 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     // Plan
     document.getElementById("generatePlanList").addEventListener("click", planShoppingList);
     document.getElementById("autoPlanWeek").addEventListener("click", autoPlanWeek);
+    document.getElementById("clearWeekBtn").addEventListener("click", () => {
+      const count = Object.values(state.mealPlan).filter(Boolean).length;
+      if (!count) { showToast("Week is already empty"); return; }
+      const backup = { ...state.mealPlan };
+      state.mealPlan = {};
+      saveState(); renderPlan();
+      showToast("Week cleared", "Undo", () => {
+        state.mealPlan = backup;
+        saveState(); renderPlan();
+      });
+    });
 
     // Chat
     document.getElementById("chatSend").addEventListener("click", () => {
