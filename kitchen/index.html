@@ -2681,12 +2681,15 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
 
       const rowHtml = (s) => {
         const searchUrl = `https://www.instacart.com/store/s?k=${encodeURIComponent(s.name + (s.brand ? " " + s.brand : ""))}`;
+        const sourceChip = (s.recipeEmoji || s.recipeName)
+          ? `<span style="display:inline-flex; align-items:center; gap:3px; font-size:11px; background:var(--green-light,#e8f5e9); color:var(--green,#2e7d32); padding:2px 7px; border-radius:99px; white-space:nowrap; font-weight:600; margin-top:3px;">${s.recipeEmoji ? escapeHtml(s.recipeEmoji) + " " : ""}${escapeHtml(s.recipeName || "")}</span>`
+          : "";
         return `
         <div class="shop-row${s.checked ? " checked" : ""}" data-id="${escapeHtml(s.id)}">
           <button class="shop-check" data-action="toggle" aria-label="${s.checked ? "Uncheck" : "Check off"}">${s.checked ? "✓" : ""}</button>
           <div style="min-width:0; flex:1;">
             <div class="shop-name">${escapeHtml(s.name)}${s.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(s.brand)}</span>` : ""}</div>
-            <div class="shop-meta">${escapeHtml(s.reason || "manual")}</div>
+            ${sourceChip ? `<div style="line-height:1;">${sourceChip}</div>` : `<div class="shop-meta">${escapeHtml(s.reason || "manual")}</div>`}
           </div>
           <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
             <div class="shop-qty">${formatQty(s.qty) || "1"}${s.unit ? " " + escapeHtml(s.unit) : ""}</div>
@@ -3110,7 +3113,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
             const id = e.target.dataset.id || e.target.closest("[data-action='addmissing']").dataset.id;
             const recipe = recipeMatch(getRecipe(id));
             if (recipe && recipe.missing.length > 0) {
-              startCart(recipe.missing, "recipe", `Missing for ${recipe.name}`);
+              startCart(recipe.missing, "recipe", `Missing for ${recipe.name}`, { id: recipe.id, name: recipe.name, emoji: recipe.emoji });
             }
             return;
           }
@@ -3255,26 +3258,31 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     // Now it just bulk-adds the items to the shopping list and opens it,
     // so the shopping list is the single place to review, order, and print.
     // ============================================================
-    function startCart(items, mode, title) {
+    // recipeRef (optional): { id, name, emoji } — stored on each list item so the
+    // shopping list can show which recipe needs this ingredient.
+    function startCart(items, mode, title, recipeRef) {
       if (!items || !items.length) { showToast("Nothing to add"); return; }
-      let added = 0, dupes = 0;
+      let added = 0;
       items.forEach(item => {
+        // Enrich with brand/unit from an existing inventory entry (even qty:0 out-of-stock).
+        // This ensures we search for the exact product the user already buys on Instacart.
+        const invMatch = findInventoryFor(item.name);
+        const brand = item.brand || (invMatch && invMatch.brand) || "";
+        const unit  = item.unit  || (invMatch && invMatch.unit)  || "";
         const entry = {
           name: item.name,
-          brand: item.brand || "",
+          brand,
           qty: item.scaledQty != null ? item.scaledQty : (item.qty || 1),
-          unit: item.unit || "",
+          unit,
           reason: title || mode || "added from recipe",
+          recipeEmoji: recipeRef ? recipeRef.emoji : (mode === "plan" ? "📅" : ""),
+          recipeName:  recipeRef ? recipeRef.name  : (mode === "plan" ? "Meal Plan" : ""),
         };
         const result = addToShoppingList(entry, { allowDupe: false });
         if (result && result.added) added++;
-        else if (result && result.duplicate) dupes++;
       });
-      if (added > 0) {
-        showToast(`Added ${added} item${added !== 1 ? "s" : ""} to your shopping list`);
-      } else {
-        showToast("Already in your shopping list ✓");
-      }
+      if (added > 0) showToast(`Added ${added} item${added !== 1 ? "s" : ""} to your shopping list`);
+      else showToast("Already in your shopping list ✓");
       openShoppingList();
     }
 
@@ -4787,14 +4795,36 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         r.ingredients.forEach(i => {
           if (!hasIngredient(i.name)) {
             const k = normalize(i.name);
-            if (!missing[k]) missing[k] = { name: i.name, qty: 0, unit: i.unit };
+            if (!missing[k]) {
+              const invMatch = findInventoryFor(i.name);
+              missing[k] = {
+                name: i.name,
+                brand: (invMatch && invMatch.brand) || "",
+                unit: i.unit || (invMatch && invMatch.unit) || "",
+                qty: 0,
+                recipes: [],
+              };
+            }
             missing[k].qty += (i.qty || 1);
+            missing[k].recipes.push(r.name);
           }
         });
       });
       const items = Object.values(missing);
-      if (!items.length) { alert("Your meal plan is fully stocked already!"); return; }
-      startCart(items, "plan", "Shopping list from plan");
+      if (!items.length) { showToast("Your meal plan is fully stocked!"); return; }
+      let added = 0;
+      items.forEach(item => {
+        const recipeLabel = [...new Set(item.recipes)].join(", ");
+        const result = addToShoppingList({
+          name: item.name, brand: item.brand, qty: item.qty, unit: item.unit,
+          reason: `Meal plan · ${recipeLabel}`,
+          recipeEmoji: "📅", recipeName: recipeLabel,
+        }, { allowDupe: false });
+        if (result && result.added) added++;
+      });
+      if (added > 0) showToast(`Added ${added} item${added !== 1 ? "s" : ""} to your shopping list`);
+      else showToast("Already in your shopping list ✓");
+      openShoppingList();
     }
 
     // ============================================================
@@ -5303,7 +5333,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const items = scaledFor(r).filter(i => !i.have);
       if (items.length === 0) { alert("You already have everything!"); return; }
       hideModal("recipeModal");
-      startCart(items, "recipe", `Shopping for ${r.name}`);
+      startCart(items, "recipe", `Shopping for ${r.name}`, { id: r.id, name: r.name, emoji: r.emoji });
     });
     document.getElementById("rmShopAll").addEventListener("click", () => {
       const r = getRecipe(openRecipeId);
