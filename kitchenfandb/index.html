@@ -1402,17 +1402,11 @@
         <button class="header-btn" id="rmFavBtn" aria-label="Favorite" style="background: var(--bg); color: var(--muted2);">☆</button>
       </div>
 
-      <div class="family-row">
-        <div>
-          <div class="label" id="familyLabel">Batch of 4</div>
-          <div class="sublabel">Scales ingredients</div>
-        </div>
-        <div class="stepper">
-          <button id="minusBtn">−</button>
-          <span class="value" id="familyValue">4</span>
-          <button id="plusBtn">+</button>
-        </div>
-      </div>
+      <!-- Cafe: always 1 serving, no batch stepper -->
+      <div id="familyLabel" style="display:none;"></div>
+      <div id="familyValue" style="display:none;"></div>
+      <button id="minusBtn" style="display:none;"></button>
+      <button id="plusBtn" style="display:none;"></button>
 
       <div class="section-title"><h2>Ingredients</h2><span class="count" id="rmMatchCount"></span></div>
       <ul class="ing-list" id="rmIngList"></ul>
@@ -1481,7 +1475,7 @@
     <div class="modal">
       <button class="close-x" data-close="itemModal">×</button>
       <h2 id="imTitle">Add item</h2>
-      <p class="subtitle">Track what's in your kitchen so we know what you can cook.</p>
+      <p class="subtitle">Track stock levels. Set a par level to trigger automatic reorder alerts.</p>
       <div class="field">
         <label>Item</label>
         <input id="imName" type="text" placeholder="e.g. Ground beef" autocomplete="off" />
@@ -1511,6 +1505,18 @@
         <label>Shelf / section</label>
         <select id="imSection"></select>
       </div>
+      <div style="display:flex; gap:8px;">
+        <div class="field" style="flex:1;">
+          <label>Par level <span style="font-weight:400; color:var(--muted); font-size:11px;">(reorder trigger)</span></label>
+          <input id="imPar" type="number" step="0.5" min="0" placeholder="e.g. 2" />
+        </div>
+        <div class="field" style="flex:1;">
+          <label>Supplier</label>
+          <select id="imSupplier">
+            <option value="">— none —</option>
+          </select>
+        </div>
+      </div>
       <div class="field">
         <label>Expires (optional)</label>
         <input id="imExpiry" type="date" />
@@ -1527,8 +1533,8 @@
   <div class="modal-backdrop" id="shoppingListModal">
     <div class="modal">
       <button class="close-x" data-close="shoppingListModal">×</button>
-      <h2>🛒 Shopping List</h2>
-      <p class="subtitle">Items you're out of, or added manually. Check off as you shop — restored items go back into inventory.</p>
+      <h2>📦 Order List</h2>
+      <p class="subtitle">Items below par or out of stock. Check off as you receive — tap Put away to restock inventory.</p>
 
       <div id="shopDupeWarn"></div>
 
@@ -2401,7 +2407,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     let currentView = "cook";
     let editingItemKey = null;
     let openRecipeId = null;
-    let familySize = 4;
+    let familySize = 1; // Cafe: always 1 serving
     let checklistState = [];
     let checklistItems = [];
     let cartMode = "recipe"; // "recipe" or "plan"
@@ -2765,18 +2771,32 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       if (!invItem) return;
       // Don't auto-add if an open (unchecked) line for this item already exists.
       if (shoppingListMatch(invItem.name, invItem.brand)) return;
-      addToShoppingList({
+      // Calculate reorder qty: enough to bring stock up to 2× par level, or 1 if no par set
+      const reorderQty = invItem.par != null ? Math.max(1, (invItem.par * 2) - (invItem.qty || 0)) : 1;
+      const result = addToShoppingList({
         name: invItem.name,
         brand: invItem.brand || "",
-        qty: 1,
+        qty: reorderQty,
         unit: invItem.unit || "",
         reason: reason || "ran out",
+        recipeEmoji: "📦",
+        recipeName: "Resupply",
       }, { allowDupe: false });
-      showToast(`Added ${invItem.name}${invItem.brand ? " (" + invItem.brand + ")" : ""} to shopping list`, "Undo", () => {
-        // Undo: pop the last matching entry
-        const idx = (state.shoppingList || []).map(s => s.name).lastIndexOf(invItem.name);
-        if (idx >= 0) { state.shoppingList.splice(idx, 1); saveState(); if (typeof renderShoppingList === "function") renderShoppingList(); }
-      });
+      if (result && result.added) {
+        showToast(`📦 Reorder triggered: ${invItem.name}`, "Undo", () => {
+          const idx = (state.shoppingList || []).map(s => s.name).lastIndexOf(invItem.name);
+          if (idx >= 0) { state.shoppingList.splice(idx, 1); saveState(); if (typeof renderShoppingList === "function") renderShoppingList(); }
+        });
+      }
+    }
+
+    // Check par levels after any qty change and auto-add if needed
+    function checkParAndAutoOrder(item, prevQty) {
+      if (!item || item.par == null) return;
+      const crossedPar = (prevQty == null || prevQty > item.par) && (item.qty || 0) <= item.par;
+      if (crossedPar) {
+        autoAddOnDepletion(item, `Below par (${item.qty} ${item.unit || ""} ≤ par ${item.par})`);
+      }
     }
 
     // ---- Shopping list UI ----
@@ -3123,7 +3143,14 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       return new Date(item.expiry).getTime() < Date.now();
     }
     function isLowStock(item) {
-      return item.qty != null && item.qty > 0 && item.qty <= (state.settings.lowStockThreshold || 1);
+      if (item.qty == null || item.qty <= 0) return false;
+      // Use item-level par if set, otherwise fall back to global threshold
+      const threshold = item.par != null ? item.par : (state.settings.lowStockThreshold || 1);
+      return item.qty <= threshold;
+    }
+
+    function isAtOrBelowPar(item) {
+      return item.par != null && item.qty != null && item.qty <= item.par;
     }
 
     function daysAgo(dateStr) {
@@ -3318,7 +3345,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           <div class="emoji">${r.emoji}</div>
           <div class="info">
             <div class="name">${r.name}</div>
-            <div class="meta">${r.time} · serves ${r.baseServings}${lastCooked}</div>
+            <div class="meta">${r.time} · 1 serving${lastCooked}</div>
             ${statusHtml}
           </div>
           <button class="fav-star ${fav ? "on" : ""}" data-action="fav" aria-label="Favorite">${fav ? "★" : "☆"}</button>
@@ -3355,7 +3382,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       familySize = state.settings.familyDefault || r.baseServings;
       document.getElementById("rmEmoji").textContent = r.emoji;
       document.getElementById("rmName").textContent = r.name;
-      document.getElementById("rmMeta").textContent = `${r.time} · ${r.difficulty || "easy"} · serves ${r.baseServings}`;
+      document.getElementById("rmMeta").textContent = `${r.time} · ${r.difficulty || "easy"} · 1 serving`;
       const tags = [];
       if (r.cuisine) tags.push(r.cuisine);
       if (r.mealType) tags.push(r.mealType);
@@ -3371,14 +3398,13 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     }
 
     function renderFamily() {
-      document.getElementById("familyValue").textContent = familySize;
-      document.getElementById("familyLabel").textContent = `${familySize} ${familySize === 1 ? "person" : "people"}`;
-      document.getElementById("minusBtn").disabled = familySize <= 1;
-      document.getElementById("plusBtn").disabled = familySize >= 12;
+      // Cafe: always 1 serving, stepper is hidden — nothing to render
+      familySize = 1;
     }
 
     function scaledFor(recipe) {
-      const factor = familySize / recipe.baseServings;
+      // Cafe: always scale to 1 serving regardless of baseServings
+      const factor = 1 / (recipe.baseServings || 1);
       return recipe.ingredients.map(i => ({
         ...i,
         scaledQty: i.qty * factor,
@@ -3493,7 +3519,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           <div class="card empty-state" style="padding:28px 16px;">
             <span class="big">📦</span>
             <p style="margin:8px 0 4px; font-weight:600;">No items yet</p>
-            <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your pantry or fridge to add items</p>
+            <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your bar or dry storage to add items, then set par levels for automatic reorder alerts</p>
             <button class="btn btn-ai" onclick="setView('scan')" style="width:100%;">📸 Scan your kitchen with AI<span class="ai-badge">AI</span></button>
           </div>`;
         return;
@@ -3660,6 +3686,10 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       document.getElementById("imQty").value = item && item.qty != null ? item.qty : "";
       document.getElementById("imUnit").value = item && item.unit ? item.unit : "";
       document.getElementById("imExpiry").value = item && item.expiry ? item.expiry : "";
+      document.getElementById("imPar").value = item && item.par != null ? item.par : "";
+      // Populate supplier dropdown from state.suppliers
+      const supEl = document.getElementById("imSupplier");
+      supEl.innerHTML = `<option value="">— none —</option>` + (state.suppliers || []).map(s => `<option value="${s.id}"${item && item.supplier === s.id ? " selected" : ""}>${escapeHtml(s.name)}</option>`).join("");
       document.getElementById("imDelete").style.display = item ? "inline-flex" : "none";
       // Populate area + section
       populateAreaSelect(item?.areaId, item?.sectionId);
@@ -3674,6 +3704,9 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       const expiry = document.getElementById("imExpiry").value || null;
       const newQty = qtyStr === "" ? null : Number(qtyStr);
       const prev = editingItemKey ? state.inventory[editingItemKey] : null;
+      const parStr = document.getElementById("imPar").value;
+      const par = parStr === "" ? null : Number(parStr);
+      const supplier = document.getElementById("imSupplier").value || (prev && prev.supplier) || "";
       const item = {
         name,
         brand: document.getElementById("imBrand").value.trim(),
@@ -3682,9 +3715,11 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         unit: document.getElementById("imUnit").value,
         areaId: document.getElementById("imArea").value,
         sectionId: document.getElementById("imSection").value,
-        loc: getLayout().find(a => a.id === document.getElementById("imArea").value)?.name.toLowerCase() || "pantry",
+        loc: getLayout().find(a => a.id === document.getElementById("imArea").value)?.name.toLowerCase() || "drystore",
         expiry,
         upc: (prev && prev.upc) ? prev.upc : "",
+        par,
+        supplier,
       };
       const newKey = inventoryKey(item);
       if (editingItemKey && editingItemKey !== newKey) {
@@ -3695,11 +3730,15 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       hideModal("itemModal");
       renderInventory();
       haptic(10);
-      // Auto-add to shopping list if user manually set qty to 0
-      // (either a new item created at 0, or an existing item whose qty went from >0 → 0).
+      const prevQty = prev ? prev.qty : null;
+      // Trigger resupply if qty hit zero
       if (newQty === 0) {
-        const wentToZero = !prev || (prev.qty == null || prev.qty > 0);
+        const wentToZero = prevQty == null || prevQty > 0;
         if (wentToZero) autoAddOnDepletion(item, "ran out");
+      }
+      // Trigger resupply if qty just crossed the par threshold (and isn't zero)
+      else if (newQty != null && newQty > 0) {
+        checkParAndAutoOrder(item, prevQty);
       }
     }
     function deleteItem() {
@@ -4833,7 +4872,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       if (!r || !r.steps || !r.steps.length) { alert("No steps to walk through"); return; }
       cookStep = 0;
       document.getElementById("cmTitle").textContent = r.name;
-      document.getElementById("cmSubtitle").textContent = `${r.time} · for ${familySize}`;
+      document.getElementById("cmSubtitle").textContent = `${r.time} · 1 serving`;
       hideModal("recipeModal");
       renderCookStep();
       document.getElementById("cookMode").classList.add("show");
@@ -4866,14 +4905,16 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         const inv = findInventoryFor(ing.name);
         if (!inv) return;
         removed.push({ key: inventoryKey(inv), before: { ...inv } });
+        const prevQty = inv.qty;
         if (inv.qty != null && inv.qty > 1) {
-          inv.qty = Math.max(0, inv.qty - 1);
+          inv.qty = Math.max(0, inv.qty - (ing.scaledQty || 1));
         } else {
-          // Would deplete to 0. Keep the entry at qty:0 (Need to restock)
-          // instead of deleting, so inventory keeps the product identity.
+          // Would deplete to 0 — keep at qty:0 so inventory retains product identity
           inv.qty = 0;
           if (!isTrivialUnit(ing.unit)) depletedToAutoAdd.push(inv);
         }
+        // Check par threshold after deduction
+        if (inv.qty > 0) checkParAndAutoOrder(inv, prevQty);
       });
       state.history[r.id] = new Date().toISOString();
       saveState();
@@ -4950,7 +4991,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           <div class="emoji">${r.emoji}</div>
           <div class="info">
             <div class="name">${r.name}</div>
-            <div class="meta">${r.time} · serves ${r.baseServings}</div>
+            <div class="meta">${r.time} · 1 serving</div>
           </div>
         </div>`).join("");
       picker.querySelectorAll(".recipe-row").forEach(row => {
@@ -5013,7 +5054,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       }).join("\n") || "(empty)";
 
       const recipes = RECIPES.concat(state.customRecipes || []).map(r =>
-        `- ${r.id}: ${r.name} (${r.cuisine || "—"}, ${r.mealType || "—"}, ${r.time}, serves ${r.baseServings})`
+        `- ${r.id}: ${r.name} (${r.cuisine || "—"}, ${r.mealType || "—"}, ${r.time}, 1 serving)`
       ).join("\n");
 
       const plan = DAYS.map(d => `${d}: ${state.mealPlan[d] ? getRecipe(state.mealPlan[d])?.name || "—" : "empty"}`).join("\n");
