@@ -1792,10 +1792,113 @@
 
   <script>
     // ============================================================
-    // RECIPE LIBRARY (16 recipes with full steps + tags)
+    // CAFE MENU LIBRARY
     // ============================================================
     const RECIPES = [
-      { id:"spaghetti", name:"Spaghetti Bolognese", emoji:"🍝", baseServings:4, time:"30 min",
+      // ── ESPRESSO DRINKS ──
+      { id:"espresso", name:"Espresso", emoji:"☕", baseServings:1, time:"2 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"easy", tags:["coffee","quick"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.036,unit:"kg"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Grind 18g of espresso beans fresh.","Pull a 30ml shot at 9 bar, ~25–30 seconds.","Serve immediately in a warmed demitasse."] },
+
+      { id:"americano", name:"Americano", emoji:"☕", baseServings:1, time:"3 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"easy", tags:["coffee","quick"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.036,unit:"kg"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Pull a double shot of espresso.","Add 6–8oz hot water to the cup first.","Pour espresso over the water to preserve crema."] },
+
+      { id:"latte", name:"Latte", emoji:"🥛", baseServings:1, time:"4 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"easy", tags:["coffee","milk"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.036,unit:"kg"},{name:"Whole milk",qty:0.3,unit:"L"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Pull a double shot of espresso into a 12oz cup.","Steam 10oz whole milk to 140°F — silky, no big bubbles.","Pour milk over espresso, holding back foam.","Finish with a thin layer of microfoam on top."] },
+
+      { id:"oat-latte", name:"Oat Milk Latte", emoji:"🌾", baseServings:1, time:"4 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"easy", tags:["coffee","dairy-free"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.036,unit:"kg"},{name:"Oat milk",qty:0.3,unit:"L"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Pull a double shot of espresso into a 12oz cup.","Steam oat milk to 140°F — oat milk froths best slightly cooler.","Pour over espresso and finish with a thin layer of foam."] },
+
+      { id:"cappuccino", name:"Cappuccino", emoji:"☕", baseServings:1, time:"4 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"medium", tags:["coffee","milk"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.036,unit:"kg"},{name:"Whole milk",qty:0.15,unit:"L"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Pull a double shot of espresso into a 6oz cup.","Steam 4oz whole milk to a thick, velvety microfoam.","Pour steamed milk — equal parts espresso, milk, and foam.","The foam should stand up slightly above the rim."] },
+
+      { id:"flat-white", name:"Flat White", emoji:"☕", baseServings:1, time:"4 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"medium", tags:["coffee","milk","strong"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.036,unit:"kg"},{name:"Whole milk",qty:0.15,unit:"L"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Pull a double ristretto (shorter, sweeter) shot.","Steam 4oz whole milk to silky microfoam — finer than a cappuccino.","Pour in a steady stream for a flat, glossy surface."] },
+
+      { id:"cortado", name:"Cortado", emoji:"☕", baseServings:1, time:"3 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"medium", tags:["coffee","strong","quick"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.036,unit:"kg"},{name:"Whole milk",qty:0.06,unit:"L"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Pull a double shot of espresso.","Steam a small amount of milk — equal volume to the espresso.","Pour directly over the shot. No latte art needed — cortados are flat."] },
+
+      { id:"iced-latte", name:"Iced Latte", emoji:"🧊", baseServings:1, time:"3 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"easy", tags:["coffee","iced","milk"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.036,unit:"kg"},{name:"Whole milk",qty:0.25,unit:"L"},{name:"16oz cups",qty:1,unit:""},{name:"Cup lids",qty:1,unit:""}],
+        steps:["Fill a 16oz cup with ice.","Pull a double shot and let cool 30 seconds, or pull directly over ice.","Pour cold milk over ice almost to the top.","Pour espresso over — let customer stir or leave layered."] },
+
+      { id:"cold-brew", name:"Cold Brew", emoji:"🥤", baseServings:1, time:"2 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"easy", tags:["coffee","iced","batch"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.05,unit:"kg"},{name:"16oz cups",qty:1,unit:""},{name:"Cup lids",qty:1,unit:""}],
+        steps:["Cold brew should be pre-made in batch (steep 16–18hr, filter, refrigerate).","Fill a 16oz cup with ice.","Pour cold brew concentrate to about 2/3 full.","Top with cold water or milk to preference."] },
+
+      { id:"vanilla-latte", name:"Vanilla Latte", emoji:"🍦", baseServings:1, time:"4 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"easy", tags:["coffee","sweet","milk"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.036,unit:"kg"},{name:"Whole milk",qty:0.3,unit:"L"},{name:"Vanilla syrup",qty:0.03,unit:"L"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Add 1 pump vanilla syrup to the cup.","Pull a double shot directly over the syrup.","Steam 10oz whole milk and pour over.","Stir gently if needed."] },
+
+      { id:"caramel-latte", name:"Caramel Latte", emoji:"🍮", baseServings:1, time:"4 min",
+        cuisine:"coffee", mealType:"coffee", difficulty:"easy", tags:["coffee","sweet","milk"],
+        ingredients:[
+          {name:"Espresso beans",qty:0.036,unit:"kg"},{name:"Whole milk",qty:0.3,unit:"L"},{name:"Caramel sauce",qty:0.03,unit:"L"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Drizzle caramel sauce on the inside of the cup.","Pull a double shot of espresso.","Steam 10oz whole milk and pour over shot.","Drizzle more caramel on top."] },
+
+      { id:"chai-latte", name:"Chai Latte", emoji:"🫖", baseServings:1, time:"5 min",
+        cuisine:"tea", mealType:"tea", difficulty:"easy", tags:["tea","spiced","milk"],
+        ingredients:[
+          {name:"Black tea bags",qty:2,unit:""},{name:"Whole milk",qty:0.25,unit:"L"},{name:"Simple syrup",qty:0.03,unit:"L"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Steep 2 black tea bags in 4oz of just-boiled water for 4 minutes.","Add simple syrup or sugar to taste.","Steam 8oz milk to 140°F.","Pour steamed milk over the concentrated tea."] },
+
+      { id:"matcha-latte", name:"Matcha Latte", emoji:"🍵", baseServings:1, time:"4 min",
+        cuisine:"tea", mealType:"tea", difficulty:"easy", tags:["tea","healthy","milk"],
+        ingredients:[
+          {name:"Whole milk",qty:0.3,unit:"L"},{name:"Simple syrup",qty:0.02,unit:"L"},{name:"12oz cups",qty:1,unit:""}],
+        steps:["Whisk 2 tsp matcha powder with 2oz hot water until smooth — no lumps.","Add simple syrup to the matcha base.","Steam 10oz milk and pour over.","Optional: dust a little matcha on top."] },
+
+      // ── FOOD ──
+      { id:"avo-toast", name:"Avocado Toast", emoji:"🥑", baseServings:1, time:"5 min",
+        cuisine:"food", mealType:"breakfast", difficulty:"easy", tags:["food","breakfast","vegetarian"],
+        ingredients:[
+          {name:"Sourdough bread",qty:0.15,unit:"loaf"},{name:"Avocado",qty:0.5,unit:""},{name:"Cherry tomatoes",qty:0.1,unit:"pint"},{name:"Napkins",qty:2,unit:""}],
+        steps:["Toast 2 slices sourdough until deeply golden.","Halve and pit the avocado. Scoop into a bowl.","Mash with a pinch of salt, pepper, and lemon juice.","Spread generously on toast. Top with halved cherry tomatoes, flaky salt, chili flakes."] },
+
+      { id:"avo-toast-egg", name:"Avocado Toast + Egg", emoji:"🥑", baseServings:1, time:"8 min",
+        cuisine:"food", mealType:"breakfast", difficulty:"easy", tags:["food","breakfast","protein"],
+        ingredients:[
+          {name:"Sourdough bread",qty:0.15,unit:"loaf"},{name:"Avocado",qty:0.5,unit:""},{name:"Eggs",qty:1,unit:""},{name:"Cherry tomatoes",qty:0.1,unit:"pint"},{name:"Napkins",qty:2,unit:""}],
+        steps:["Toast 2 slices sourdough.","Mash half an avocado with salt, pepper, lemon.","Poach or fry 1 egg to your liking.","Spread avocado on toast, layer egg on top, add cherry tomatoes and seasoning."] },
+
+      { id:"turkey-sandwich", name:"Turkey Sandwich", emoji:"🥪", baseServings:1, time:"5 min",
+        cuisine:"food", mealType:"lunch", difficulty:"easy", tags:["food","lunch","protein"],
+        ingredients:[
+          {name:"Sourdough bread",qty:0.15,unit:"loaf"},{name:"Turkey breast",qty:0.15,unit:"lb"},{name:"Mixed greens",qty:0.1,unit:"bag"},{name:"Cheddar cheese",qty:0.1,unit:"lb"},{name:"Napkins",qty:2,unit:""}],
+        steps:["Toast 2 slices sourdough if desired.","Layer turkey, cheddar, and mixed greens.","Add condiments — mayo, mustard, or aioli.","Cut diagonally and plate."] },
+
+      { id:"salmon-toast", name:"Smoked Salmon Toast", emoji:"🐟", baseServings:1, time:"5 min",
+        cuisine:"food", mealType:"breakfast", difficulty:"easy", tags:["food","breakfast","premium"],
+        ingredients:[
+          {name:"Sourdough bread",qty:0.15,unit:"loaf"},{name:"Smoked salmon",qty:0.25,unit:"pkg"},{name:"Cherry tomatoes",qty:0.1,unit:"pint"},{name:"Napkins",qty:2,unit:""}],
+        steps:["Toast 2 slices sourdough.","Spread with cream cheese (if available) or avocado mash.","Layer smoked salmon generously.","Garnish with capers, red onion, and cherry tomatoes."] },
+    ];
         cuisine:"italian", mealType:"dinner", difficulty:"easy", tags:["kid-friendly","comfort"],
         ingredients:[
           {name:"Spaghetti",qty:1,unit:"lb"},{name:"Ground beef",qty:1,unit:"lb"},
@@ -3244,37 +3347,31 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       const ranked = filteredRanked();
       const favSet = new Set(state.favorites);
       const favRecipes = ranked.filter(r => favSet.has(r.id));
-      const cookNow = ranked.filter(r => r.ratio === 1 && !favSet.has(r.id));
-      // "Almost" = missing 1–4 ingredients (regardless of ratio — even a 20-ingredient recipe missing 2 is "almost")
+      const canMake = ranked.filter(r => r.ratio === 1 && !favSet.has(r.id));
       const almost = ranked.filter(r => r.missing.length > 0 && r.missing.length <= 4 && !favSet.has(r.id));
       const far = ranked.filter(r => r.missing.length > 4 && !favSet.has(r.id));
 
-      // Empty inventory prompt
-      const invCount = Object.keys(state.inventory).length;
-      const emptyBanner = document.getElementById("emptyInvBanner");
-      if (emptyBanner) emptyBanner.remove();
-      if (invCount === 0) {
-        const banner = document.createElement("div");
-        banner.id = "emptyInvBanner";
-        banner.className = "card";
-        banner.style = "text-align:center; padding:24px 16px; margin-bottom:12px;";
-        banner.innerHTML = `
-          <span style="font-size:40px;">📷</span>
-          <p style="margin:10px 0 4px; font-weight:600;">Your inventory is empty</p>
-          <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your pantry or fridge to get started</p>
-          <button class="btn btn-ai" onclick="setView('scan')" style="width:100%;">📸 Scan your kitchen with AI<span class="ai-badge">AI</span></button>
-        `;
-        document.getElementById("useSoonWrap").before(banner);
-      }
+      // ── LOW STOCK DASHBOARD ──
+      const lowItems = Object.values(state.inventory).filter(i => {
+        if (!i || i.qty == null) return false;
+        if (i.qty === 0) return true;
+        if (i.par != null && i.qty <= i.par) return true;
+        return false;
+      }).sort((a, b) => (a.qty || 0) - (b.qty || 0));
 
-      const soonItems = expiringSoon();
-      document.getElementById("useSoonWrap").innerHTML = soonItems.length ? `
-        <div class="section-title"><h2>Use soon</h2><span class="count">${soonItems.length}</span></div>
-        <div class="card" style="background: var(--amber-light); border:1px solid #ffe082;">
-          <div style="font-size:13px; margin-bottom:6px; color: #9a6300;">Items expiring in the next 3 days:</div>
-          <div style="display:flex; flex-wrap:wrap; gap:6px;">
-            ${soonItems.map(i => `<span class="chip" style="background: var(--card); pointer-events:none;">${i.name}</span>`).join("")}
-          </div>
+      document.getElementById("useSoonWrap").innerHTML = lowItems.length ? `
+        <div class="section-title"><h2>⚠️ Needs Attention</h2><span class="count" style="background:var(--red-light); color:var(--red);">${lowItems.length}</span></div>
+        <div class="card" style="background:var(--red-light); border:1px solid #ffcdd2; padding:12px; margin-bottom:4px;">
+          <div style="font-size:12px; font-weight:600; color:var(--red); margin-bottom:8px;">These items are at or below par — reorder now</div>
+          ${lowItems.map(i => `
+            <div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(198,40,40,.1);">
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:600; font-size:14px;">${escapeHtml(i.name)}</div>
+                <div style="font-size:11px; color:var(--red);">${i.qty === 0 ? "Out of stock" : `${formatQty(i.qty)} ${i.unit||""} left${i.par != null ? " (par: "+i.par+")" : ""}`}</div>
+              </div>
+              <button data-quick-restock="${inventoryKey(i)}" style="font-size:12px; padding:4px 10px; border-radius:8px; border:1px solid var(--green); background:var(--green-light); color:var(--green); font-weight:700; cursor:pointer; white-space:nowrap;">+ Restock</button>
+            </div>`).join("")}
+          <button class="btn btn-primary" style="width:100%; margin-top:10px; font-size:13px;" onclick="openShoppingList()">📦 View Order List</button>
         </div>` : "";
 
       document.getElementById("favWrap").innerHTML = favRecipes.length ?
@@ -3282,20 +3379,34 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         favRecipes.map(r => recipeRow(r, classForRatio(r.ratio))).join("") : "";
 
       document.getElementById("cookNowWrap").innerHTML = sectionHtml(
-        "🟢 Cook right now", cookNow, "ready-now",
-        "🍽️", "Nothing fully stocked", "Add ingredients in Inventory, then recipes will appear here."
+        "✅ Ready to make", canMake, "ready-now",
+        "🍽️", "Nothing fully stocked", "Add ingredients in Stock, then menu items will appear here."
       );
       document.getElementById("almostWrap").innerHTML = sectionHtml(
-        "🛒 Missing just a few things", almost, "almost", "", "", ""
+        "🛒 Missing a few things", almost, "almost", "", "", ""
       );
-      document.getElementById("farWrap").innerHTML = sectionHtml("Need more groceries", far, "far", "🧺", "", "");
+      document.getElementById("farWrap").innerHTML = sectionHtml("Need more stock", far, "far", "🧺", "", "");
+
+      // Wire quick restock buttons in the low stock dashboard
+      document.querySelectorAll("[data-quick-restock]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const key = btn.dataset.quickRestock;
+          const inv = state.inventory[key];
+          if (!inv) return;
+          openItem(key); // open edit modal pre-filled
+        });
+      });
 
       document.querySelectorAll(".recipe-row").forEach(row => {
         row.addEventListener("click", (e) => {
           if (e.target.dataset.action === "fav") {
-            toggleFav(row.dataset.id);
+            toggleFav(row.dataset.id); e.stopPropagation(); return;
+          }
+          if (e.target.dataset.action === "serve" || e.target.closest("[data-action='serve']")) {
             e.stopPropagation();
-            return;
+            const id = e.target.dataset.id || e.target.closest("[data-action='serve']").dataset.id;
+            quickServe(id); return;
           }
           if (e.target.dataset.action === "addmissing" || e.target.closest("[data-action='addmissing']")) {
             e.stopPropagation();
@@ -3310,6 +3421,16 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         });
       });
     }
+
+    // One-tap serve: deplete inventory, trigger par checks, show toast
+    function quickServe(id) {
+      openRecipeId = id;
+      recordCooked();
+      const r = getRecipe(id);
+      showToast(`${r ? r.emoji + " " + r.name : "Item"} served ✓`);
+      haptic(10);
+      renderCook();
+    }
     function classForRatio(ratio) {
       return ratio === 1 ? "ready-now" : (ratio >= 0.5 ? "almost" : "far");
     }
@@ -3319,22 +3440,25 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
 
       let statusHtml = "";
       if (r.ratio === 1) {
-        // Cook now — green badge
-        statusHtml = `<div class="ready" style="color:var(--green); font-weight:700;">✓ You have everything — cook now!</div>`;
+        statusHtml = `
+          <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+            <button data-action="serve" data-id="${r.id}"
+              style="flex:1; font-size:14px; font-weight:700; padding:8px 0; border-radius:10px; border:none; background:var(--green); color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+              ⚡ Serve
+            </button>
+          </div>`;
       } else if (r.missing.length <= 4) {
-        // Almost — show exactly what's missing as chips
         const chips = r.missing.map(i =>
           `<span style="display:inline-block; background:var(--red-light); color:var(--red); font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; white-space:nowrap;">${i.name}</span>`
         ).join(" ");
         statusHtml = `
           <div class="ready" style="color:var(--muted); margin-bottom:5px;">${r.have.length} of ${r.total} in stock</div>
           <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-bottom:7px;">
-            <span style="font-size:11px; color:var(--muted); font-weight:600;">Need:</span>
-            ${chips}
+            <span style="font-size:11px; color:var(--muted); font-weight:600;">Need:</span>${chips}
           </div>
           <button class="add-missing-btn" data-id="${r.id}" data-action="addmissing"
-            style="font-size:12px; font-weight:600; padding:5px 12px; border-radius:999px; border:none; background:var(--instacart); color:white; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
-            🛒 Add ${r.missing.length} item${r.missing.length > 1 ? "s" : ""} to cart
+            style="font-size:12px; font-weight:600; padding:5px 12px; border-radius:999px; border:none; background:var(--instacart); color:white; cursor:pointer;">
+            🛒 Order ${r.missing.length} missing item${r.missing.length > 1 ? "s" : ""}
           </button>`;
       } else {
         statusHtml = `<div class="ready">${r.have.length} of ${r.total} in stock</div>`;
@@ -3555,7 +3679,11 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
               ${parText}${supplierText}
             </div>
             <div class="badges">${badges.join("")}</div>
-            <div class="qty">${qtyText}</div>
+            <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+              <button data-action="decrement" style="width:26px; height:26px; border-radius:6px; border:1px solid var(--border); background:var(--bg); font-size:16px; line-height:1; cursor:pointer; color:var(--muted); display:flex; align-items:center; justify-content:center;">−</button>
+              <div class="qty" style="min-width:36px; text-align:center;">${qtyText}</div>
+              <button data-action="increment" style="width:26px; height:26px; border-radius:6px; border:1px solid var(--green); background:var(--green-light); font-size:16px; line-height:1; cursor:pointer; color:var(--green); display:flex; align-items:center; justify-content:center; font-weight:700;">+</button>
+            </div>
             <button class="delete" data-action="delete" aria-label="Delete">×</button>
           </div>`;
       }
@@ -3655,6 +3783,22 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
               if (typeof renderShoppingList === "function") renderShoppingList();
             });
             haptic(10);
+          } else if (action === "increment") {
+            const item = state.inventory[k];
+            if (!item) return;
+            const prevQty = item.qty || 0;
+            item.qty = Math.round((prevQty + 1) * 10) / 10;
+            saveState(); renderInventory(); haptic(5);
+            showToast(`${item.name}: ${formatQty(item.qty)} ${item.unit || ""}`);
+          } else if (action === "decrement") {
+            const item = state.inventory[k];
+            if (!item || !item.qty) return;
+            const prevQty = item.qty;
+            item.qty = Math.max(0, Math.round((prevQty - 1) * 10) / 10);
+            checkParAndAutoOrder(item, prevQty);
+            if (item.qty === 0) autoAddOnDepletion(item, "ran out");
+            saveState(); renderInventory(); haptic(5);
+            showToast(`${item.name}: ${item.qty === 0 ? "out of stock" : formatQty(item.qty) + " " + (item.unit || "")}`);
           } else {
             openItem(k);
           }
