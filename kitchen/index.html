@@ -16,8 +16,8 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <meta name="theme-color" content="#2e7d32" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#0d2f0e" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#1565c0" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0d2149" media="(prefers-color-scheme: dark)" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Kitchen" />
@@ -27,10 +27,10 @@
   <title>My Kitchen</title>
   <style>
     :root {
-      --green: #2e7d32;
-      --green-dark: #1b5e20;
-      --green-light: #e8f5e9;
-      --green-ring: #a5d6a7;
+      --green: #1565c0;
+      --green-dark: #0d47a1;
+      --green-light: #e3f2fd;
+      --green-ring: #90caf9;
       --amber: #f9a825;
       --amber-light: #fff8e1;
       --red: #c62828;
@@ -48,10 +48,10 @@
       --shadow-lg: 0 4px 14px rgba(0,0,0,0.1);
     }
     [data-theme="dark"] {
-      --green: #66bb6a;
-      --green-dark: #81c784;
-      --green-light: #1e3a1e;
-      --green-ring: #2e5e30;
+      --green: #64b5f6;
+      --green-dark: #90caf9;
+      --green-light: #0d2a4a;
+      --green-ring: #1a3a6b;
       --amber: #ffb74d;
       --amber-light: #3a2e1a;
       --red: #ef5350;
@@ -3713,7 +3713,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
 
       const container = document.getElementById("scanResult");
       container.innerHTML = `
-        <img class="preview-img" src="${dataUrl}" alt="Captured" />
+        ${dataUrl ? `<img class="preview-img" src="${dataUrl}" alt="Captured" />` : ""}
         <div class="card">
           <h3 style="margin:0 0 4px;">Confirm this item</h3>
           <p id="closeUpStatus" style="color:var(--muted); font-size:12px; margin:0 0 12px;">
@@ -3859,7 +3859,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5",
+          model: "claude-sonnet-4-6",
           max_tokens: 600,
           messages: [{
             role: "user",
@@ -4451,19 +4451,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
 
     // ─── END BATCH SCAN ──────────────────────────────────────────────────────────
 
-    async function handleBarcodeOnly() {
-      // Fires when the user taps "Scan barcode only" on the Scan tab (no photo first).
-      // Opens the scanner. If a match is found, pre-fills a close-up review card.
-      closeUpDraft = { dataUrl: "", name: "", brand: "", canonicalName: "", qty: null, unit: "", upc: "", loc: "pantry", size: "" };
-      // Make sure the scan result area has a placeholder so applyCloseUpInfo has DOM to target
-      const container = document.getElementById("scanResult");
-      container.innerHTML = "";
-      // Open scanner; when a UPC is decoded, we'll render the review card
-      const origOnDecode = onBarcodeDecoded;
-      // Temporarily override to render review card first
-      window._pendingBarcodeFromScanTab = true;
-      openBarcodeScanner();
-    }
 
     function saveCloseUpItem() {
       if (!closeUpDraft) return;
@@ -4762,7 +4749,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5",
+          model: "claude-sonnet-4-6",
           max_tokens: 1500,
           messages: [{
             role: "user",
@@ -4817,6 +4804,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           areaId,
           sectionId,
           expiry: null,
+          upc: "",
         };
         state.inventory[inventoryKey(item)] = item;
       });
@@ -4824,7 +4812,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       document.getElementById("scanResult").innerHTML = `
         <div class="card empty-state" style="background:var(--green-light);">
           <span class="big">✅</span>
-          Added ${selected.length} item${selected.length === 1 ? "" : "s"} to your ${loc}.<br/>
+          Added ${selected.length} item${selected.length === 1 ? "" : "s"} to your ${areaName}.<br/>
           <small>Check the Inventory tab to review.</small>
         </div>`;
       haptic(15);
@@ -5052,7 +5040,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
           "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({
-          model: opts.model || "claude-sonnet-4-5",
+          model: opts.model || "claude-sonnet-4-6",
           max_tokens: opts.maxTokens || 800,
           system,
           messages,
@@ -5498,12 +5486,6 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       hideModal("recipeModal");
       setView("plan");
       showToast("Tap any day to place this recipe");
-      // Queue the recipe for next pick
-      const once = (day) => {
-        state.mealPlan[day] = openRecipeId;
-        saveState(); renderPlan();
-      };
-      // Simpler: user picks via existing flow; we just surface plan
     });
 
     // Cooking mode
