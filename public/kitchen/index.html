@@ -1,21 +1,8 @@
-<!--
-  My Kitchen App
-  © 2026 Ryan Triplett. All rights reserved.
-  Unauthorized copying, modification, or distribution of this software,
-  via any medium, is strictly prohibited.
-  Proprietary and confidential.
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <!-- Capacitor bridge — injected automatically in native builds, no-op on web -->
-  <script>window.Capacitor = window.Capacitor || {};</script>
-  <!-- Firebase SDK (compat) — loaded async so it never blocks first paint -->
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <meta name="theme-color" content="#2e7d32" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0d2f0e" media="(prefers-color-scheme: dark)" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -115,40 +102,11 @@
     }
     header .header-btn:active { transform: scale(0.92); }
 
-    /* Sync status dot */
-    #syncStatus {
-      font-size: 13px;
-      line-height: 1;
-      display: none;
-      pointer-events: none;
-    }
-    #authBtn img { border: 2px solid rgba(255,255,255,0.5); }
-
-    /* Sign-in modal */
-    .signin-google-btn {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      padding: 14px 20px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: var(--card);
-      color: var(--text);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      justify-content: center;
-      transition: background 0.15s;
-    }
-    .signin-google-btn:hover { background: var(--green-light); }
-    .signin-google-btn:active { transform: scale(0.98); }
-
     /* Views */
     main {
       max-width: 640px;
       margin: 0 auto;
-      padding: 12px 12px calc(88px + env(safe-area-inset-bottom));
+      padding: 12px 12px 20px;
     }
     .view { display: none; }
     .view.active { display: block; animation: fadeIn 0.15s; }
@@ -415,11 +373,6 @@
       background: none; border: none; font-size: 18px; color: var(--muted2);
       cursor: pointer; padding: 0;
     }
-    .shop-find-btn {
-      font-size: 14px; text-decoration: none; opacity: 0.55;
-      transition: opacity .15s;
-    }
-    .shop-find-btn:hover { opacity: 1; }
     .dupe-warn {
       background: var(--amber-light);
       color: #7a4a00;
@@ -443,49 +396,6 @@
     }
     .dupe-warn .dupe-cancel { background: transparent; color: var(--muted); }
     .dupe-warn .dupe-add { background: var(--amber); color: #000; }
-
-    /* Batch Scan */
-    .bs-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin-bottom: 6px;
-    }
-    .bs-item-name { font-weight: 600; font-size: 14px; line-height: 1.3; }
-    .bs-item-brand { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .bs-qty-row { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-    .bs-qty-btn {
-      width: 30px; height: 30px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      font-size: 17px; line-height: 1;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text);
-      -webkit-tap-highlight-color: transparent;
-    }
-    .bs-qty-btn:active { background: var(--green-light); }
-    .bs-qty-val { font-weight: 700; font-size: 15px; min-width: 22px; text-align: center; }
-    .bs-remove-btn {
-      width: 30px; height: 30px;
-      border-radius: 8px;
-      border: none;
-      background: var(--red-light);
-      color: var(--red);
-      font-size: 13px; font-weight: 700;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .bs-item-loading { opacity: .6; }
-    .bs-new-flash { animation: bsFlash .4s; }
-    @keyframes bsFlash { from { background: var(--green-light); } to { background: var(--card); } }
 
     /* FAB */
     .fab {
@@ -700,58 +610,6 @@
     .btn-green { background: var(--green); color: white; }
     .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
     .btn-ghost { background: transparent; color: var(--green); }
-
-    /* ✨ AI-powered button style */
-    .btn-ai {
-      background: linear-gradient(135deg, #7c3aed, #a855f7, #6366f1);
-      color: white;
-      border: none;
-      position: relative;
-      overflow: hidden;
-      font-weight: 600;
-      letter-spacing: 0.1px;
-    }
-    .btn-ai::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 60%);
-      pointer-events: none;
-    }
-    .btn-ai:active { opacity: 0.85; transform: scale(0.97); }
-    @keyframes shimmer {
-      0% { background-position: -200% center; }
-      100% { background-position: 200% center; }
-    }
-    .btn-ai .ai-badge {
-      display: inline-block;
-      background: rgba(255,255,255,0.25);
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      padding: 1px 5px;
-      margin-left: 6px;
-      vertical-align: middle;
-    }
-    /* AI scan dropzone */
-    .scan-dropzone-ai {
-      background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(99,102,241,0.08));
-      border: 2px dashed #a855f7;
-    }
-    .scan-dropzone-ai:hover, .scan-dropzone-ai:active {
-      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(99,102,241,0.15));
-    }
-    /* AI tab indicator */
-    .tab-btn.ai-tab .tab-icon { position: relative; }
-    .tab-btn.ai-tab .tab-icon::after {
-      content: "✨";
-      font-size: 8px;
-      position: absolute;
-      top: -4px;
-      right: -6px;
-    }
-    .tab-btn.ai-tab.active { color: #7c3aed; }
     .btn-red { background: var(--red); color: white; }
     .btn-row { display: flex; gap: 8px; margin-top: 6px; }
     .btn-row > .btn { flex: 1; }
@@ -1151,91 +1009,13 @@
       font-weight: 700; margin-left: 12px;
       cursor: pointer; font-size: 13px;
     }
-
-    /* ── Native barcode scanner overlay (Capacitor only) ─────────────────────── */
-    body.cap-scanning,
-    body.cap-scanning html { background: transparent !important; }
-    body.cap-scanning > *:not(#nativeScanOverlay) { visibility: hidden; }
-    body.cap-scanning #nativeScanOverlay { visibility: visible; display: flex !important; }
-
-    #nativeScanOverlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      background: transparent;
-    }
-    #nativeScanOverlay.active { display: flex; }
-
-    .native-scan-frame {
-      width: 260px;
-      height: 180px;
-      border: 3px solid white;
-      border-radius: 18px;
-      box-shadow: 0 0 0 4000px rgba(0,0,0,0.45);
-      position: relative;
-    }
-    .native-scan-frame::before,
-    .native-scan-frame::after {
-      content: "";
-      position: absolute;
-      width: 30px; height: 30px;
-      border-color: var(--green);
-      border-style: solid;
-    }
-    .native-scan-frame::before { top: -3px; left: -3px; border-width: 4px 0 0 4px; border-radius: 14px 0 0 0; }
-    .native-scan-frame::after  { bottom: -3px; right: -3px; border-width: 0 4px 4px 0; border-radius: 0 0 14px 0; }
-
-    .native-scan-line {
-      position: absolute;
-      left: 10px; right: 10px;
-      height: 2px;
-      background: var(--green);
-      box-shadow: 0 0 6px var(--green);
-      animation: scanLine 2s ease-in-out infinite;
-    }
-    @keyframes scanLine {
-      0%, 100% { top: 10px; }
-      50% { top: calc(100% - 12px); }
-    }
-    .native-scan-label {
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
-      margin-top: 20px;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-    }
-    .native-scan-cancel {
-      margin-top: 24px;
-      background: rgba(255,255,255,0.15);
-      border: 1.5px solid rgba(255,255,255,0.5);
-      color: white;
-      border-radius: 30px;
-      padding: 10px 28px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      backdrop-filter: blur(4px);
-    }
   </style>
 </head>
 <body>
-  <!-- Native barcode scanner overlay (Capacitor only — transparent over camera) -->
-  <div id="nativeScanOverlay">
-    <div class="native-scan-frame">
-      <div class="native-scan-line"></div>
-    </div>
-    <p class="native-scan-label">Point at a barcode</p>
-    <button class="native-scan-cancel" id="nativeScanCancelBtn">Cancel</button>
-  </div>
-
   <!-- Update banner — shown once per version, dismissed on tap -->
   <div id="updateBanner" style="display:none; background:#1565c0; color:white; padding:10px 16px; font-size:13px; align-items:center; justify-content:space-between; gap:8px;">
-    <span>✨ <strong>Update:</strong> Shopping list is now your cart — order on Instacart, print, or copy from there!</span>
-    <button onclick="document.getElementById('updateBanner').style.display='none'; localStorage.setItem('seenUpdate','v13');" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Got it</button>
+    <span>✨ <strong>Update:</strong> Barcode scanner improved — better iOS detection!</span>
+    <button onclick="document.getElementById('updateBanner').style.display='none'; localStorage.setItem('seenUpdate','v10');" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Got it</button>
   </div>
 
   <header>
@@ -1245,8 +1025,6 @@
     </div>
     <div style="display:flex; gap:8px; align-items:center;">
       <button class="header-btn" id="openShoppingListBtn" aria-label="Shopping list" style="position:relative;">🛒<span id="shopBadge" style="position:absolute; top:-2px; right:-2px; background:var(--red); color:white; font-size:10px; font-weight:700; padding:1px 5px; border-radius:10px; display:none;">0</span></button>
-      <span id="syncStatus" title="Synced to cloud"></span>
-      <button class="header-btn" id="authBtn" aria-label="Sign in / account" title="Sign in to sync across devices">👤</button>
       <button class="header-btn" id="openSettingsBtn" aria-label="Settings">⚙️</button>
     </div>
   </header>
@@ -1267,27 +1045,7 @@
 
     <!-- INVENTORY VIEW -->
     <div class="view" id="viewInventory">
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
-        <button class="btn btn-secondary" id="manageLayoutBtn" style="flex:1;">📍 Manage Layout</button>
-        <button class="btn btn-secondary" id="clearPantryBtn" style="color:var(--red);">🗑️ Clear pantry</button>
-      </div>
       <div id="inventoryList"></div>
-    </div>
-
-    <!-- Layout Manager Modal -->
-    <div class="modal-backdrop" id="layoutModal">
-      <div class="modal" style="max-height:85vh; overflow-y:auto;">
-        <button class="close-x" data-close="layoutModal">×</button>
-        <h2>📍 Kitchen Layout</h2>
-        <p class="subtitle">Define your storage areas and shelves, or let Claude build it from a photo.</p>
-        <label style="display:block; width:100%; margin-bottom:8px;">
-          <div class="btn btn-ai" style="width:100%; text-align:center; cursor:pointer;">📸 Scan photo to build layout<span class="ai-badge">AI</span></div>
-          <input id="layoutScanInput" type="file" accept="image/*" capture="environment" style="display:none;" />
-        </label>
-        <div id="layoutScanStatus" style="font-size:13px; color:var(--muted); text-align:center; margin-bottom:8px; min-height:18px;"></div>
-        <div id="layoutAreaList"></div>
-        <button class="btn btn-green" id="addAreaBtn" style="width:100%; margin-top:12px;">+ Add Area manually</button>
-      </div>
     </div>
 
     <!-- PLAN VIEW -->
@@ -1295,10 +1053,9 @@
       <div class="section-title"><h2>This week's meals</h2></div>
       <div class="plan-grid" id="planGrid"></div>
       <div style="display:flex; gap:8px; flex-wrap: wrap;">
-        <button class="btn btn-ai" id="autoPlanWeek" style="flex:1; min-width: 140px;">✨ Auto-plan my week<span class="ai-badge">AI</span></button>
+        <button class="btn btn-green" id="autoPlanWeek" style="flex:1; min-width: 140px;">✨ Auto-plan my week</button>
         <button class="btn btn-primary" id="generatePlanList" style="flex:1; min-width: 140px;">🛒 Shopping list</button>
       </div>
-      <button class="btn btn-secondary" id="clearWeekBtn" style="width:100%; margin-top:8px; color:var(--red);">🗑️ Clear week</button>
     </div>
 
     <!-- SCAN VIEW -->
@@ -1307,21 +1064,20 @@
         <strong>Tip:</strong> For best matching, snap one item up close. Claude reads the label. Tap 📷 Scan barcode to lock in the exact product.
       </div>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-        <label class="scan-dropzone scan-dropzone-ai" for="scanOneInput" style="padding: 18px 10px;">
+        <label class="scan-dropzone" for="scanOneInput" style="padding: 18px 10px;">
           <span class="big">📸</span>
-          <h3 style="margin:4px 0 2px; font-size:15px;">One item <span style="background:#a855f7; color:white; font-size:9px; font-weight:700; border-radius:4px; padding:1px 5px; vertical-align:middle; letter-spacing:.4px;">AI</span></h3>
-          <p style="font-size:11px; margin:0; color:#7c3aed;">Claude reads the label</p>
+          <h3 style="margin:4px 0 2px; font-size:15px;">One item</h3>
+          <p style="font-size:11px; margin:0;">Close-up of a label</p>
           <input id="scanOneInput" type="file" accept="image/*" capture="environment" />
         </label>
-        <label class="scan-dropzone scan-dropzone-ai" for="scanInput" style="padding: 18px 10px;">
+        <label class="scan-dropzone" for="scanInput" style="padding: 18px 10px;">
           <span class="big">🗄️</span>
-          <h3 style="margin:4px 0 2px; font-size:15px;">Whole shelf <span style="background:#a855f7; color:white; font-size:9px; font-weight:700; border-radius:4px; padding:1px 5px; vertical-align:middle; letter-spacing:.4px;">AI</span></h3>
-          <p style="font-size:11px; margin:0; color:#7c3aed;">Claude identifies all items</p>
+          <h3 style="margin:4px 0 2px; font-size:15px;">Whole shelf</h3>
+          <p style="font-size:11px; margin:0;">Bulk capture</p>
           <input id="scanInput" type="file" accept="image/*" capture="environment" />
         </label>
       </div>
-      <button class="btn btn-secondary" id="scanBarcodeBtn" style="width:100%; margin-bottom:8px;">📷 Scan barcode only</button>
-      <button class="btn btn-green" id="batchScanBtn" style="width:100%; margin-bottom:12px;">📦 Scan a shelf <span style="font-size:11px; opacity:.75; margin-left:4px;">scan many at once</span></button>
+      <button class="btn btn-secondary" id="scanBarcodeBtn" style="width:100%; margin-bottom:12px;">📷 Scan barcode only</button>
       <div id="scanResult"></div>
     </div>
 
@@ -1337,58 +1093,6 @@
           <button class="btn btn-secondary" id="barcodeCancel">Cancel</button>
           <button class="btn btn-green" id="barcodeManual">Type UPC instead</button>
         </div>
-      </div>
-    </div>
-
-    <!-- Batch Scan Modal -->
-    <div class="modal-backdrop" id="batchScanModal">
-      <div class="modal">
-
-        <!-- Step 1: Pick location -->
-        <div id="bsStep1">
-          <button class="close-x" id="bsClose1">×</button>
-          <h2>📦 Scan a Shelf</h2>
-          <p class="subtitle">Pick where these items are stored, then scan them one by one.</p>
-          <div class="field">
-            <label>Storage area</label>
-            <select id="bsArea"></select>
-          </div>
-          <div class="field">
-            <label>Shelf / Section</label>
-            <select id="bsSection"></select>
-          </div>
-          <div class="btn-row" style="margin-top:16px;">
-            <button class="btn btn-secondary" id="bsCancelStep1">Cancel</button>
-            <button class="btn btn-green" id="bsStartBtn">📷 Start Scanning →</button>
-          </div>
-        </div>
-
-        <!-- Step 2: Active scanning -->
-        <div id="bsStep2" style="display:none;">
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-            <div style="flex:1; min-width:0;">
-              <div id="bsLocationLabel" style="font-weight:700; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
-              <div id="bsCount" style="font-size:12px; color:var(--muted);">0 items scanned</div>
-            </div>
-            <button class="btn btn-green" id="bsDoneBtn" style="flex-shrink:0; min-width:90px;">Done ✓</button>
-          </div>
-          <div id="bsScannerBox" style="border-radius:12px; overflow:hidden; background:#000; min-height:200px; position:relative;"></div>
-          <p id="bsScanStatus" style="text-align:center; font-size:12px; color:var(--muted); margin:8px 0 4px;">Loading scanner…</p>
-          <div id="bsScannedList" style="margin-top:4px;"></div>
-        </div>
-
-        <!-- Step 3: Review before saving -->
-        <div id="bsStep3" style="display:none;">
-          <button class="close-x" id="bsClose3">×</button>
-          <h2>✅ Review Items</h2>
-          <p class="subtitle" id="bsReviewSubtitle"></p>
-          <div id="bsReviewList"></div>
-          <div class="btn-row" style="margin-top:14px;">
-            <button class="btn btn-secondary" id="bsBackBtn">← Scan more</button>
-            <button class="btn btn-green" id="bsSaveAllBtn">💾 Save All</button>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -1414,8 +1118,8 @@
     <button class="tab-btn active" data-view="cook"><span class="tab-icon">🍲</span><span>Cook</span></button>
     <button class="tab-btn" data-view="inventory"><span class="tab-icon">📦</span><span>Inv</span></button>
     <button class="tab-btn" data-view="plan"><span class="tab-icon">📅</span><span>Plan</span></button>
-    <button class="tab-btn ai-tab" data-view="scan"><span class="tab-icon">📷</span><span>Scan</span></button>
-    <button class="tab-btn ai-tab" data-view="ask"><span class="tab-icon">✨</span><span>Ask AI</span></button>
+    <button class="tab-btn" data-view="scan"><span class="tab-icon">📷</span><span>Scan</span></button>
+    <button class="tab-btn" data-view="ask"><span class="tab-icon">💬</span><span>Ask</span></button>
   </nav>
 
   <!-- Recipe detail modal -->
@@ -1501,7 +1205,7 @@
         <button class="btn btn-secondary" id="orderViaClaudeChrome">🤖 Order via Claude in Chrome</button>
         <button class="btn btn-secondary" id="orderViaAmazon">📦 Order on Amazon Fresh</button>
         <button class="btn btn-secondary" id="copyList">Copy list to clipboard</button>
-        <p class="subtitle" style="margin-top:6px; font-size:12px;">Click <strong>Find</strong> next to each item to search Instacart, add it to your cart, then come back. <strong>Claude in Chrome</strong> automates this for you — needs the extension installed. Amazon Fresh opens each item in a new tab.</p>
+        <p class="subtitle" style="margin-top:6px; font-size:12px;">Claude-in-Chrome drives Instacart for you (install the extension first). Amazon Fresh opens each item in a new tab — allow pop-ups.</p>
       </div>
     </div>
   </div>
@@ -1534,12 +1238,13 @@
         </div>
       </div>
       <div class="field">
-        <label>Storage area</label>
-        <select id="imArea"></select>
-      </div>
-      <div class="field" id="imSectionField">
-        <label>Shelf / section</label>
-        <select id="imSection"></select>
+        <label>Where is it?</label>
+        <select id="imLoc">
+          <option value="pantry">Pantry</option>
+          <option value="fridge">Fridge</option>
+          <option value="freezer">Freezer</option>
+          <option value="counter">Counter</option>
+        </select>
       </div>
       <div class="field">
         <label>Expires (optional)</label>
@@ -1584,13 +1289,9 @@
       <div id="shopListChecked" style="margin-top:8px;"></div>
 
       <div class="btn-row" style="flex-direction: column; margin-top: 14px;">
-        <button class="btn btn-primary" id="shopOrderInstacart">🛒 Order on Instacart</button>
-        <div style="display:flex; gap:8px;">
-          <button class="btn btn-secondary" id="shopPrint" style="flex:1;">🖨️ Print list</button>
-          <button class="btn btn-secondary" id="shopCopyList" style="flex:1;">📋 Copy list</button>
-        </div>
+        <button class="btn btn-primary" id="shopToCart">🛒 Send to Instacart</button>
+        <button class="btn btn-secondary" id="shopToAnyList">📧 Send to AnyList</button>
         <button class="btn btn-secondary" id="shopClearChecked">Clear checked items</button>
-        <button class="btn btn-secondary" id="shopClearAll" style="color:var(--red);">Clear entire list</button>
       </div>
     </div>
   </div>
@@ -1768,24 +1469,12 @@
 
       <div class="section-title"><h2>About</h2></div>
       <div class="settings-group">
-        <div class="settings-row" style="cursor:pointer;" onclick="window.open('tos.html','_blank')">
-          <div class="label-wrap">
-            <div>Terms of Service</div>
-            <div class="label-sub">View terms, privacy &amp; intellectual property</div>
-          </div>
-          <span style="color:var(--muted2);font-size:18px;">›</span>
-        </div>
         <div class="settings-row">
           <div class="label-wrap">
             <div>My Kitchen</div>
-            <div class="label-sub">© 2026 Ryan Triplett. All rights reserved.</div>
-            <div class="label-sub" style="margin-top:2px;">Unauthorized copying or distribution is prohibited.</div>
+            <div class="label-sub">Prototype v1.0 — built collaboratively with Claude</div>
           </div>
         </div>
-      </div>
-
-      <div style="text-align:center; padding: 18px 0 6px; color: var(--muted); font-size: 12px; letter-spacing: .3px;">
-        My Kitchen · v13 · Built April 22, 2026 at 10:45 PM
       </div>
     </div>
   </div>
@@ -2145,208 +1834,10 @@
     ];
 
     // ============================================================
-    // KITCHEN LAYOUT
-    // ============================================================
-    function genId() { return "s" + Math.random().toString(36).slice(2, 9); }
-
-    function defaultLayout() {
-      return [
-        { id: "area-pantry",  name: "Pantry",  icon: "🗄️",  sections: [
-          { id: genId(), name: "Top Shelf" },
-          { id: genId(), name: "Middle Shelf" },
-          { id: genId(), name: "Bottom Shelf" },
-        ]},
-        { id: "area-fridge",  name: "Fridge",  icon: "🧊",  sections: [
-          { id: genId(), name: "Top Shelf" },
-          { id: genId(), name: "Middle Shelf" },
-          { id: genId(), name: "Bottom Shelf" },
-          { id: genId(), name: "Crisper Drawer" },
-          { id: genId(), name: "Door" },
-        ]},
-        { id: "area-freezer", name: "Freezer", icon: "❄️",  sections: [
-          { id: genId(), name: "Top" },
-          { id: genId(), name: "Bottom" },
-        ]},
-        { id: "area-counter", name: "Counter", icon: "🍞",  sections: [
-          { id: genId(), name: "Counter" },
-        ]},
-      ];
-    }
-
-    function getLayout() {
-      if (!state.layout || !state.layout.length) state.layout = defaultLayout();
-      return state.layout;
-    }
-
-    function findSection(sectionId) {
-      for (const area of getLayout()) {
-        for (const sec of area.sections) {
-          if (sec.id === sectionId) return { area, sec };
-        }
-      }
-      return null;
-    }
-
-    function renderLayoutModal() {
-      const layout = getLayout();
-      const areaHtml = layout.map((area, ai) => `
-        <div class="card" style="margin-bottom:10px; padding:14px;">
-          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span style="font-size:22px;">${area.icon}</span>
-            <input class="layout-area-name" data-ai="${ai}" value="${escapeHtml(area.name)}"
-              style="flex:1; font-weight:600; font-size:15px; border:none; background:transparent; color:var(--text); outline:none; border-bottom:1px solid var(--border); padding-bottom:2px;" />
-            <button class="btn-mini" style="color:var(--red);" data-action="del-area" data-ai="${ai}">✕</button>
-          </div>
-          <div class="layout-sections" data-ai="${ai}">
-            ${area.sections.map((sec, si) => `
-              <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-                <span style="color:var(--muted); font-size:16px;">↳</span>
-                <input class="layout-sec-name" data-ai="${ai}" data-si="${si}" value="${escapeHtml(sec.name)}"
-                  style="flex:1; font-size:13px; border:1px solid var(--border); border-radius:7px; padding:6px 9px; background:var(--bg); color:var(--text);" />
-                <button class="btn-mini" style="color:var(--red);" data-action="del-sec" data-ai="${ai}" data-si="${si}">✕</button>
-              </div>`).join("")}
-          </div>
-          <button class="btn btn-secondary" data-action="add-sec" data-ai="${ai}" style="width:100%; margin-top:4px; font-size:13px; padding:6px;">+ Add shelf</button>
-        </div>`).join("");
-      document.getElementById("layoutAreaList").innerHTML = areaHtml;
-
-      // Wire inputs to update state live
-      document.querySelectorAll(".layout-area-name").forEach(el => {
-        el.addEventListener("input", () => {
-          state.layout[+el.dataset.ai].name = el.value;
-          saveState();
-        });
-      });
-      document.querySelectorAll(".layout-sec-name").forEach(el => {
-        el.addEventListener("input", () => {
-          state.layout[+el.dataset.ai].sections[+el.dataset.si].name = el.value;
-          saveState();
-        });
-      });
-      document.querySelectorAll("[data-action='del-area']").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const ai = +btn.dataset.ai;
-          if (state.layout[ai].sections.length && !confirm(`Delete "${state.layout[ai].name}" and all its shelves?`)) return;
-          state.layout.splice(ai, 1);
-          saveState(); renderLayoutModal();
-        });
-      });
-      document.querySelectorAll("[data-action='del-sec']").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.layout[+btn.dataset.ai].sections.splice(+btn.dataset.si, 1);
-          saveState(); renderLayoutModal();
-        });
-      });
-      document.querySelectorAll("[data-action='add-sec']").forEach(btn => {
-        btn.addEventListener("click", () => {
-          state.layout[+btn.dataset.ai].sections.push({ id: genId(), name: "New Shelf" });
-          saveState(); renderLayoutModal();
-        });
-      });
-    }
-
-    async function scanLayoutFromPhoto(file) {
-      const statusEl = document.getElementById("layoutScanStatus");
-      const key = state.settings.claudeKey?.trim();
-      if (!key) {
-        statusEl.textContent = "⚠️ Add your Claude API key in Settings first.";
-        return;
-      }
-      statusEl.textContent = "📸 Processing photo…";
-      try {
-        const rawDataUrl = await blobToDataUrl(file);
-        const jpegDataUrl = await normalizeImageToJpeg(rawDataUrl);
-        const base64 = jpegDataUrl.split(",")[1];
-
-        statusEl.textContent = "🤖 Claude is analyzing your storage area…";
-
-        const resp = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "x-api-key": key,
-            "anthropic-version": "2023-06-01",
-            "anthropic-dangerous-direct-browser-access": "true",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "claude-opus-4-5",
-            max_tokens: 1024,
-            messages: [{
-              role: "user",
-              content: [
-                { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64 } },
-                { type: "text", text: `Look at this photo of a kitchen storage area (pantry shelf, refrigerator, freezer, cabinet, etc.).
-
-Identify:
-1. What type of area this is (Pantry, Fridge, Freezer, Cabinet, Counter, etc.)
-2. All distinct shelves, drawers, compartments, or sections visible from top to bottom
-
-Return ONLY a JSON object in this exact format, no other text:
-{
-  "areaName": "Pantry",
-  "icon": "🗄️",
-  "sections": ["Top Shelf", "Middle Shelf", "Bottom Shelf"]
-}
-
-Use a fitting emoji icon for the area type. Name shelves descriptively based on what you see (e.g. "Spice Shelf", "Canned Goods", "Produce Drawer", "Door Shelf", "Snack Shelf"). List sections top to bottom.` }
-              ]
-            }]
-          })
-        });
-
-        if (!resp.ok) throw new Error(`API error ${resp.status}`);
-        const data = await resp.json();
-        const text = data.content?.[0]?.text || "";
-        const json = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || "{}");
-
-        if (!json.areaName || !Array.isArray(json.sections) || !json.sections.length) {
-          throw new Error("Couldn't read the layout from that photo. Try a clearer shot.");
-        }
-
-        // Build new area and add to layout
-        const newArea = {
-          id: "area-" + genId(),
-          name: json.areaName,
-          icon: json.icon || "🗄️",
-          sections: json.sections.map(s => ({ id: genId(), name: s }))
-        };
-
-        // Check if area with same name already exists — replace or append
-        const existingIdx = state.layout.findIndex(a => a.name.toLowerCase() === newArea.name.toLowerCase());
-        if (existingIdx >= 0) {
-          if (confirm(`You already have a "${newArea.name}" area. Replace its shelves with what Claude found?`)) {
-            state.layout[existingIdx].sections = newArea.sections;
-          }
-        } else {
-          state.layout.push(newArea);
-        }
-
-        saveState();
-        renderLayoutModal();
-        statusEl.textContent = `✅ Added "${newArea.name}" with ${newArea.sections.length} sections!`;
-      } catch (err) {
-        statusEl.textContent = `❌ ${err.message}`;
-      }
-    }
-
-    // ============================================================
     // STATE
     // ============================================================
     const STORAGE_KEY = "myKitchen:v2";
-
-    // ============================================================
-    // FIREBASE CONFIG
-    // Paste your config from Firebase Console → Project Settings → Your apps
-    // ============================================================
-    const FIREBASE_CONFIG = {
-      apiKey:            "AIzaSyDpWc6Uia84FhT0G27JzHo2dQCBxtMLMUE",
-      authDomain:        "my-kitchen-e4079.firebaseapp.com",
-      projectId:         "my-kitchen-e4079",
-      storageBucket:     "my-kitchen-e4079.firebasestorage.app",
-      messagingSenderId: "49025591071",
-      appId:             "1:49025591071:web:008418cdb3e7ed7b6db22a"
-    };
-    const UPDATE_VERSION = "v13";
+    const UPDATE_VERSION = "v10";
     let state = loadState();
 
     // Show update banner once per version
@@ -2379,7 +1870,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         mealPlan: {}, // dayName -> recipeId
         customRecipes: [],
         chatHistory: [], // {role: "user"|"assistant", content: string, ts: ISO}
-        layout: defaultLayout(),
         settings: {
           theme: "system",
           haptic: true,
@@ -2418,7 +1908,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     function migrateState(s) {
       if (!s.inventory) s.inventory = {};
       if (!Array.isArray(s.shoppingList)) s.shoppingList = [];
-      if (!Array.isArray(s.layout) || !s.layout.length) s.layout = defaultLayout();
       const newInv = {};
       Object.entries(s.inventory).forEach(([oldKey, item]) => {
         if (!item || typeof item !== "object") return;
@@ -2434,180 +1923,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     }
     function saveState() {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
-      if (window._fbUser) debouncedSyncToCloud();
     }
-
-    // ============================================================
-    // FIREBASE — Google Auth + Firestore offline-first sync
-    // ============================================================
-    let _fbAuth = null, _fbDb = null;
-    window._fbUser = null;
-    let _syncTimer = null;
-
-    function initFirebase() {
-      try {
-        if (!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey === "YOUR_API_KEY") {
-          console.log("Firebase: no config yet — running offline only.");
-          return;
-        }
-        firebase.initializeApp(FIREBASE_CONFIG);
-        _fbAuth = firebase.auth();
-        _fbDb   = firebase.firestore();
-
-        // Enable offline persistence (IndexedDB cache — app works without internet)
-        _fbDb.enablePersistence({ synchronizeTabs: true }).catch(err => {
-          if (err.code !== "failed-precondition" && err.code !== "unimplemented")
-            console.warn("Firestore persistence:", err.code);
-        });
-
-        // Watch auth state
-        _fbAuth.onAuthStateChanged(user => {
-          window._fbUser = user;
-          updateAuthUI(user);
-          if (user) loadCloudState(user.uid);
-        });
-
-      } catch (e) { console.warn("Firebase init:", e); }
-    }
-
-    async function signInWithGoogle() {
-      if (!_fbAuth) return;
-      try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await _fbAuth.signInWithPopup(provider);
-      } catch (e) { console.warn("Sign-in:", e); }
-    }
-
-    async function doSignOut() {
-      if (!_fbAuth) return;
-      await _fbAuth.signOut();
-    }
-
-    // Merge two shopping lists by item id.
-    // Local items take priority (they may have been added offline/between syncs).
-    function mergeShoppingLists(local, cloud) {
-      const result = [...(local || [])];
-      const localIds = new Set(result.map(i => i.id).filter(Boolean));
-      (cloud || []).forEach(ci => {
-        if (ci.id && !localIds.has(ci.id)) result.push(ci);
-      });
-      return result;
-    }
-
-    // Pull cloud state and merge with local — cloud wins on inventory/plan/list,
-    // local wins on settings (theme, claudeKey) and chat history (stays private).
-    async function loadCloudState(uid) {
-      if (!_fbDb) return;
-      setSyncStatus("pending");
-      try {
-        const snap = await _fbDb.doc(`users/${uid}/app/state`).get();
-        if (snap.exists) {
-          const cloud = snap.data();
-          // IMPORTANT: merge shopping lists so locally-added items added between
-          // page-load and this async response are never overwritten by stale cloud data.
-          const merged = {
-            ...state,
-            ...cloud,
-            shoppingList: mergeShoppingLists(state.shoppingList, cloud.shoppingList),
-            settings: { ...cloud.settings, ...state.settings }, // local settings win (theme, claudeKey)
-            chatHistory: state.chatHistory,                       // keep chat local
-          };
-          state = migrateState(merged);
-          saveState();
-          // Re-render all views with synced data
-          if (typeof renderInventory  === "function") renderInventory();
-          if (typeof renderCook       === "function") renderCook();
-          if (typeof renderPlan       === "function") renderPlan();
-          if (typeof renderShoppingList === "function") renderShoppingList();
-          updateShopBadge();
-          setSyncStatus("synced");
-        } else {
-          // First sign-in ever — push local data up to the cloud
-          await syncToCloud();
-        }
-      } catch (e) {
-        console.warn("Cloud load:", e);
-        setSyncStatus("error");
-      }
-    }
-
-    function debouncedSyncToCloud() {
-      setSyncStatus("pending");
-      if (_syncTimer) clearTimeout(_syncTimer);
-      _syncTimer = setTimeout(syncToCloud, 2500);
-    }
-
-    async function syncToCloud() {
-      if (!_fbDb || !window._fbUser) return;
-      try {
-        // Never store the Claude API key in the cloud
-        const toSave = JSON.parse(JSON.stringify(state));
-        if (toSave.settings) toSave.settings.claudeKey = "";
-        toSave._syncedAt = firebase.firestore.FieldValue.serverTimestamp();
-        await _fbDb.doc(`users/${window._fbUser.uid}/app/state`).set(toSave);
-        setSyncStatus("synced");
-      } catch (e) {
-        console.warn("Cloud sync:", e);
-        setSyncStatus("error");
-      }
-    }
-
-    function setSyncStatus(status) {
-      const el = document.getElementById("syncStatus");
-      if (!el) return;
-      const map = {
-        idle:    { icon: "",   tip: "" },
-        pending: { icon: "⏳", tip: "Syncing…" },
-        synced:  { icon: "☁️", tip: "Synced to cloud" },
-        error:   { icon: "⚠️", tip: "Sync failed — changes saved locally" },
-      };
-      const { icon, tip } = map[status] || map.idle;
-      el.textContent = icon;
-      el.title = tip;
-    }
-
-    function updateAuthUI(user) {
-      const authBtn = document.getElementById("authBtn");
-      const syncEl  = document.getElementById("syncStatus");
-      if (!authBtn) return;
-      if (user) {
-        authBtn.innerHTML = user.photoURL
-          ? `<img src="${user.photoURL}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.5);" />`
-          : "👤";
-        authBtn.title = user.displayName || user.email;
-        if (syncEl) syncEl.style.display = "inline";
-        // Populate account modal
-        const av  = document.getElementById("accountAvatar");
-        const nm  = document.getElementById("accountName");
-        const em  = document.getElementById("accountEmail");
-        if (av) av.innerHTML = user.photoURL
-          ? `<img src="${user.photoURL}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;" />`
-          : "👤";
-        if (nm) nm.textContent = user.displayName || "Signed in";
-        if (em) em.textContent = user.email || "";
-      } else {
-        authBtn.innerHTML = "👤";
-        authBtn.title = "Sign in to sync across devices";
-        if (syncEl) syncEl.style.display = "none";
-        setSyncStatus("idle");
-      }
-    }
-
-    // Wire auth button and sign-in / account modals — deferred so modal HTML exists
-    window.addEventListener("load", () => {
-      document.getElementById("authBtn").addEventListener("click", () => {
-        if (window._fbUser) showModal("accountModal");
-        else showModal("signInModal");
-      });
-      document.getElementById("googleSignInBtn").addEventListener("click", async () => {
-        hideModal("signInModal");
-        await signInWithGoogle();
-      });
-      document.getElementById("signOutBtn").addEventListener("click", async () => {
-        hideModal("accountModal");
-        await doSignOut();
-      });
-    });
 
     // ============================================================
     // HELPERS
@@ -2758,60 +2074,24 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         return;
       }
 
-      const rowHtml = (s) => {
-        const searchUrl = `https://www.instacart.com/store/s?k=${encodeURIComponent(s.name + (s.brand ? " " + s.brand : ""))}`;
-        const sourceChip = (s.recipeEmoji || s.recipeName)
-          ? `<span style="display:inline-flex; align-items:center; gap:3px; font-size:11px; background:var(--green-light,#e8f5e9); color:var(--green,#2e7d32); padding:2px 7px; border-radius:99px; white-space:nowrap; font-weight:600; margin-top:3px;">${s.recipeEmoji ? escapeHtml(s.recipeEmoji) + " " : ""}${escapeHtml(s.recipeName || "")}</span>`
-          : "";
-        return `
+      const rowHtml = (s) => `
         <div class="shop-row${s.checked ? " checked" : ""}" data-id="${escapeHtml(s.id)}">
           <button class="shop-check" data-action="toggle" aria-label="${s.checked ? "Uncheck" : "Check off"}">${s.checked ? "✓" : ""}</button>
-          <div style="min-width:0; flex:1;">
+          <div style="min-width:0;">
             <div class="shop-name">${escapeHtml(s.name)}${s.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(s.brand)}</span>` : ""}</div>
-            ${sourceChip ? `<div style="line-height:1;">${sourceChip}</div>` : `<div class="shop-meta">${escapeHtml(s.reason || "manual")}</div>`}
+            <div class="shop-meta">${escapeHtml(s.reason || "manual")}</div>
           </div>
-          <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-            <div class="shop-qty">${formatQty(s.qty) || "1"}${s.unit ? " " + escapeHtml(s.unit) : ""}</div>
-            ${!s.checked
-              ? `<a href="${searchUrl}" target="_blank" rel="noopener" class="shop-find-btn" title="Find on Instacart">🔍</a>`
-              : `<button data-action="putaway" style="font-size:11px; padding:3px 8px; border-radius:8px; border:1px solid var(--green); background:var(--green-light,#e8f5e9); color:var(--green); font-weight:600; cursor:pointer; white-space:nowrap;" title="Add to pantry">📦 Put away</button>`
-            }
-          </div>
+          <div class="shop-qty">${formatQty(s.qty) || "1"}${s.unit ? " " + escapeHtml(s.unit) : ""}</div>
           <button class="shop-del" data-action="remove" aria-label="Remove">×</button>
         </div>`;
-      };
 
       openEl.innerHTML = open.length
         ? `<div class="inv-group-title">To buy <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${open.length})</span></div>` + open.map(rowHtml).join("")
         : `<div class="card empty-state" style="padding:16px;"><small>Nothing to buy right now.</small></div>`;
 
       checkedEl.innerHTML = checked.length
-        ? `<div class="inv-group-title" style="display:flex; align-items:center; justify-content:space-between;">
-             <span>Got it ✓ <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${checked.length})</span></span>
-             <button id="shopRestockAll" style="font-size:12px; padding:4px 10px; border-radius:8px; border:1px solid var(--green); background:var(--green-light,#e8f5e9); color:var(--green); font-weight:600; cursor:pointer;">📦 Restock all</button>
-           </div>` + checked.map(rowHtml).join("")
+        ? `<div class="inv-group-title">In cart <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${checked.length})</span></div>` + checked.map(rowHtml).join("")
         : "";
-
-      // Helper: add a shopping list item into inventory (used by put-away)
-      function putAwayItem(s) {
-        const invItem = {
-          name: s.name,
-          brand: s.brand || "",
-          canonicalName: normalize(s.name),
-          qty: s.qty || 1,
-          unit: s.unit || "",
-          loc: "pantry",
-          expiry: null,
-        };
-        const key = inventoryKey(invItem);
-        if (state.inventory[key]) {
-          const prev = state.inventory[key];
-          prev.qty = (prev.qty || 0) + (s.qty || 1);
-          if (!prev.unit && invItem.unit) prev.unit = invItem.unit;
-        } else {
-          state.inventory[key] = invItem;
-        }
-      }
 
       // Wire row actions
       [openEl, checkedEl].forEach(scope => {
@@ -2824,17 +2104,37 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
             if (idx < 0) return;
             const s = state.shoppingList[idx];
             if (action === "toggle") {
-              // Just mark got/not got — inventory updated separately via Put away
               s.checked = !s.checked;
-              haptic(5);
-              saveState(); renderShoppingList();
-            } else if (action === "putaway") {
-              // Add to inventory and remove from shopping list
-              putAwayItem(s);
-              state.shoppingList.splice(idx, 1);
+              // Checking off restores inventory at qty 1 (default unit from list entry)
+              if (s.checked) {
+                const invItem = {
+                  name: s.name,
+                  brand: s.brand || "",
+                  canonicalName: normalize(s.name),
+                  qty: s.qty || 1,
+                  unit: s.unit || "",
+                  loc: "pantry",
+                  expiry: null,
+                };
+                const key = inventoryKey(invItem);
+                if (state.inventory[key]) {
+                  // existing entry (likely at qty:0): bump it
+                  const prev = state.inventory[key];
+                  prev.qty = (prev.qty || 0) + (s.qty || 1);
+                  if (!prev.unit && invItem.unit) prev.unit = invItem.unit;
+                } else {
+                  state.inventory[key] = invItem;
+                }
+                haptic(10);
+              } else {
+                // Unchecking: roll back the inventory bump (best-effort)
+                const key = inventoryKey({canonicalName: s.canonicalName || s.name, brand: s.brand});
+                const inv = state.inventory[key];
+                if (inv) {
+                  inv.qty = Math.max(0, (inv.qty || 0) - (s.qty || 1));
+                }
+              }
               saveState(); renderShoppingList(); renderInventory();
-              showToast(`${s.name} added to pantry ✓`);
-              haptic(10);
             } else if (action === "remove") {
               const removed = state.shoppingList.splice(idx, 1)[0];
               saveState(); renderShoppingList();
@@ -2847,20 +2147,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           });
         });
       });
-
-      // Restock all checked items at once
-      const restockAllBtn = document.getElementById("shopRestockAll");
-      if (restockAllBtn) {
-        restockAllBtn.addEventListener("click", () => {
-          const toRestock = (state.shoppingList || []).filter(s => s.checked);
-          if (!toRestock.length) return;
-          toRestock.forEach(s => putAwayItem(s));
-          state.shoppingList = (state.shoppingList || []).filter(s => !s.checked);
-          saveState(); renderShoppingList(); renderInventory();
-          showToast(`Restocked ${toRestock.length} item${toRestock.length !== 1 ? "s" : ""} in pantry ✓`);
-          haptic(10);
-        });
-      }
     }
 
     // Manual add from the shopping-list modal, with medium-strictness dupe warning.
@@ -2941,65 +2227,33 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       });
     }
 
-    function buildShopListText() {
-      return (state.shoppingList || [])
-        .filter(s => !s.checked)
-        .map(s => {
-          const qty = formatQty(s.qty) || "1";
-          return `• ${qty}${s.unit ? " " + s.unit : ""} ${s.name}${s.brand ? " (" + s.brand + ")" : ""}`.trim();
-        }).join("\n");
+    function sendShoppingListToCart() {
+      const open = (state.shoppingList || []).filter(s => !s.checked);
+      if (!open.length) { showToast("Nothing to order yet"); return; }
+      const items = open.map(s => ({
+        name: s.brand ? `${s.name} (${s.brand})` : s.name,
+        qty: s.qty || 1,
+        unit: s.unit || "",
+      }));
+      hideModal("shoppingListModal");
+      startCart(items, "shopping-list", "Shopping list");
     }
 
-    async function orderShopListViaClaudeChrome() {
+    function sendShoppingListToAnyList() {
       const open = (state.shoppingList || []).filter(s => !s.checked);
-      if (!open.length) { showToast("Nothing on the list"); return; }
-      const listText = buildShopListText();
-      const prompt = [
-        "Please open Instacart (instacart.com), pick a store near me, and add every item below to my cart.",
-        "",
-        "Use my default store/address if one is set. Closest match for each item name is fine.",
-        "",
-        "SHOPPING LIST:",
-        listText,
-        "",
-        "Stop at the cart/checkout page so I can review and pay myself. Do NOT place the order or enter payment info."
-      ].join("\n");
-      let copied = false;
-      try { await navigator.clipboard.writeText(listText); copied = true; } catch(e) {}
-      const url = "https://claude.ai/new?q=" + encodeURIComponent(prompt);
-      const opened = window.open(url, "_blank");
-      if (!opened) {
-        showToast(copied ? "Popup blocked · list copied — open claude.ai and paste!" : "Popup blocked · open claude.ai manually");
-      } else {
-        showToast(copied ? "Opened Claude · list also copied to clipboard" : "Opened Claude in a new tab");
-      }
-    }
-
-    function printShoppingList() {
-      const open = (state.shoppingList || []).filter(s => !s.checked);
-      if (!open.length) { showToast("Nothing to print"); return; }
-      const rows = open.map(s => {
-        const qty = formatQty(s.qty) || "1";
-        return `<li style="padding:6px 0; border-bottom:1px solid #eee; font-size:16px;">
-          <span style="display:inline-block; width:24px; height:24px; border:2px solid #333; border-radius:4px; margin-right:10px; vertical-align:middle;"></span>
-          ${qty}${s.unit ? " " + s.unit : ""} <strong>${s.name}</strong>${s.brand ? ` <span style="color:#666;">(${s.brand})</span>` : ""}
-        </li>`;
-      }).join("");
-      const w = window.open("", "_blank");
-      if (!w) { showToast("Allow pop-ups to print"); return; }
-      w.document.write(`<!DOCTYPE html><html><head><title>Shopping List</title>
-        <style>body{font-family:sans-serif;max-width:480px;margin:40px auto;padding:0 20px;}
-        h1{font-size:22px;margin-bottom:4px;}p{color:#666;font-size:13px;margin-bottom:20px;}
-        ul{list-style:none;padding:0;margin:0;}
-        @media print{button{display:none!important;}}</style></head>
-        <body>
-          <h1>🛒 Shopping List</h1>
-          <p>${new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</p>
-          <ul>${rows}</ul>
-          <button onclick="window.print()" style="margin-top:24px;padding:10px 20px;font-size:14px;cursor:pointer;">🖨️ Print</button>
-        </body></html>`);
-      w.document.close();
-      setTimeout(() => w.print(), 300);
+      if (!open.length) { showToast("Nothing to send yet"); return; }
+      const lines = open.map(s => {
+        const qty = s.qty ? `${s.qty}${s.unit ? " " + s.unit : ""} ` : "";
+        const brand = s.brand ? ` (${s.brand})` : "";
+        return `- ${qty}${s.name}${brand}`;
+      });
+      // AnyList parses emails sent to recipes@anylist.com from your registered address.
+      // The "Ingredients:" header tells their parser what to import.
+      const subject = "My Kitchen shopping list";
+      const body = `Shopping List\n\nIngredients:\n${lines.join("\n")}\n\nSent from My Kitchen`;
+      const href = `mailto:recipes@anylist.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = href;
+      showToast(`Opening email with ${open.length} item${open.length === 1 ? "" : "s"} for AnyList`);
     }
 
     function allRecipes() {
@@ -3155,26 +2409,8 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       const favSet = new Set(state.favorites);
       const favRecipes = ranked.filter(r => favSet.has(r.id));
       const cookNow = ranked.filter(r => r.ratio === 1 && !favSet.has(r.id));
-      const almost = ranked.filter(r => r.missing.length > 0 && r.missing.length <= 4 && !favSet.has(r.id));
-      const far = ranked.filter(r => r.missing.length > 4 && !favSet.has(r.id));
-
-      // Empty inventory prompt
-      const invCount = Object.keys(state.inventory).length;
-      const emptyBanner = document.getElementById("emptyInvBanner");
-      if (emptyBanner) emptyBanner.remove();
-      if (invCount === 0) {
-        const banner = document.createElement("div");
-        banner.id = "emptyInvBanner";
-        banner.className = "card";
-        banner.style = "text-align:center; padding:24px 16px; margin-bottom:12px;";
-        banner.innerHTML = `
-          <span style="font-size:40px;">📷</span>
-          <p style="margin:10px 0 4px; font-weight:600;">Your inventory is empty</p>
-          <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your pantry or fridge to get started</p>
-          <button class="btn btn-ai" onclick="setView('scan')" style="width:100%;">📸 Scan your kitchen with AI<span class="ai-badge">AI</span></button>
-        `;
-        document.getElementById("useSoonWrap").before(banner);
-      }
+      const almost = ranked.filter(r => r.ratio >= 0.5 && r.ratio < 1 && !favSet.has(r.id));
+      const far = ranked.filter(r => r.ratio < 0.5 && !favSet.has(r.id));
 
       const soonItems = expiringSoon();
       document.getElementById("useSoonWrap").innerHTML = soonItems.length ? `
@@ -3191,12 +2427,10 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         favRecipes.map(r => recipeRow(r, classForRatio(r.ratio))).join("") : "";
 
       document.getElementById("cookNowWrap").innerHTML = sectionHtml(
-        "🟢 Cook right now", cookNow, "ready-now",
-        "🍽️", "Nothing fully stocked", "Add ingredients in Inventory, then recipes will appear here."
+        "Ready to cook", cookNow, "ready-now",
+        "🍽️", "Nothing fully stocked", "Check the Almost-have list below or restock in Inventory."
       );
-      document.getElementById("almostWrap").innerHTML = sectionHtml(
-        "🛒 Missing just a few things", almost, "almost", "", "", ""
-      );
+      document.getElementById("almostWrap").innerHTML = sectionHtml("Almost have everything", almost, "almost", "🛒", "", "");
       document.getElementById("farWrap").innerHTML = sectionHtml("Need more groceries", far, "far", "🧺", "", "");
 
       document.querySelectorAll(".recipe-row").forEach(row => {
@@ -3204,15 +2438,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           if (e.target.dataset.action === "fav") {
             toggleFav(row.dataset.id);
             e.stopPropagation();
-            return;
-          }
-          if (e.target.dataset.action === "addmissing" || e.target.closest("[data-action='addmissing']")) {
-            e.stopPropagation();
-            const id = e.target.dataset.id || e.target.closest("[data-action='addmissing']").dataset.id;
-            const recipe = recipeMatch(getRecipe(id));
-            if (recipe && recipe.missing.length > 0) {
-              startCart(recipe.missing, "recipe", `Missing for ${recipe.name}`);
-            }
             return;
           }
           openRecipe(row.dataset.id);
@@ -3224,36 +2449,17 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     }
     function recipeRow(r, cls) {
       const fav = state.favorites.includes(r.id);
-      const lastCooked = state.history[r.id] ? ` · last: ${daysAgo(state.history[r.id])}` : "";
-
-      let statusHtml = "";
-      if (r.ratio === 1) {
-        statusHtml = `<div class="ready" style="color:var(--green); font-weight:700;">✓ You have everything — cook now!</div>`;
-      } else if (r.missing.length <= 4) {
-        const chips = r.missing.map(i =>
-          `<span style="display:inline-block; background:var(--red-light); color:var(--red); font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; white-space:nowrap;">${i.name}</span>`
-        ).join(" ");
-        statusHtml = `
-          <div class="ready" style="color:var(--muted); margin-bottom:5px;">${r.have.length} of ${r.total} in stock</div>
-          <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-bottom:7px;">
-            <span style="font-size:11px; color:var(--muted); font-weight:600;">Need:</span>
-            ${chips}
-          </div>
-          <button class="add-missing-btn" data-id="${r.id}" data-action="addmissing"
-            style="font-size:12px; font-weight:600; padding:5px 12px; border-radius:999px; border:none; background:var(--instacart); color:white; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
-            🛒 Add ${r.missing.length} item${r.missing.length > 1 ? "s" : ""} to cart
-          </button>`;
-      } else {
-        statusHtml = `<div class="ready">${r.have.length} of ${r.total} in stock</div>`;
-      }
-
+      const readyText = r.ratio === 1
+        ? "✓ All ingredients"
+        : `${r.have.length} of ${r.total} in stock`;
+      const lastCooked = state.history[r.id] ? `· last: ${daysAgo(state.history[r.id])}` : "";
       return `
         <div class="recipe-row ${cls}" data-id="${r.id}">
           <div class="emoji">${r.emoji}</div>
           <div class="info">
             <div class="name">${r.name}</div>
-            <div class="meta">${r.time} · serves ${r.baseServings}${lastCooked}</div>
-            ${statusHtml}
+            <div class="meta">${r.time} · serves ${r.baseServings} ${lastCooked}</div>
+            <div class="ready">${readyText}</div>
           </div>
           <button class="fav-star ${fav ? "on" : ""}" data-action="fav" aria-label="Favorite">${fav ? "★" : "☆"}</button>
         </div>
@@ -3349,29 +2555,16 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     }
 
     // ============================================================
-    // CART → SHOPPING LIST
+    // INSTACART CART
     // ============================================================
     function startCart(items, mode, title) {
-      if (!items || !items.length) { showToast("Nothing to add"); return; }
-      let added = 0, dupes = 0;
-      items.forEach(item => {
-        const entry = {
-          name: item.name,
-          brand: item.brand || "",
-          qty: item.scaledQty != null ? item.scaledQty : (item.qty || 1),
-          unit: item.unit || "",
-          reason: title || mode || "added from recipe",
-        };
-        const result = addToShoppingList(entry, { allowDupe: false });
-        if (result && result.added) added++;
-        else if (result && result.duplicate) dupes++;
-      });
-      if (added > 0) {
-        showToast(`Added ${added} item${added !== 1 ? "s" : ""} to your shopping list`);
-      } else {
-        showToast("Already in your shopping list ✓");
-      }
-      openShoppingList();
+      checklistItems = items;
+      checklistState = items.map(() => false);
+      cartMode = mode || "recipe";
+      if (title) document.getElementById("cartTitle").textContent = title;
+      else document.getElementById("cartTitle").textContent = "Add to Instacart";
+      renderChecklist();
+      showModal("cartModal");
     }
 
     function renderChecklist() {
@@ -3405,7 +2598,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       const done = checklistState.filter(Boolean).length;
       document.getElementById("progressCount").textContent = `${done} of ${total}`;
       document.getElementById("progressFill").style.width = total ? `${(done/total)*100}%` : "0%";
-      document.getElementById("goToCart").disabled = false; // always enabled — go to cart any time
+      document.getElementById("goToCart").disabled = done === 0;
     }
 
     // ============================================================
@@ -3416,91 +2609,69 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       const allItems = Object.entries(state.inventory);
       if (allItems.length === 0) {
         container.innerHTML = `
-          <div class="card empty-state" style="padding:28px 16px;">
+          <div class="card empty-state">
             <span class="big">📦</span>
-            <p style="margin:8px 0 4px; font-weight:600;">No items yet</p>
-            <p style="margin:0 0 14px; color:var(--muted); font-size:13px;">Scan your pantry or fridge to add items</p>
-            <button class="btn btn-ai" onclick="setView('scan')" style="width:100%;">📸 Scan your kitchen with AI<span class="ai-badge">AI</span></button>
+            Your inventory is empty.<br/>
+            <small>Tap + below to add, or use the Scan tab.</small>
           </div>`;
         return;
       }
 
-      // Split: in-stock vs need-to-restock
+      // Split: in-stock (qty > 0 or qty null) vs need-to-restock (qty === 0)
       const stocked = [];
       const restock = [];
       allItems.forEach(([k, i]) => {
-        (i.qty === 0 ? restock : stocked).push({ key: k, item: i });
+        const entry = { key: k, item: i };
+        if (i.qty === 0) restock.push(entry);
+        else stocked.push(entry);
       });
 
-      const layout = getLayout();
       let html = "";
 
-      function itemRow(key, item, areaIcon) {
-        const qtyText = formatQty(item.qty) + (item.unit ? " " + item.unit : "");
-        const badges = [];
-        if (isExpired(item)) badges.push(`<span class="badge expired">expired</span>`);
-        else if (item.expiry) {
-          const diff = (new Date(item.expiry).getTime() - Date.now()) / (24*3600*1000);
-          if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
-        }
-        if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
-        return `
-          <div class="inv-item" data-key="${escapeHtml(key)}">
-            <div class="icon">${areaIcon}</div>
-            <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
-            <div class="badges">${badges.join("")}</div>
-            <div class="qty">${qtyText}</div>
-            <button class="delete" data-action="delete" aria-label="Delete">×</button>
-          </div>`;
-      }
-
-      // Group stocked items by area → section
-      layout.forEach(area => {
-        const areaItems = stocked.filter(({item}) => item.areaId === area.id);
-        // Also catch legacy items that used item.loc matching area name
-        const legacyItems = stocked.filter(({item}) => !item.areaId && (item.loc || "pantry").toLowerCase() === area.name.toLowerCase());
-        const allAreaItems = [...areaItems, ...legacyItems];
-        if (!allAreaItems.length) return;
-
-        html += `<div class="inv-group-title">${area.icon} ${escapeHtml(area.name)} <span style="color:var(--muted2); font-weight:500; text-transform:none;">(${allAreaItems.length})</span></div>`;
-
-        // Group by section
-        area.sections.forEach(sec => {
-          const secItems = allAreaItems.filter(({item}) => item.sectionId === sec.id);
-          if (!secItems.length) return;
-          html += `<div style="font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin:8px 0 4px 4px;">↳ ${escapeHtml(sec.name)}</div>`;
-          html += secItems.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => itemRow(key, item, area.icon)).join("");
-        });
-
-        // Items with no section assigned
-        const unassigned = allAreaItems.filter(({item}) => !item.sectionId || !area.sections.find(s => s.id === item.sectionId));
-        if (unassigned.length) {
-          html += `<div style="font-size:11px; color:var(--muted2); font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin:8px 0 4px 4px;">↳ Unassigned</div>`;
-          html += unassigned.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => itemRow(key, item, area.icon)).join("");
-        }
+      // In-stock grouped by location
+      const grouped = {};
+      stocked.forEach(({key, item}) => {
+        const loc = item.loc || "pantry";
+        if (!grouped[loc]) grouped[loc] = [];
+        grouped[loc].push({key, item});
       });
-
-      // Items not matching any layout area
-      const orphans = stocked.filter(({item}) => {
-        if (item.areaId) return !layout.find(a => a.id === item.areaId);
-        return !layout.find(a => a.name.toLowerCase() === (item.loc || "pantry").toLowerCase());
-      });
-      if (orphans.length) {
-        html += `<div class="inv-group-title">📦 Other</div>`;
-        html += orphans.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => itemRow(key, item, "📦")).join("");
-      }
+      const order = ["pantry","fridge","freezer","counter"];
+      html += order.filter(loc => grouped[loc]).map(loc => {
+        const meta = LOCATION_META[loc];
+        const rows = grouped[loc].sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
+          const qtyText = formatQty(item.qty) + (item.unit ? " " + item.unit : "");
+          const badges = [];
+          if (isExpired(item)) badges.push(`<span class="badge expired">expired</span>`);
+          else if (item.expiry) {
+            const diff = (new Date(item.expiry).getTime() - Date.now()) / (24*3600*1000);
+            if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
+          }
+          if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
+          return `
+            <div class="inv-item" data-key="${escapeHtml(key)}">
+              <div class="icon">${meta.icon}</div>
+              <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
+              <div class="badges">${badges.join("")}</div>
+              <div class="qty">${qtyText}</div>
+              <button class="delete" data-action="delete" aria-label="Delete">×</button>
+            </div>`;
+        }).join("");
+        return `<div class="inv-group-title">${meta.icon} ${meta.title} <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${grouped[loc].length})</span></div>${rows}`;
+      }).join("");
 
       // Need to restock section
       if (restock.length) {
-        const rows = restock.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => `
+        const rows = restock.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
+          return `
             <div class="inv-item restock" data-key="${escapeHtml(key)}">
               <div class="icon" style="background:var(--red-light);">🛒</div>
               <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
               <div class="badges"><span class="badge expired" style="background:var(--red-light); color:var(--red);">out</span></div>
               <button class="btn-mini" data-action="restock" aria-label="Mark as restocked">↺</button>
               <button class="delete" data-action="delete" aria-label="Delete">×</button>
-            </div>`).join("");
-        html += `<div class="inv-group-title" style="color:var(--red);">🛒 Need to restock <span style="color:var(--muted2); font-weight:500; text-transform:none;">(${restock.length})</span></div>${rows}`;
+            </div>`;
+        }).join("");
+        html += `<div class="inv-group-title" style="color:var(--red);">🛒 Need to restock <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${restock.length})</span></div>${rows}`;
       }
 
       container.innerHTML = html;
@@ -3548,21 +2719,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       });
     }
 
-    function populateAreaSelect(selectedAreaId, selectedSectionId) {
-      const layout = getLayout();
-      const areaEl = document.getElementById("imArea");
-      const secEl = document.getElementById("imSection");
-      areaEl.innerHTML = layout.map(a => `<option value="${a.id}">${a.icon} ${escapeHtml(a.name)}</option>`).join("");
-      areaEl.value = selectedAreaId || layout[0]?.id || "";
-      function updateSections() {
-        const area = layout.find(a => a.id === areaEl.value);
-        secEl.innerHTML = area ? area.sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("") : "";
-        if (selectedSectionId) secEl.value = selectedSectionId;
-      }
-      updateSections();
-      areaEl.onchange = updateSections;
-    }
-
     function openItem(key) {
       editingItemKey = key;
       const item = key ? state.inventory[key] : null;
@@ -3571,10 +2727,9 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       document.getElementById("imBrand").value = item && item.brand ? item.brand : "";
       document.getElementById("imQty").value = item && item.qty != null ? item.qty : "";
       document.getElementById("imUnit").value = item && item.unit ? item.unit : "";
+      document.getElementById("imLoc").value = item ? item.loc : "pantry";
       document.getElementById("imExpiry").value = item && item.expiry ? item.expiry : "";
       document.getElementById("imDelete").style.display = item ? "inline-flex" : "none";
-      // Populate area + section
-      populateAreaSelect(item?.areaId, item?.sectionId);
       showModal("itemModal");
       if (!item) setTimeout(() => document.getElementById("imName").focus(), 50);
     }
@@ -3592,9 +2747,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         canonicalName: normalize(name),
         qty: newQty,
         unit: document.getElementById("imUnit").value,
-        areaId: document.getElementById("imArea").value,
-        sectionId: document.getElementById("imSection").value,
-        loc: getLayout().find(a => a.id === document.getElementById("imArea").value)?.name.toLowerCase() || "pantry",
+        loc: document.getElementById("imLoc").value,
         expiry,
         upc: (prev && prev.upc) ? prev.upc : "",
       };
@@ -3752,12 +2905,13 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
             <p id="cuUpcHint" style="color:var(--muted); font-size:11px; margin:4px 0 0;"></p>
           </div>
           <div class="field">
-            <label>Storage area</label>
-            <select id="cuArea">${getLayout().map(a => `<option value="${a.id}">${a.icon} ${escapeHtml(a.name)}</option>`).join("")}</select>
-          </div>
-          <div class="field">
-            <label>Shelf / section</label>
-            <select id="cuSection"></select>
+            <label>Where does it go?</label>
+            <select id="cuLoc">
+              <option value="pantry">Pantry</option>
+              <option value="fridge">Fridge</option>
+              <option value="freezer">Freezer</option>
+              <option value="counter">Counter</option>
+            </select>
           </div>
           <div id="cuDupeWarn"></div>
           <button class="btn btn-green" id="cuSave" style="width:100%;">Save to inventory</button>
@@ -3779,17 +2933,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       syncField("cuUpc", "upc");
       document.getElementById("cuQty").addEventListener("input", (e) => { closeUpDraft.qty = e.target.value ? Number(e.target.value) : null; });
       document.getElementById("cuUnit").addEventListener("change", (e) => { closeUpDraft.unit = e.target.value; });
-      // Wire area → section cascade for close-up scan
-      function updateCuSections() {
-        const areaId = document.getElementById("cuArea").value;
-        const area = getLayout().find(a => a.id === areaId);
-        document.getElementById("cuSection").innerHTML = area ? area.sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("") : "";
-        closeUpDraft.areaId = areaId;
-        closeUpDraft.sectionId = document.getElementById("cuSection").value;
-      }
-      updateCuSections();
-      document.getElementById("cuArea").addEventListener("change", updateCuSections);
-      document.getElementById("cuSection").addEventListener("change", (e) => { closeUpDraft.sectionId = e.target.value; });
+      document.getElementById("cuLoc").addEventListener("change", (e) => { closeUpDraft.loc = e.target.value; });
 
       document.getElementById("cuScanBarcode").addEventListener("click", openBarcodeScanner);
       document.getElementById("cuSave").addEventListener("click", saveCloseUpItem);
@@ -3896,8 +3040,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       if (!cleaned || cleaned.length < 8) throw new Error("UPC must be 8–14 digits");
       const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cleaned)}.json?fields=product_name,brands,quantity,product_quantity,product_quantity_unit,categories_tags,generic_name`;
       const res = await fetch(url);
-      // 404 just means the product isn't in the database — not an error
-      if (res.status === 404) return null;
       if (!res.ok) throw new Error(`OpenFoodFacts ${res.status}`);
       const data = await res.json();
       if (data.status !== 1 || !data.product) return null;
@@ -3923,248 +3065,44 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       };
     }
 
-    // ─── UNIFIED SCANNER ─────────────────────────────────────────────────────────
-    // Three-path scanner — picks the best available engine automatically:
-    //   1. Capacitor native (iOS AVFoundation / Android MLKit) — when running as app
-    //   2. BarcodeDetector Web API  — Chrome/Android browser, hardware-accelerated
-    //   3. ZXing @zxing/library     — iOS Safari, Firefox, everything else
-    // All paths support single-shot and continuous (batch) mode.
-
-    const IS_CAPACITOR = !!(window.Capacitor?.isNativePlatform?.());
-
-    let nativeScanRAF = null;    // rAF handle for BarcodeDetector loop
-    let nativeScanStream = null; // MediaStream for BarcodeDetector path
-    let scannerControls = null;  // ZXing IScannerControls
-    let scannerReader = null;    // ZXing BrowserMultiFormatReader instance
-    let capScanActive = false;   // Capacitor scan in progress
-    let capScanContinuous = false;
-    let capScanCallback = null;
-
-    async function initScanner(containerEl, statusEl, onCode, { continuous = false } = {}) {
-      await teardownScanner();
-      if (statusEl) statusEl.textContent = "Starting camera…";
-
-      // ── Path 1: Capacitor native (iOS AVFoundation / Android MLKit) ───────────
-      if (IS_CAPACITOR) {
-        await runCapacitorScanner(onCode, continuous);
-        return;
-      }
-
-      containerEl.innerHTML = "";
-      containerEl.style.cssText = "position:relative; background:#000; border-radius:12px; overflow:hidden; min-height:220px;";
-
-      // ── Path 2: Native BarcodeDetector (Chrome, Android WebView) ──────────────
-      if ("BarcodeDetector" in window) {
-        try {
-          let formats = ["ean_13","ean_8","upc_a","upc_e","code_128","code_39","itf"];
-          try {
-            const sup = await BarcodeDetector.getSupportedFormats();
-            const filtered = formats.filter(f => sup.includes(f));
-            if (filtered.length) formats = filtered;
-          } catch {}
-          const detector = new BarcodeDetector({ formats });
-
-          // Try exact environment first, fall back to ideal
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { exact: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }
-          }).catch(() => navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
-          }));
-          nativeScanStream = stream;
-
-          const video = document.createElement("video");
-          video.setAttribute("playsinline", "true");
-          video.setAttribute("autoplay", "true");
-          video.muted = true;
-          video.style.cssText = "width:100%; height:auto; display:block;";
-          video.srcObject = stream;
-          containerEl.appendChild(video);
-          await video.play();
-          if (statusEl) statusEl.textContent = "Point camera at barcode…";
-
-          let lastCode = "", lastTime = 0;
-          const loop = async () => {
-            if (!nativeScanStream) return;
-            if (video.readyState >= 2) {
-              try {
-                const results = await detector.detect(video);
-                if (results.length) {
-                  const code = results[0].rawValue;
-                  const now = Date.now();
-                  if (code && (code !== lastCode || now - lastTime > 2000)) {
-                    lastCode = code; lastTime = now;
-                    haptic(15);
-                    onCode(code);
-                    if (!continuous) { await teardownScanner(); return; }
-                  }
-                }
-              } catch {}
-            }
-            nativeScanRAF = requestAnimationFrame(loop);
-          };
-          nativeScanRAF = requestAnimationFrame(loop);
-          return;
-        } catch {
-          // BarcodeDetector failed — fall through to ZXing
-          await teardownScanner();
-          containerEl.innerHTML = "";
-          containerEl.style.cssText = "position:relative; background:#000; border-radius:12px; overflow:hidden; min-height:220px;";
-        }
-      }
-
-      // ── Path 2: ZXing (iOS Safari, Firefox, anything without BarcodeDetector) ──
-      if (statusEl) statusEl.textContent = "Loading scanner…";
-      if (!window.ZXing) {
-        await loadScript("https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js");
-      }
-      const hints = new Map([
-        [ZXing.DecodeHintType.POSSIBLE_FORMATS, [
-          ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
-          ZXing.BarcodeFormat.UPC_A,  ZXing.BarcodeFormat.UPC_E,
-          ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39, ZXing.BarcodeFormat.ITF,
-        ]],
-        [ZXing.DecodeHintType.TRY_HARDER, true],
-      ]);
-      const reader = new ZXing.BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 200 });
-      scannerReader = reader;
-
-      const video = document.createElement("video");
-      video.setAttribute("playsinline", "true");
-      video.muted = true;
-      video.style.cssText = "width:100%; height:auto; display:block;";
-      containerEl.appendChild(video);
-
-      // Pick rear camera by label (critical for iOS where default may be front)
-      let deviceId;
-      try {
-        const devices = await reader.listVideoInputDevices();
-        const back = devices.find(d => /back|rear|environment/i.test(d.label));
-        deviceId = back?.deviceId || (devices.length > 1 ? devices[devices.length - 1].deviceId : undefined);
-      } catch {}
-
-      if (statusEl) statusEl.textContent = "Point camera at barcode…";
-      let lastCode = "", lastTime = 0;
-      scannerControls = await reader.decodeFromVideoDevice(deviceId, video, (result) => {
-        if (!result) return;
-        const code = result.getText();
-        const now = Date.now();
-        if (code && (code !== lastCode || now - lastTime > 2000)) {
-          lastCode = code; lastTime = now;
-          haptic(15);
-          onCode(code);
-          if (!continuous && scannerControls) {
-            try { scannerControls.stop(); } catch {}
-            scannerControls = null;
-          }
-        }
-      });
-    }
-
-    // ── Capacitor native scanner ──────────────────────────────────────────────────
-    async function runCapacitorScanner(onCode, continuous) {
-      const { BarcodeScanner } = window.Capacitor?.Plugins || {};
-      if (!BarcodeScanner) {
-        showToast("Barcode scanner not available on this device.");
-        return;
-      }
-
-      // Check / request camera permission
-      let permStatus;
-      try { permStatus = await BarcodeScanner.checkPermission({ force: false }); }
-      catch(e) { showToast("Scanner error: " + (e.message || e)); return; }
-
-      if (permStatus.denied || permStatus.restricted) {
-        showToast("Camera access denied — enable it in Settings → Privacy → Camera");
-        BarcodeScanner.openAppSettings?.();
-        return;
-      }
-      if (!permStatus.granted) {
-        const req = await BarcodeScanner.checkPermission({ force: true });
-        if (!req.granted) { showToast("Camera permission required to scan barcodes."); return; }
-      }
-
-      // Prepare AVFoundation camera session before hiding the WebView
-      try { await BarcodeScanner.prepare(); } catch {}
-
-      capScanActive = true;
-      capScanContinuous = continuous;
-      capScanCallback = onCode;
-
-      // Make WebView transparent so native camera layer shows through (v3 API)
-      await BarcodeScanner.hideBackground();
-      document.body.classList.add("cap-scanning");
-      document.getElementById("nativeScanOverlay").classList.add("active");
-
-      const doScan = async () => {
-        if (!capScanActive) return;
-        try {
-          const result = await BarcodeScanner.startScan({
-            targetedFormats: ["EAN_13","EAN_8","UPC_A","UPC_E","CODE_128","CODE_39","ITF"],
-          });
-          if (!capScanActive) return; // cancelled while scanning
-          if (result.hasContent) {
-            haptic(15);
-            onCode(result.content);
-            if (continuous && capScanActive) {
-              // Brief pause so the user can see the toast, then keep scanning
-              setTimeout(doScan, 600);
-            } else {
-              stopCapacitorScanner();
-            }
-          } else {
-            // startScan returned without content = user hit back / cancelled
-            stopCapacitorScanner();
-          }
-        } catch {
-          stopCapacitorScanner();
-        }
-      };
-      doScan();
-    }
-
-    function stopCapacitorScanner() {
-      if (!capScanActive) return;
-      capScanActive = false;
-      try {
-        const { BarcodeScanner } = window.Capacitor?.Plugins || {};
-        if (BarcodeScanner) {
-          BarcodeScanner.stopScan({ resolveScan: true });
-          BarcodeScanner.showBackground(); // v3 API (was showWebViewBackground in v1/v2)
-        }
-      } catch {}
-      document.body.classList.remove("cap-scanning");
-      document.getElementById("nativeScanOverlay").classList.remove("active");
-      capScanCallback = null;
-    }
-
-    async function teardownScanner() {
-      if (IS_CAPACITOR) { stopCapacitorScanner(); return; }
-      if (nativeScanRAF)   { cancelAnimationFrame(nativeScanRAF); nativeScanRAF = null; }
-      if (nativeScanStream){ nativeScanStream.getTracks().forEach(t => t.stop()); nativeScanStream = null; }
-      if (scannerControls) { try { scannerControls.stop(); } catch {}; scannerControls = null; }
-      if (scannerReader)   { try { scannerReader.reset(); } catch {};  scannerReader = null; }
-    }
-
-    // ── Single-item barcode scanner (used by the main barcode modal) ────────────
+    // ---- Barcode scanner (html5-qrcode — better iOS Safari support) ----
+    let html5QrScanner = null;
 
     async function openBarcodeScanner() {
-      // In Capacitor, the native scanner takes over the full screen —
-      // no need to show our custom modal at all.
-      if (!IS_CAPACITOR) showModal("barcodeModal");
+      showModal("barcodeModal");
       const statusEl = document.getElementById("barcodeStatus");
-      const box = document.getElementById("barcodeReaderBox");
+      statusEl.textContent = "Loading scanner…";
       try {
-        await initScanner(box, statusEl, (code) => {
-          if (!IS_CAPACITOR) hideModal("barcodeModal");
-          onBarcodeDecoded(code);
-        }, { continuous: false });
+        if (!window.Html5Qrcode) {
+          await loadScript("https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js");
+        }
+        // Clear any previous instance
+        const box = document.getElementById("barcodeReaderBox");
+        box.innerHTML = "";
+        html5QrScanner = new Html5Qrcode("barcodeReaderBox");
+        statusEl.textContent = "Point at barcode…";
+        await html5QrScanner.start(
+          { facingMode: "environment" },
+          { fps: 15, qrbox: { width: 250, height: 150 }, aspectRatio: 1.5 },
+          (decodedText) => {
+            closeBarcodeScanner();
+            onBarcodeDecoded(decodedText);
+          },
+          () => { /* scan errors are normal, ignore */ }
+        );
       } catch (err) {
-        statusEl.innerHTML = `<span style="color:var(--red);">Camera error: ${escapeHtml(err.message || String(err))}</span>`;
+        statusEl.innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(err.message)}</span>`;
       }
     }
 
     async function closeBarcodeScanner() {
-      await teardownScanner();
+      if (html5QrScanner) {
+        try {
+          if (html5QrScanner.isScanning) await html5QrScanner.stop();
+          html5QrScanner.clear();
+        } catch {}
+        html5QrScanner = null;
+      }
       hideModal("barcodeModal");
     }
 
@@ -4196,261 +3134,6 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       }
     }
 
-    // ─── BATCH SCAN ──────────────────────────────────────────────────────────────
-
-    let batchItems = [];
-    let batchAreaId = "";
-    let batchSectionId = "";
-    let batchLastScan = {}; // debounce: { upc: timestamp }
-
-    function openBatchScan() {
-      batchItems = [];
-      batchLastScan = {};
-      const layout = getLayout();
-      const areaEl = document.getElementById("bsArea");
-      areaEl.innerHTML = layout.map(a => `<option value="${a.id}">${a.icon} ${escapeHtml(a.name)}</option>`).join("");
-      function updateBsSections() {
-        const area = layout.find(a => a.id === areaEl.value);
-        document.getElementById("bsSection").innerHTML = area
-          ? area.sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")
-          : "<option value=''>—</option>";
-      }
-      updateBsSections();
-      areaEl.onchange = updateBsSections;
-      document.getElementById("bsStep1").style.display = "";
-      document.getElementById("bsStep2").style.display = "none";
-      document.getElementById("bsStep3").style.display = "none";
-      showModal("batchScanModal");
-    }
-
-    async function startBatchScanning() {
-      const layout = getLayout();
-      batchAreaId = document.getElementById("bsArea").value;
-      batchSectionId = document.getElementById("bsSection").value;
-      const area = layout.find(a => a.id === batchAreaId);
-      const section = area?.sections.find(s => s.id === batchSectionId);
-      const locLabel = `${area?.icon || "📦"} ${area?.name || "Pantry"}${section ? " › " + section.name : ""}`;
-      document.getElementById("bsLocationLabel").textContent = locLabel;
-      document.getElementById("bsCount").textContent = "0 items scanned";
-      document.getElementById("bsScannedList").innerHTML = "";
-      document.getElementById("bsStep1").style.display = "none";
-      document.getElementById("bsStep2").style.display = "";
-      const box = document.getElementById("bsScannerBox");
-      const statusEl = document.getElementById("bsScanStatus");
-      try {
-        await initScanner(box, statusEl, (code) => {
-          const now = Date.now();
-          if (batchLastScan[code] && now - batchLastScan[code] < 2500) return;
-          batchLastScan[code] = now;
-          addBatchItem(code);
-        }, { continuous: true });
-      } catch (err) {
-        statusEl.innerHTML = `<span style="color:var(--red);">Camera error: ${escapeHtml(err.message || String(err))}</span>`;
-      }
-    }
-
-    async function addBatchItem(code) {
-      // Already in this batch? Increment qty instead.
-      const existing = batchItems.find(i => i.upc === code);
-      if (existing) {
-        existing.qty = (existing.qty || 1) + 1;
-        haptic(10);
-        showToast(`+1 ${existing.name || code}`);
-        renderBatchQueue();
-        return;
-      }
-      const item = {
-        id: Date.now() + Math.random(),
-        upc: code,
-        name: "",
-        brand: "",
-        qty: 1,
-        unit: "",
-        areaId: batchAreaId,
-        sectionId: batchSectionId,
-        loc: getLayout().find(a => a.id === batchAreaId)?.name?.toLowerCase() || "pantry",
-        canonicalName: "",
-        status: "loading",
-      };
-      batchItems.push(item);
-      haptic(15);
-      renderBatchQueue();
-      document.getElementById("bsScanStatus").textContent = `Got ${code} — looking up…`;
-      try {
-        const info = await lookupUpc(code);
-        if (info) {
-          item.name = info.name || info.canonicalName || code;
-          item.brand = info.brand || "";
-          item.unit = info.unit || "";
-          item.canonicalName = info.canonicalName || normalize(item.name);
-          item.status = "done";
-          showToast(`✓ ${item.brand ? item.brand + " · " : ""}${item.name}`);
-        } else {
-          item.name = "Unknown — tap to edit";
-          item.canonicalName = normalize(code);
-          item.status = "failed";
-          showToast(`UPC ${code} not in catalog`);
-        }
-      } catch {
-        item.name = "Unknown — tap to edit";
-        item.canonicalName = normalize(code);
-        item.status = "failed";
-      }
-      renderBatchQueue();
-      document.getElementById("bsScanStatus").textContent = "Point camera at next barcode…";
-      document.getElementById("bsCount").textContent = `${batchItems.length} item${batchItems.length !== 1 ? "s" : ""} scanned`;
-    }
-
-    function renderBatchQueue() {
-      const list = document.getElementById("bsScannedList");
-      if (!list) return;
-      document.getElementById("bsCount").textContent = `${batchItems.length} item${batchItems.length !== 1 ? "s" : ""} scanned`;
-      if (!batchItems.length) { list.innerHTML = ""; return; }
-      list.innerHTML = batchItems.map((item, idx) => `
-        <div class="bs-item${item.status === "loading" ? " bs-item-loading" : " bs-new-flash"}" data-idx="${idx}">
-          <div style="flex:1; min-width:0; overflow:hidden;">
-            <div class="bs-item-name">${item.status === "loading" ? `🔍 ${escapeHtml(item.upc)}…` : escapeHtml(item.name || item.upc)}</div>
-            ${item.brand ? `<div class="bs-item-brand">${escapeHtml(item.brand)}</div>` : ""}
-            ${item.status === "failed" ? `<div class="bs-item-brand" style="color:var(--amber);">⚠️ Not found — tap name to edit</div>` : ""}
-          </div>
-          <div class="bs-qty-row">
-            <button class="bs-qty-btn" data-action="dec" data-idx="${idx}">−</button>
-            <span class="bs-qty-val">${item.qty}</span>
-            <button class="bs-qty-btn" data-action="inc" data-idx="${idx}">+</button>
-          </div>
-          <button class="bs-remove-btn" data-action="remove" data-idx="${idx}" title="Remove">✕</button>
-        </div>
-      `).reverse().join(""); // newest on top
-      list.querySelectorAll("[data-action]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const idx = Number(btn.dataset.idx);
-          const act = btn.dataset.action;
-          if (act === "inc") { batchItems[idx].qty++; renderBatchQueue(); }
-          else if (act === "dec") { batchItems[idx].qty = Math.max(1, batchItems[idx].qty - 1); renderBatchQueue(); }
-          else if (act === "remove") { batchItems.splice(idx, 1); renderBatchQueue(); }
-        });
-      });
-      // Tapping name on "failed" items lets user rename inline
-      list.querySelectorAll(".bs-item").forEach(el => {
-        const idx = Number(el.dataset.idx);
-        if (batchItems[idx]?.status === "failed") {
-          el.querySelector(".bs-item-name").addEventListener("click", () => {
-            const newName = prompt("Edit item name:", batchItems[idx].name === "Unknown — tap to edit" ? "" : batchItems[idx].name);
-            if (newName && newName.trim()) {
-              batchItems[idx].name = newName.trim();
-              batchItems[idx].canonicalName = normalize(newName.trim());
-              batchItems[idx].status = "done";
-              renderBatchQueue();
-            }
-          });
-        }
-      });
-    }
-
-    function showBatchReview() {
-      teardownScanner();
-      if (!batchItems.length) { showToast("No items scanned yet — point camera at barcodes first."); return; }
-      const layout = getLayout();
-      const area = layout.find(a => a.id === batchAreaId);
-      const section = area?.sections.find(s => s.id === batchSectionId);
-      const readyCount = batchItems.filter(i => i.status !== "loading").length;
-      document.getElementById("bsReviewSubtitle").textContent =
-        `${readyCount} item${readyCount !== 1 ? "s" : ""} → ${area?.icon || "📦"} ${area?.name || "Pantry"}${section ? " › " + section.name : ""}`;
-      document.getElementById("bsStep2").style.display = "none";
-      document.getElementById("bsStep3").style.display = "";
-      renderBatchReview();
-    }
-
-    function renderBatchReview() {
-      const list = document.getElementById("bsReviewList");
-      if (!batchItems.length) { list.innerHTML = `<p style="color:var(--muted); text-align:center; padding:20px 0;">No items to save.</p>`; return; }
-      list.innerHTML = batchItems.map((item, idx) => `
-        <div class="bs-item" data-idx="${idx}">
-          <div style="flex:1; min-width:0; overflow:hidden;">
-            <div class="bs-item-name">${item.status === "failed" ? "✏️ " : ""}${escapeHtml(item.name || item.upc)}</div>
-            ${item.brand ? `<div class="bs-item-brand">${escapeHtml(item.brand)}</div>` : ""}
-            <div class="bs-item-brand" style="font-size:11px; color:var(--muted2);">${escapeHtml(item.upc)}</div>
-          </div>
-          <div class="bs-qty-row">
-            <button class="bs-qty-btn" data-action="dec" data-idx="${idx}">−</button>
-            <span class="bs-qty-val">${item.qty}</span>
-            <button class="bs-qty-btn" data-action="inc" data-idx="${idx}">+</button>
-          </div>
-          <button class="bs-remove-btn" data-action="remove" data-idx="${idx}" title="Remove">✕</button>
-        </div>
-      `).join("");
-      list.querySelectorAll("[data-action]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const idx = Number(btn.dataset.idx);
-          const act = btn.dataset.action;
-          if (act === "inc") { batchItems[idx].qty++; renderBatchReview(); }
-          else if (act === "dec") { batchItems[idx].qty = Math.max(1, batchItems[idx].qty - 1); renderBatchReview(); }
-          else if (act === "remove") { batchItems.splice(idx, 1); renderBatchReview(); }
-        });
-      });
-      // Tap name to edit on review screen too
-      list.querySelectorAll(".bs-item").forEach(el => {
-        const idx = Number(el.dataset.idx);
-        el.querySelector(".bs-item-name").addEventListener("click", () => {
-          const cur = batchItems[idx];
-          const newName = prompt("Edit item name:", cur.name === "Unknown — tap to edit" ? "" : cur.name);
-          if (newName && newName.trim()) {
-            batchItems[idx].name = newName.trim();
-            batchItems[idx].canonicalName = normalize(newName.trim());
-            batchItems[idx].status = "done";
-            renderBatchReview();
-          }
-        });
-      });
-      document.getElementById("bsSaveAllBtn").textContent = `💾 Save All (${batchItems.length})`;
-    }
-
-    function saveAllBatch() {
-      let saved = 0, merged = 0;
-      batchItems.forEach(item => {
-        const name = (item.name || "").trim();
-        if (!name || name === "Unknown — tap to edit") return;
-        const inv = {
-          name,
-          brand: item.brand || "",
-          canonicalName: item.canonicalName || normalize(name),
-          qty: item.qty || 1,
-          unit: item.unit || "",
-          loc: item.loc,
-          areaId: item.areaId,
-          sectionId: item.sectionId,
-          expiry: null,
-          upc: item.upc || "",
-        };
-        const key = inventoryKey(inv);
-        if (state.inventory[key]) {
-          state.inventory[key].qty = (state.inventory[key].qty || 0) + inv.qty;
-          merged++;
-        } else {
-          state.inventory[key] = inv;
-          saved++;
-        }
-      });
-      saveState();
-      hideModal("batchScanModal");
-      renderInventory();
-      haptic(20);
-      const skipped = batchItems.length - saved - merged;
-      let msg = `✅ Saved ${saved} new`;
-      if (merged) msg += `, updated ${merged}`;
-      if (skipped) msg += ` (${skipped} unnamed skipped)`;
-      showToast(msg);
-      batchItems = [];
-    }
-
-    function closeBatchScan() {
-      teardownScanner();
-      hideModal("batchScanModal");
-      batchItems = [];
-    }
-
-    // ─── END BATCH SCAN ──────────────────────────────────────────────────────────
-
 
     function saveCloseUpItem() {
       if (!closeUpDraft) return;
@@ -4460,9 +3143,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       const qtyEl = document.getElementById("cuQty");
       const unitEl = document.getElementById("cuUnit");
       const upcEl = document.getElementById("cuUpc");
-      const areaId = document.getElementById("cuArea")?.value || getLayout()[0]?.id || "";
-      const sectionId = document.getElementById("cuSection")?.value || "";
-      const areaName = getLayout().find(a => a.id === areaId)?.name?.toLowerCase() || "pantry";
+      const locEl = document.getElementById("cuLoc");
       const name = (nameEl.value || "").trim();
       if (!name) { nameEl.focus(); alert("Name is required."); return; }
       const upc = (upcEl.value || "").replace(/\D/g, "");
@@ -4474,9 +3155,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
         canonicalName: canonical,
         qty: qtyEl.value ? Number(qtyEl.value) : 1,
         unit: unitEl.value || "",
-        loc: areaName,
-        areaId,
-        sectionId,
+        loc: locEl.value || "pantry",
         expiry: null,
         upc: upc || "",
       };
@@ -4583,24 +3262,16 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           <div class="scan-summary" id="scanSummary"></div>
           <button class="btn btn-ghost" id="addScanItem" style="width:100%;">+ Add another item</button>
           <div class="field" style="margin-top:12px;">
-            <label>Storage area</label>
-            <select id="bulkArea">${getLayout().map(a => `<option value="${a.id}">${a.icon} ${escapeHtml(a.name)}</option>`).join("")}</select>
-          </div>
-          <div class="field">
-            <label>Shelf / section</label>
-            <select id="bulkSection"></select>
+            <label>Where do these go?</label>
+            <select id="bulkLoc">
+              <option value="pantry">Pantry</option>
+              <option value="fridge">Fridge</option>
+              <option value="freezer">Freezer</option>
+              <option value="counter">Counter</option>
+            </select>
           </div>
           <button class="btn btn-green" id="bulkSave" style="width:100%;">Add selected to inventory</button>
         </div>`;
-
-      // Wire bulk area → section cascade
-      function updateBulkSections() {
-        const areaId = document.getElementById("bulkArea").value;
-        const area = getLayout().find(a => a.id === areaId);
-        document.getElementById("bulkSection").innerHTML = area ? area.sections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("") : "";
-      }
-      updateBulkSections();
-      document.getElementById("bulkArea").addEventListener("change", updateBulkSections);
 
       // Reset draft
       scanDraftItems = [];
@@ -4786,9 +3457,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
     }
 
     function saveScannedItems() {
-      const areaId = document.getElementById("bulkArea")?.value || getLayout()[0]?.id || "";
-      const sectionId = document.getElementById("bulkSection")?.value || "";
-      const areaName = getLayout().find(a => a.id === areaId)?.name?.toLowerCase() || "pantry";
+      const loc = document.getElementById("bulkLoc").value;
       const selected = scanDraftItems.filter(i => i.included && (i.name || "").trim());
       if (!selected.length) { alert("Nothing selected. Check the items you want to keep."); return; }
       selected.forEach(i => {
@@ -4800,9 +3469,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
           canonicalName: normalize(name),
           qty: i.qty,
           unit: i.unit || "",
-          loc: areaName,
-          areaId,
-          sectionId,
+          loc,
           expiry: null,
           upc: "",
         };
@@ -4812,7 +3479,7 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       document.getElementById("scanResult").innerHTML = `
         <div class="card empty-state" style="background:var(--green-light);">
           <span class="big">✅</span>
-          Added ${selected.length} item${selected.length === 1 ? "" : "s"} to your ${areaName}.<br/>
+          Added ${selected.length} item${selected.length === 1 ? "" : "s"} to your ${loc}.<br/>
           <small>Check the Inventory tab to review.</small>
         </div>`;
       haptic(15);
@@ -4872,18 +3539,15 @@ Use a fitting emoji icon for the area type. Name shelves descriptively based on 
       state.history[r.id] = new Date().toISOString();
       saveState();
       // Auto-add depleted items to the shopping list (one toast per cook session)
-      let addedCount = 0;
       depletedToAutoAdd.forEach(inv => {
         if (!shoppingListMatch(inv.name, inv.brand)) {
-          const r2 = addToShoppingList({
+          addToShoppingList({
             name: inv.name, brand: inv.brand || "", qty: 1,
             unit: inv.unit || "", reason: `ran out cooking ${r.name}`,
           }, { allowDupe: false });
-          if (r2 && r2.added) addedCount++;
         }
       });
-      // Refresh cook view so this recipe moves out of "Cook right now"
-      if (typeof renderCook === "function") renderCook();
+      const addedCount = depletedToAutoAdd.length;
       const toastMsg = addedCount
         ? `Logged ${r.name} · added ${addedCount} to shopping list`
         : `Logged ${r.name}`;
@@ -5129,30 +3793,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         });
         saveState();
         renderPlan();
-        // Auto-add missing ingredients to the shopping list
-        let addedToList = 0;
-        const missing = {};
-        Object.values(state.mealPlan).forEach(id => {
-          const r = getRecipe(id);
-          if (!r) return;
-          r.ingredients.forEach(i => {
-            if (!hasIngredient(i.name)) {
-              const k = normalize(i.name);
-              if (!missing[k]) missing[k] = { name: i.name, qty: 0, unit: i.unit };
-              missing[k].qty += (i.qty || 1);
-            }
-          });
-        });
-        Object.values(missing).forEach(item => {
-          const result = addToShoppingList({
-            name: item.name, qty: item.qty, unit: item.unit,
-            reason: "meal plan",
-          }, { allowDupe: false });
-          if (result && result.added) addedToList++;
-        });
-        updateShopBadge();
-        const listMsg = addedToList > 0 ? ` · added ${addedToList} item${addedToList !== 1 ? "s" : ""} to shopping list` : " · shopping list already stocked!";
-        showToast(`✨ Planned ${applied} meal${applied === 1 ? "" : "s"}${listMsg}`);
+        showToast(`✨ Planned ${applied} meal${applied === 1 ? "" : "s"}`);
         haptic(20);
       } catch (err) {
         alert(`Auto-plan failed: ${err.message}`);
@@ -5371,13 +4012,6 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       document.getElementById("onboard").classList.remove("show");
     }
 
-    // Layout scan photo input
-    document.getElementById("layoutScanInput").addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
-      if (file) scanLayoutFromPhoto(file);
-      e.target.value = "";
-    });
-
     // ============================================================
     // EVENT WIRING
     // ============================================================
@@ -5389,60 +4023,16 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       else if (currentView === "cook") openCustom();
     });
     document.getElementById("openSettingsBtn").addEventListener("click", openSettings);
-    document.getElementById("clearPantryBtn").addEventListener("click", () => {
-      const count = Object.keys(state.inventory).length;
-      if (!count) { showToast("Pantry is already empty"); return; }
-      if (!confirm(`Clear all ${count} item${count !== 1 ? "s" : ""} from your inventory?`)) return;
-      const backup = { ...state.inventory };
-      state.inventory = {};
-      saveState(); renderInventory(); renderCook();
-      showToast(`Cleared ${count} item${count !== 1 ? "s" : ""}`, "Undo", () => {
-        state.inventory = backup;
-        saveState(); renderInventory(); renderCook();
-      });
-    });
-    document.getElementById("manageLayoutBtn").addEventListener("click", () => {
-      renderLayoutModal();
-      showModal("layoutModal");
-    });
-    document.getElementById("addAreaBtn").addEventListener("click", () => {
-      const icons = ["🗄️","🧊","❄️","🍞","🧺","🚪","🍷","☕"];
-      const icon = icons[state.layout.length % icons.length];
-      state.layout.push({ id: "area-" + genId(), name: "New Area", icon, sections: [{ id: genId(), name: "Shelf 1" }] });
-      saveState(); renderLayoutModal();
-    });
     document.getElementById("openShoppingListBtn").addEventListener("click", openShoppingList);
     document.getElementById("shopAddBtn").addEventListener("click", handleShopManualAdd);
     document.getElementById("shopAddName").addEventListener("keydown", (e) => { if (e.key === "Enter") handleShopManualAdd(); });
-    document.getElementById("shopOrderInstacart").addEventListener("click", orderShopListViaClaudeChrome);
-    document.getElementById("shopPrint").addEventListener("click", printShoppingList);
-    document.getElementById("shopCopyList").addEventListener("click", async () => {
-      const text = buildShopListText();
-      if (!text) { showToast("Nothing to copy"); return; }
-      try { await navigator.clipboard.writeText(text); showToast("List copied to clipboard"); }
-      catch (e) { alert(text); }
-    });
+    document.getElementById("shopToCart").addEventListener("click", sendShoppingListToCart);
+    document.getElementById("shopToAnyList").addEventListener("click", sendShoppingListToAnyList);
     document.getElementById("shopClearChecked").addEventListener("click", clearCheckedShopItems);
-    document.getElementById("shopClearAll").addEventListener("click", () => {
-      const all = state.shoppingList || [];
-      if (!all.length) { showToast("List is already empty"); return; }
-      if (!confirm(`Clear all ${all.length} item${all.length !== 1 ? "s" : ""} from the shopping list?`)) return;
-      state.shoppingList = [];
-      saveState(); renderShoppingList();
-      showToast("Shopping list cleared", "Undo", () => {
-        state.shoppingList = all;
-        saveState(); renderShoppingList();
-      });
-    });
 
     document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => hideModal(b.dataset.close)));
     document.querySelectorAll(".modal-backdrop").forEach(m => {
-      m.addEventListener("click", (e) => {
-        if (e.target === m) {
-          if (m.id === "batchScanModal") { closeBatchScan(); return; }
-          hideModal(m.id);
-        }
-      });
+      m.addEventListener("click", (e) => { if (e.target === m) hideModal(m.id); });
     });
 
     // Search
@@ -5522,38 +4112,26 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       }).join("\n");
     }
 
-    // Order via Claude in Chrome: copies the shopping list to the clipboard,
-    // then opens claude.ai with a pre-filled prompt so Claude can drive Instacart.
-    // Requires the Claude in Chrome browser extension to be installed.
-    document.getElementById("orderViaClaudeChrome").addEventListener("click", async () => {
+    // Order via Claude in Chrome: opens claude.ai with a prompt pre-loaded,
+    // instructing Claude to drive Instacart and add every item to the cart.
+    // Relies on the user having Claude in Chrome (the browser-automation
+    // extension) installed and signed in.
+    document.getElementById("orderViaClaudeChrome").addEventListener("click", () => {
       if (!checklistItems.length) { showToast("Nothing on the list"); return; }
       const listText = buildShoppingListText();
       const prompt = [
         "Please open Instacart (instacart.com), pick a store near me, and add every item below to my cart.",
         "",
-        "Use my default store/address if one is set. Use the closest match for each item name (generic brands are fine unless specified).",
+        "Use my default store/address if one is set. Use the closest match for each item name (generic brands are fine unless I've specified).",
         "",
         "SHOPPING LIST:",
         listText,
         "",
-        "Stop at the cart/checkout page so I can review and pay myself. Do NOT place the order or enter payment info."
+        "When you've finished adding everything, stop at the cart/checkout page so I can review and pay myself. Do NOT place the order or enter payment info."
       ].join("\n");
-      // Always copy to clipboard first — fallback if popup is blocked
-      let copied = false;
-      try { await navigator.clipboard.writeText(listText); copied = true; } catch(e) {}
       const url = "https://claude.ai/new?q=" + encodeURIComponent(prompt);
-      const opened = window.open(url, "_blank");
-      if (!opened) {
-        showToast(copied
-          ? "Popup blocked · list copied to clipboard — open claude.ai and paste it!"
-          : "Popup blocked · open claude.ai and describe what you need"
-        );
-      } else {
-        showToast(copied
-          ? "Opened Claude · list also copied to clipboard as backup"
-          : "Opened Claude — type your list there if the prompt didn't appear"
-        );
-      }
+      window.open(url, "_blank", "noopener");
+      showToast("Opening Claude — make sure Claude in Chrome is installed");
     });
 
     // Order via Amazon Fresh: opens a search tab on Amazon Fresh per item.
@@ -5608,37 +4186,6 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       openBarcodeScanner();
     });
 
-    // Batch scan button
-    // Native scan overlay cancel button
-    document.getElementById("nativeScanCancelBtn").addEventListener("click", () => {
-      stopCapacitorScanner();
-      hideModal("barcodeModal");
-    });
-
-    document.getElementById("batchScanBtn").addEventListener("click", openBatchScan);
-    document.getElementById("bsClose1").addEventListener("click", closeBatchScan);
-    document.getElementById("bsCancelStep1").addEventListener("click", closeBatchScan);
-    document.getElementById("bsStartBtn").addEventListener("click", startBatchScanning);
-    document.getElementById("bsDoneBtn").addEventListener("click", showBatchReview);
-    document.getElementById("bsClose3").addEventListener("click", closeBatchScan);
-    document.getElementById("bsBackBtn").addEventListener("click", () => {
-      // Go back to scanning — restart camera but keep items already scanned
-      document.getElementById("bsStep3").style.display = "none";
-      document.getElementById("bsStep2").style.display = "";
-      const bsBox = document.getElementById("bsScannerBox");
-      const bsStatus = document.getElementById("bsScanStatus");
-      bsStatus.textContent = "Restarting camera…";
-      initScanner(bsBox, bsStatus, (code) => {
-        const now = Date.now();
-        if (batchLastScan[code] && now - batchLastScan[code] < 2500) return;
-        batchLastScan[code] = now;
-        addBatchItem(code);
-      }, { continuous: true }).catch(err => {
-        bsStatus.innerHTML = `<span style="color:var(--red);">Error: ${escapeHtml(err.message)}</span>`;
-      });
-    });
-    document.getElementById("bsSaveAllBtn").addEventListener("click", saveAllBatch);
-
     // Barcode modal cancel / manual entry
     document.getElementById("barcodeCancel").addEventListener("click", closeBarcodeScanner);
     document.getElementById("barcodeManual").addEventListener("click", () => {
@@ -5672,17 +4219,6 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     // Plan
     document.getElementById("generatePlanList").addEventListener("click", planShoppingList);
     document.getElementById("autoPlanWeek").addEventListener("click", autoPlanWeek);
-    document.getElementById("clearWeekBtn").addEventListener("click", () => {
-      const count = Object.values(state.mealPlan).filter(Boolean).length;
-      if (!count) { showToast("Week is already empty"); return; }
-      const backup = { ...state.mealPlan };
-      state.mealPlan = {};
-      saveState(); renderPlan();
-      showToast("Week cleared", "Undo", () => {
-        state.mealPlan = backup;
-        saveState(); renderPlan();
-      });
-    });
 
     // Chat
     document.getElementById("chatSend").addEventListener("click", () => {
@@ -5729,11 +4265,6 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     setView("cook");
     updateShopBadge();
 
-    // Firebase — init after SDKs have loaded (they're deferred)
-    window.addEventListener("load", () => {
-      if (typeof firebase !== "undefined") initFirebase();
-    });
-
     // Service worker registration (offline support)
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
@@ -5748,38 +4279,5 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       document.getElementById("onboard").classList.add("show");
     }
   </script>
-
-  <!-- SIGN-IN MODAL -->
-  <div class="modal-backdrop" id="signInModal">
-    <div class="modal" style="text-align:center; padding:32px 24px;">
-      <button class="close-x" data-close="signInModal">×</button>
-      <div style="font-size:48px; margin-bottom:12px;">☁️</div>
-      <h2 style="margin:0 0 8px;">Sync your kitchen</h2>
-      <p style="color:var(--muted); font-size:14px; margin:0 0 24px;">Sign in with Google to back up your inventory and access it on any device — forever.</p>
-      <button class="signin-google-btn" id="googleSignInBtn">
-        <svg width="20" height="20" viewBox="0 0 24 24" style="flex-shrink:0">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        Continue with Google
-      </button>
-      <p style="font-size:11px; color:var(--muted2); margin-top:16px; line-height:1.5;">Your inventory is always saved on this device, sign-in or not. Signing in just adds a cloud backup.</p>
-    </div>
-  </div>
-
-  <!-- ACCOUNT MODAL (shown when already signed in) -->
-  <div class="modal-backdrop" id="accountModal">
-    <div class="modal" style="text-align:center; padding:32px 24px;">
-      <button class="close-x" data-close="accountModal">×</button>
-      <div id="accountAvatar" style="font-size:48px; margin-bottom:8px;">👤</div>
-      <h2 id="accountName" style="margin:0 0 4px; font-size:18px;">Your Account</h2>
-      <p id="accountEmail" style="color:var(--muted); font-size:13px; margin:0 0 8px;"></p>
-      <p id="accountSyncLine" style="color:var(--green); font-size:13px; font-weight:600; margin:0 0 24px;">☁️ Inventory synced</p>
-      <button class="btn btn-secondary" id="signOutBtn" style="width:100%;">Sign out</button>
-    </div>
-  </div>
-
 </body>
 </html>
