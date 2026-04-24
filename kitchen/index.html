@@ -1469,6 +1469,13 @@
           </div>
           <span style="color: var(--green); font-size: 18px;">⬆</span>
         </div>
+        <div class="settings-row" id="loadDemoBtn" style="cursor:pointer;">
+          <div class="label-wrap">
+            <div>Load demo data</div>
+            <div class="label-sub">Fills inventory and shopping list with sample real-world items</div>
+          </div>
+          <span style="color: var(--green); font-size: 18px;">🧪</span>
+        </div>
         <div class="settings-row" id="resetBtn" style="cursor:pointer;">
           <div class="label-wrap">
             <div style="color: var(--red);">Reset all data</div>
@@ -4036,6 +4043,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         });
       });
       document.getElementById("exportBtn").addEventListener("click", exportData);
+      document.getElementById("loadDemoBtn").addEventListener("click", loadDemoData);
       document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
       document.getElementById("importFile").addEventListener("change", importData);
       document.getElementById("resetBtn").addEventListener("click", () => {
@@ -4055,6 +4063,50 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       URL.revokeObjectURL(url);
       showToast("Backup downloaded");
     }
+    function loadDemoData() {
+      if (!confirm("Load demo inventory + shopping list? This adds sample items but won't delete existing ones.")) return;
+      const today = new Date();
+      const addDays = (d) => { const x = new Date(today); x.setDate(x.getDate() + d); return x.toISOString().slice(0,10); };
+      const demoInventory = [
+        { name: "Eggs",            brand: "Vital Farms",      qty: 12, unit: "",       loc: "fridge",  expiry: addDays(14) },
+        { name: "Whole milk",      brand: "Horizon Organic",  qty: 1,  unit: "gal",    loc: "fridge",  expiry: addDays(7)  },
+        { name: "Sourdough bread", brand: "Boudin",           qty: 1,  unit: "loaf",   loc: "pantry",  expiry: addDays(4)  },
+        { name: "Greek yogurt",    brand: "Fage",             qty: 0,  unit: "32oz",   loc: "fridge",  expiry: null         },
+        { name: "Chicken thighs",  brand: "",                 qty: 1,  unit: "lb",     loc: "freezer", expiry: addDays(60)  },
+        { name: "Spaghetti",       brand: "Barilla",          qty: 2,  unit: "lb",     loc: "pantry",  expiry: null         },
+        { name: "Olive oil",       brand: "California Olive Ranch", qty: 1, unit: "bottle", loc: "pantry", expiry: null    },
+        { name: "Yellow onion",    brand: "",                 qty: 3,  unit: "",       loc: "pantry",  expiry: null         },
+        { name: "Garlic",          brand: "",                 qty: 1,  unit: "head",   loc: "pantry",  expiry: null         },
+        { name: "Parmesan cheese", brand: "BelGioioso",       qty: 1,  unit: "wedge",  loc: "fridge",  expiry: addDays(30)  },
+        { name: "Bananas",         brand: "",                 qty: 5,  unit: "",       loc: "counter", expiry: addDays(5)   },
+        { name: "Avocado",         brand: "",                 qty: 0,  unit: "",       loc: "counter", expiry: null         },
+        { name: "Butter",          brand: "Kerrygold",        qty: 1,  unit: "stick",  loc: "fridge",  expiry: addDays(45)  },
+        { name: "Heinz ketchup",   brand: "Heinz",            qty: 1,  unit: "bottle", loc: "fridge",  expiry: null         },
+        { name: "Cheerios",        brand: "General Mills",    qty: 1,  unit: "box",    loc: "pantry",  expiry: addDays(180) },
+      ];
+      let invAdded = 0;
+      demoInventory.forEach(d => {
+        const item = { ...d, canonicalName: normalize(d.name) };
+        const key = inventoryKey(item);
+        if (!state.inventory[key]) { state.inventory[key] = item; invAdded++; }
+      });
+      const demoShop = [
+        { name: "Ground beef",        brand: "",            qty: 1, unit: "lb",      reason: "manual" },
+        { name: "Crushed tomatoes",   brand: "San Marzano", qty: 1, unit: "28oz can", reason: "manual" },
+        { name: "Fresh basil",        brand: "",            qty: 1, unit: "bunch",   reason: "manual" },
+        { name: "Lemons",             brand: "",            qty: 4, unit: "",        reason: "manual" },
+        { name: "Cold brew coffee",   brand: "Stumptown",   qty: 1, unit: "bottle",  reason: "manual" },
+      ];
+      let shopAdded = 0;
+      demoShop.forEach(d => {
+        if (!shoppingListMatch(d.name, d.brand)) { addToShoppingList(d); shopAdded++; }
+      });
+      saveState();
+      if (typeof renderInventory === "function") renderInventory();
+      if (typeof renderShoppingList === "function") renderShoppingList();
+      showToast(`Demo loaded: +${invAdded} inventory, +${shopAdded} shopping list`);
+    }
+
     function importData(e) {
       const f = e.target.files[0];
       if (!f) return;
