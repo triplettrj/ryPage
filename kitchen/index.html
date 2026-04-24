@@ -1289,6 +1289,7 @@
       <div id="shopListChecked" style="margin-top:8px;"></div>
 
       <div class="btn-row" style="flex-direction: column; margin-top: 14px;">
+        <button class="btn btn-secondary" id="shopFromInventory">↻ Restock from inventory</button>
         <button class="btn btn-primary" id="shopToCart">🛒 Send to Instacart</button>
         <button class="btn btn-secondary" id="shopToAnyList">📧 Send to AnyList</button>
         <button class="btn btn-secondary" id="shopClearChecked">Clear checked items</button>
@@ -2237,6 +2238,36 @@
       }));
       hideModal("shoppingListModal");
       startCart(items, "shopping-list", "Shopping list");
+    }
+
+    function restockFromInventory() {
+      const candidates = Object.values(state.inventory).filter(i => {
+        const out = i.qty != null && i.qty <= 0;
+        return out || isLowStock(i) || isExpired(i);
+      });
+      if (!candidates.length) {
+        showToast("Nothing low, out, or expired — fully stocked!");
+        return;
+      }
+      let added = 0, skipped = 0;
+      candidates.forEach(i => {
+        if (shoppingListMatch(i.name, i.brand)) { skipped++; return; }
+        const reason = isExpired(i) ? "expired" : (i.qty != null && i.qty <= 0 ? "out" : "low stock");
+        addToShoppingList({
+          name: i.name,
+          brand: i.brand || "",
+          qty: 1,
+          unit: i.unit || "",
+          reason,
+        });
+        added++;
+      });
+      saveState();
+      renderShoppingList();
+      const msg = added
+        ? `Added ${added} item${added === 1 ? "" : "s"} from inventory${skipped ? ` (${skipped} already on list)` : ""}`
+        : `All ${skipped} low/expired items are already on your list`;
+      showToast(msg);
     }
 
     function sendShoppingListToAnyList() {
@@ -4028,6 +4059,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     document.getElementById("shopAddName").addEventListener("keydown", (e) => { if (e.key === "Enter") handleShopManualAdd(); });
     document.getElementById("shopToCart").addEventListener("click", sendShoppingListToCart);
     document.getElementById("shopToAnyList").addEventListener("click", sendShoppingListToAnyList);
+    document.getElementById("shopFromInventory").addEventListener("click", restockFromInventory);
     document.getElementById("shopClearChecked").addEventListener("click", clearCheckedShopItems);
 
     document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => hideModal(b.dataset.close)));
