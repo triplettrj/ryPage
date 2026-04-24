@@ -1292,6 +1292,7 @@
         <button class="btn btn-secondary" id="shopFromInventory">↻ Restock from inventory</button>
         <button class="btn btn-primary" id="shopToCart">🛒 Send to Instacart</button>
         <button class="btn btn-secondary" id="shopToAnyList">📧 Send to AnyList</button>
+        <button class="btn btn-green" id="shopGotAll">✅ Got everything — add to inventory</button>
         <button class="btn btn-secondary" id="shopClearChecked">Clear checked items</button>
       </div>
     </div>
@@ -2249,6 +2250,41 @@
       }));
       hideModal("shoppingListModal");
       startCart(items, "shopping-list", "Shopping list");
+    }
+
+    function gotAllShoppingItems() {
+      const open = (state.shoppingList || []).filter(s => !s.checked);
+      if (!open.length) { showToast("Nothing to mark as purchased"); return; }
+      const before = JSON.parse(JSON.stringify({ list: state.shoppingList, inv: state.inventory }));
+      let added = 0;
+      open.forEach(s => {
+        s.checked = true;
+        const invItem = {
+          name: s.name,
+          brand: s.brand || "",
+          canonicalName: normalize(s.name),
+          qty: s.qty || 1,
+          unit: s.unit || "",
+          loc: "pantry",
+          expiry: null,
+        };
+        const key = inventoryKey(invItem);
+        if (state.inventory[key]) {
+          const prev = state.inventory[key];
+          prev.qty = (prev.qty || 0) + (s.qty || 1);
+          if (!prev.unit && invItem.unit) prev.unit = invItem.unit;
+        } else {
+          state.inventory[key] = invItem;
+        }
+        added++;
+      });
+      saveState(); renderShoppingList(); renderInventory();
+      haptic(20);
+      showToast(`Added ${added} item${added === 1 ? "" : "s"} to inventory`, "Undo", () => {
+        state.shoppingList = before.list;
+        state.inventory = before.inv;
+        saveState(); renderShoppingList(); renderInventory();
+      });
     }
 
     function restockFromInventory() {
@@ -4077,6 +4113,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     document.getElementById("shopToCart").addEventListener("click", sendShoppingListToCart);
     document.getElementById("shopToAnyList").addEventListener("click", sendShoppingListToAnyList);
     document.getElementById("shopFromInventory").addEventListener("click", restockFromInventory);
+    document.getElementById("shopGotAll").addEventListener("click", gotAllShoppingItems);
     document.getElementById("shopClearChecked").addEventListener("click", clearCheckedShopItems);
 
     document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => hideModal(b.dataset.close)));
