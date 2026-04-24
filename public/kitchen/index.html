@@ -2105,8 +2105,20 @@
           <button class="shop-del" data-action="remove" aria-label="Remove">×</button>
         </div>`;
 
+      const checkAllRow = open.length
+        ? `<div class="shop-row" id="shopCheckAllRow" style="background: var(--green-light); border-color: var(--green-ring); cursor: pointer;">
+             <button class="shop-check" id="shopCheckAllBtn" aria-label="Check all"></button>
+             <div style="min-width:0;">
+               <div class="shop-name" style="color: var(--green-dark);">Check all (${open.length})</div>
+               <div class="shop-meta">Adds everything to inventory</div>
+             </div>
+             <div class="shop-qty"></div>
+             <div style="width:24px;"></div>
+           </div>`
+        : "";
+
       openEl.innerHTML = open.length
-        ? `<div class="inv-group-title">To buy <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${open.length})</span></div>` + open.map(rowHtml).join("")
+        ? `<div class="inv-group-title">To buy <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${open.length})</span></div>` + checkAllRow + open.map(rowHtml).join("")
         : `<div class="card empty-state" style="padding:16px;"><small>Nothing to buy right now.</small></div>`;
 
       checkedEl.innerHTML = checked.length
@@ -2167,6 +2179,11 @@
           });
         });
       });
+
+      const checkAllRowEl = document.getElementById("shopCheckAllRow");
+      if (checkAllRowEl) {
+        checkAllRowEl.addEventListener("click", () => gotAllShoppingItems());
+      }
     }
 
     // Manual add from the shopping-list modal, with medium-strictness dupe warning.
