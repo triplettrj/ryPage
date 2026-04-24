@@ -1442,6 +1442,16 @@
         </div>
       </div>
 
+      <div class="settings-group">
+        <div class="settings-row" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <div class="label-wrap">
+            <div>AnyList email address</div>
+            <div class="label-sub">Find your personal address in AnyList → Settings → "Email Items to AnyList". Looks like <code>xxxx@data.anylist.com</code>.</div>
+          </div>
+          <input type="email" id="setAnyListEmail" placeholder="xxxx@data.anylist.com" autocomplete="off" spellcheck="false" style="width:100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: monospace; font-size: 13px;" />
+        </div>
+      </div>
+
       <div class="section-title"><h2>Data</h2></div>
       <div class="settings-group">
         <div class="settings-row" id="exportBtn" style="cursor:pointer;">
@@ -1878,6 +1888,7 @@
           lowStockThreshold: 1,
           hasOnboarded: false,
           claudeKey: "",
+          anyListEmail: "",
           prefs: {
             allergies: "",
             dietary: "",
@@ -2271,18 +2282,19 @@
     }
 
     function sendShoppingListToAnyList() {
+      const addr = (state.settings.anyListEmail || "").trim();
+      if (!addr || !addr.includes("@")) {
+        showToast("Set your AnyList email in Settings first");
+        return;
+      }
       const open = (state.shoppingList || []).filter(s => !s.checked);
       if (!open.length) { showToast("Nothing to send yet"); return; }
-      const lines = open.map(s => {
-        const qty = s.qty ? `${s.qty}${s.unit ? " " + s.unit : ""} ` : "";
-        const brand = s.brand ? ` (${s.brand})` : "";
-        return `- ${qty}${s.name}${brand}`;
-      });
-      // AnyList parses emails sent to recipes@anylist.com from your registered address.
-      // The "Ingredients:" header tells their parser what to import.
-      const subject = "My Kitchen shopping list";
-      const body = `Shopping List\n\nIngredients:\n${lines.join("\n")}\n\nSent from My Kitchen`;
-      const href = `mailto:recipes@anylist.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      // AnyList's "Email Items to AnyList" expects each item on its own line in the BODY.
+      // Subject is ignored. Use plain "name" only — quantity/unit/brand confuses their parser.
+      const lines = open.map(s => s.brand ? `${s.name} (${s.brand})` : s.name);
+      const subject = "Shopping list";
+      const body = lines.join("\n");
+      const href = `mailto:${encodeURIComponent(addr)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       window.location.href = href;
       showToast(`Opening email with ${open.length} item${open.length === 1 ? "" : "s"} for AnyList`);
     }
@@ -3905,6 +3917,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       document.getElementById("setLowStock").value = state.settings.lowStockThreshold;
       document.getElementById("setClaudeKey").value = state.settings.claudeKey || "";
       document.getElementById("claudeKeyStatus").textContent = state.settings.claudeKey ? "Key saved in this browser." : "";
+      document.getElementById("setAnyListEmail").value = state.settings.anyListEmail || "";
       document.getElementById("prefAllergies").value = p.allergies || "";
       document.getElementById("prefDietary").value = p.dietary || "";
       document.getElementById("prefLikedCuisines").value = p.likedCuisines || "";
@@ -3929,6 +3942,10 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         state.settings.claudeKey = e.target.value.trim();
         saveState();
         document.getElementById("claudeKeyStatus").textContent = state.settings.claudeKey ? "Key saved in this browser." : "";
+      });
+      document.getElementById("setAnyListEmail").addEventListener("change", e => {
+        state.settings.anyListEmail = e.target.value.trim();
+        saveState();
       });
       document.getElementById("testClaudeKey").addEventListener("click", async () => {
         const k = document.getElementById("setClaudeKey").value.trim();
