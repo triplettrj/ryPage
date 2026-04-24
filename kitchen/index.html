@@ -275,12 +275,18 @@
       border: 1px solid var(--border);
     }
     .inv-item .icon {
-      width: 32px; height: 32px;
+      width: 36px; height: 36px;
       border-radius: 9px;
       background: var(--green-light);
       display: flex; align-items: center; justify-content: center;
       font-size: 16px;
       flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .inv-item .icon img {
+      width: 100%; height: 100%; object-fit: cover;
+      background: #fff;
     }
     .inv-item .name {
       flex: 1;
@@ -1475,6 +1481,13 @@
             <div class="label-sub">Fills inventory and shopping list with sample real-world items</div>
           </div>
           <span style="color: var(--green); font-size: 18px;">🧪</span>
+        </div>
+        <div class="settings-row" id="fetchPhotosBtn" style="cursor:pointer;">
+          <div class="label-wrap">
+            <div>Fetch product photos</div>
+            <div class="label-sub">Looks up real product images from Open Food Facts for items missing one</div>
+          </div>
+          <span style="color: var(--green); font-size: 18px;">📷</span>
         </div>
         <div class="settings-row" id="resetBtn" style="cursor:pointer;">
           <div class="label-wrap">
@@ -2750,9 +2763,12 @@
             if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
           }
           if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
+          const iconHtml = item.image
+            ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='${meta.icon}'" />`
+            : meta.icon;
           return `
             <div class="inv-item" data-key="${escapeHtml(key)}">
-              <div class="icon">${meta.icon}</div>
+              <div class="icon">${iconHtml}</div>
               <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
               <div class="badges">${badges.join("")}</div>
               <div class="qty">${qtyText}</div>
@@ -2765,9 +2781,12 @@
       // Need to restock section
       if (restock.length) {
         const rows = restock.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
+          const restockIconHtml = item.image
+            ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='🛒'" />`
+            : "🛒";
           return `
             <div class="inv-item restock" data-key="${escapeHtml(key)}">
-              <div class="icon" style="background:var(--red-light);">🛒</div>
+              <div class="icon" style="background:var(--red-light);">${restockIconHtml}</div>
               <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
               <div class="badges"><span class="badge expired" style="background:var(--red-light); color:var(--red);">out</span></div>
               <button class="btn-mini" data-action="restock" aria-label="Mark as restocked">↺</button>
@@ -4061,6 +4080,10 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       });
       document.getElementById("exportBtn").addEventListener("click", exportData);
       document.getElementById("loadDemoBtn").addEventListener("click", loadDemoData);
+      document.getElementById("fetchPhotosBtn").addEventListener("click", () => {
+        showToast("Fetching product photos…");
+        fillMissingProductImages();
+      });
       document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
       document.getElementById("importFile").addEventListener("change", importData);
       document.getElementById("resetBtn").addEventListener("click", () => {
@@ -4080,6 +4103,48 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       URL.revokeObjectURL(url);
       showToast("Backup downloaded");
     }
+    // Lookup a product image from Open Food Facts by name + optional brand.
+    // Free, no API key. Returns image URL or null.
+    async function lookupProductImage(name, brand) {
+      try {
+        const q = [brand, name].filter(Boolean).join(" ").trim();
+        if (!q) return null;
+        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=5&fields=image_front_url,image_url,image_small_url,product_name`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const products = (data && data.products) || [];
+        for (const p of products) {
+          const img = p.image_front_url || p.image_url || p.image_small_url;
+          if (img) return img;
+        }
+        return null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Fetch images for any inventory items that don't have one yet.
+    // Throttled to avoid hammering OFF (1 per 200ms).
+    async function fillMissingProductImages() {
+      const items = Object.entries(state.inventory).filter(([k, v]) => !v.image);
+      if (!items.length) return;
+      let updated = 0;
+      for (const [k, item] of items) {
+        const img = await lookupProductImage(item.name, item.brand);
+        if (img) {
+          item.image = img;
+          updated++;
+        }
+        await new Promise(r => setTimeout(r, 200));
+      }
+      if (updated) {
+        saveState();
+        if (typeof renderInventory === "function") renderInventory();
+        showToast(`Loaded ${updated} product photo${updated === 1 ? "" : "s"}`);
+      }
+    }
+
     function loadDemoData() {
       if (!confirm("Load demo inventory + shopping list? This adds sample items but won't delete existing ones.")) return;
       const today = new Date();
@@ -4121,7 +4186,9 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       saveState();
       if (typeof renderInventory === "function") renderInventory();
       if (typeof renderShoppingList === "function") renderShoppingList();
-      showToast(`Demo loaded: +${invAdded} inventory, +${shopAdded} shopping list`);
+      showToast(`Demo loaded: +${invAdded} inventory, +${shopAdded} shopping list. Fetching photos…`);
+      // Kick off async product-image fetch from Open Food Facts
+      fillMissingProductImages();
     }
 
     function importData(e) {
