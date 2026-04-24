@@ -1482,14 +1482,7 @@
           </div>
           <span style="color: var(--green); font-size: 18px;">🧪</span>
         </div>
-        <div class="settings-row" id="fetchPhotosBtn" style="cursor:pointer;">
-          <div class="label-wrap">
-            <div>Fetch product photos</div>
-            <div class="label-sub">Looks up real product images from Open Food Facts for items missing one</div>
-          </div>
-          <span style="color: var(--green); font-size: 18px;">📷</span>
-        </div>
-        <div class="settings-row" id="resetBtn" style="cursor:pointer;">
+<div class="settings-row" id="resetBtn" style="cursor:pointer;">
           <div class="label-wrap">
             <div style="color: var(--red);">Reset all data</div>
             <div class="label-sub">Clears inventory, recipes, plan, history</div>
@@ -1956,6 +1949,18 @@
     }
     function saveState() {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      scheduleAutoFetchPhotos();
+    }
+
+    // Debounced auto-fetch of product photos. Runs ~3s after the last state change.
+    let _autoFetchTimer = null;
+    function scheduleAutoFetchPhotos() {
+      if (typeof fillMissingProductImages !== "function") return;
+      if (_autoFetchTimer) clearTimeout(_autoFetchTimer);
+      _autoFetchTimer = setTimeout(() => {
+        const hasMissing = Object.values(state.inventory || {}).some(v => !v.image);
+        if (hasMissing) fillMissingProductImages();
+      }, 3000);
     }
 
     // ============================================================
@@ -4080,10 +4085,6 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       });
       document.getElementById("exportBtn").addEventListener("click", exportData);
       document.getElementById("loadDemoBtn").addEventListener("click", loadDemoData);
-      document.getElementById("fetchPhotosBtn").addEventListener("click", () => {
-        showToast("Fetching product photos…");
-        fillMissingProductImages();
-      });
       document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
       document.getElementById("importFile").addEventListener("change", importData);
       document.getElementById("resetBtn").addEventListener("click", () => {
@@ -4125,23 +4126,34 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     }
 
     // Fetch images for any inventory items that don't have one yet.
-    // Throttled to avoid hammering OFF (1 per 200ms).
-    async function fillMissingProductImages() {
-      const items = Object.entries(state.inventory).filter(([k, v]) => !v.image);
-      if (!items.length) return;
-      let updated = 0;
-      for (const [k, item] of items) {
-        const img = await lookupProductImage(item.name, item.brand);
-        if (img) {
-          item.image = img;
-          updated++;
+    // Throttled to avoid hammering OFF (1 per 200ms). Runs quietly in the background.
+    let _fetchingImages = false;
+    async function fillMissingProductImages(opts = {}) {
+      if (_fetchingImages) return; // single-flight guard
+      _fetchingImages = true;
+      try {
+        const items = Object.entries(state.inventory).filter(([k, v]) => !v.image && !v._imageTried);
+        if (!items.length) return;
+        let updated = 0;
+        for (const [k, item] of items) {
+          const img = await lookupProductImage(item.name, item.brand);
+          if (img) {
+            item.image = img;
+            updated++;
+          } else {
+            // Mark so we don't retry every state save. Will retry on next page load.
+            item._imageTried = true;
+          }
+          await new Promise(r => setTimeout(r, 200));
         }
-        await new Promise(r => setTimeout(r, 200));
-      }
-      if (updated) {
-        saveState();
-        if (typeof renderInventory === "function") renderInventory();
-        showToast(`Loaded ${updated} product photo${updated === 1 ? "" : "s"}`);
+        if (updated) {
+          // Bypass scheduleAutoFetchPhotos to avoid recursion
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+          if (typeof renderInventory === "function") renderInventory();
+          if (opts.verbose) showToast(`Loaded ${updated} product photo${updated === 1 ? "" : "s"}`);
+        }
+      } finally {
+        _fetchingImages = false;
       }
     }
 
@@ -4486,6 +4498,9 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     wireSettings();
     setView("cook");
     updateShopBadge();
+
+    // Auto-fetch product photos for any inventory items missing one (runs once at startup, then quietly in the background)
+    setTimeout(() => { fillMissingProductImages(); }, 1500);
 
     // Service worker registration (offline support)
     if ("serviceWorker" in navigator) {
