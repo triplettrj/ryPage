@@ -1110,6 +1110,42 @@
       cursor: pointer; font-size: 13px;
     }
     [data-theme="dark"] .toast button { color: #4ade80; }
+
+    /* Firebase Auth */
+    .auth-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--card);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s var(--ease-out);
+      flex-shrink: 0;
+      box-shadow: var(--shadow);
+    }
+    .auth-btn:hover { border-color: var(--green); box-shadow: 0 0 0 3px rgba(67,176,42,0.18); }
+    .auth-btn img { width: 100%; height: 100%; object-fit: cover; }
+    .auth-panel {
+      position: fixed;
+      top: 60px; right: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      width: 240px;
+      box-shadow: var(--shadow-xl);
+      z-index: 200;
+      display: none;
+      animation: fadeIn 0.15s var(--ease-out);
+    }
+    .auth-panel.show { display: block; }
+    .auth-panel .auth-user { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .auth-panel .auth-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .auth-panel .auth-name { font-weight: 700; font-size: 14px; line-height: 1.2; }
+    .auth-panel .auth-email { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .auth-panel .auth-divider { height: 1px; background: var(--border); margin: 0 -16px 12px; }
   </style>
 </head>
 <body>
@@ -1127,6 +1163,7 @@
     <div style="display:flex; gap:8px; align-items:center;">
       <button class="header-btn" id="openShoppingListBtn" aria-label="Shopping list" style="position:relative;">🛒<span id="shopBadge" style="position:absolute; top:-2px; right:-2px; background:var(--red); color:white; font-size:10px; font-weight:700; padding:1px 5px; border-radius:10px; display:none;">0</span></button>
       <button class="header-btn" id="openSettingsBtn" aria-label="Settings">⚙️</button>
+      <button class="auth-btn" id="authBtn" aria-label="Sign in">👤</button>
     </div>
   </header>
 
@@ -1361,6 +1398,23 @@
       </div>
       <button class="btn btn-ghost" id="imDelete" style="display:none; margin-top: 6px;">Remove from inventory</button>
     </div>
+  </div>
+
+  <!-- Auth flyout panel -->
+  <div class="auth-panel" id="authPanel">
+    <div class="auth-user" id="authUserInfo" style="display:none;">
+      <img class="auth-avatar" id="authAvatar" src="" alt="" />
+      <div>
+        <div class="auth-name" id="authName"></div>
+        <div class="auth-email" id="authEmail"></div>
+      </div>
+    </div>
+    <div class="auth-divider" id="authDivider" style="display:none;"></div>
+    <button class="btn btn-secondary" id="authSignInBtn" style="gap:10px;">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 29.8 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.6 20-21 0-1.3-.2-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.1 19.2 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 16.1 3 9.3 7.8 6.3 14.7z"/><path fill="#FBBC05" d="M24 45c5.5 0 10.5-1.9 14.4-5l-6.7-5.5C29.7 36.3 27 37 24 37c-5.7 0-10.6-3.1-11.7-8.4l-7 5.4C8.9 41.3 15.9 45 24 45z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.6 2.8-2.3 5.2-4.7 6.8l6.7 5.5c3.9-3.6 6.2-9 6.2-15.8 0-1.3-.2-2.7-.5-4z"/></svg>
+      Sign in with Google
+    </button>
+    <button class="btn btn-ghost" id="authSignOutBtn" style="display:none; margin-top:8px; color:var(--red);">Sign out</button>
   </div>
 
   <!-- Shopping list modal -->
@@ -4671,6 +4725,92 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       renderOnboard();
       document.getElementById("onboard").classList.add("show");
     }
+  </script>
+
+  <!-- Firebase Auth -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDpWc6Uia84FhT0G27JzHo2dQCBxtMLMUE",
+      authDomain: "my-kitchen-e4079.firebaseapp.com",
+      projectId: "my-kitchen-e4079",
+      storageBucket: "my-kitchen-e4079.firebasestorage.app",
+      messagingSenderId: "49025591071",
+      appId: "1:49025591071:web:008418cdb3e7ed7b6db22a",
+      measurementId: "G-GFBF0Q7JRG"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const authBtn       = document.getElementById("authBtn");
+    const authPanel     = document.getElementById("authPanel");
+    const authUserInfo  = document.getElementById("authUserInfo");
+    const authDivider   = document.getElementById("authDivider");
+    const authAvatar    = document.getElementById("authAvatar");
+    const authName      = document.getElementById("authName");
+    const authEmail     = document.getElementById("authEmail");
+    const authSignInBtn = document.getElementById("authSignInBtn");
+    const authSignOutBtn= document.getElementById("authSignOutBtn");
+
+    // Toggle flyout open/close
+    authBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      authPanel.classList.toggle("show");
+    });
+    document.addEventListener("click", e => {
+      if (!authPanel.contains(e.target) && e.target !== authBtn) {
+        authPanel.classList.remove("show");
+      }
+    });
+
+    authSignInBtn.addEventListener("click", async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (err) {
+        if (err.code !== "auth/popup-closed-by-user") {
+          alert("Sign-in failed: " + err.message);
+        }
+      }
+    });
+
+    authSignOutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      authPanel.classList.remove("show");
+    });
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        // Signed in — show avatar photo in header button
+        if (user.photoURL) {
+          authBtn.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        } else {
+          authBtn.textContent = user.displayName ? user.displayName[0].toUpperCase() : "👤";
+        }
+        authBtn.style.borderColor = "var(--green)";
+        // Populate flyout user info
+        authAvatar.src = user.photoURL || "";
+        authAvatar.style.display = user.photoURL ? "block" : "none";
+        authName.textContent = user.displayName || "Signed in";
+        authEmail.textContent = user.email || "";
+        authUserInfo.style.display = "flex";
+        authDivider.style.display = "block";
+        authSignInBtn.style.display = "none";
+        authSignOutBtn.style.display = "block";
+      } else {
+        // Signed out — reset to default icon
+        authBtn.innerHTML = "👤";
+        authBtn.style.borderColor = "";
+        authUserInfo.style.display = "none";
+        authDivider.style.display = "none";
+        authSignInBtn.style.display = "flex";
+        authSignOutBtn.style.display = "none";
+      }
+    });
   </script>
 </body>
 </html>
