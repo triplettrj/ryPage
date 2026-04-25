@@ -1222,6 +1222,10 @@
       <button class="close-x" data-close="itemModal">×</button>
       <h2 id="imTitle">Add item</h2>
       <p class="subtitle">Track what's in your kitchen so we know what you can cook.</p>
+      <div id="imImageWrap" style="display:none; text-align:center; margin: 4px 0 12px;">
+        <img id="imImage" alt="" style="max-width: 140px; max-height: 140px; border-radius: 10px; background: var(--card); object-fit: contain;" />
+        <div id="imUpcLabel" style="font-size: 11px; color: var(--muted); margin-top: 4px; font-family: ui-monospace, monospace;"></div>
+      </div>
       <div class="field">
         <label>Item</label>
         <input id="imName" type="text" placeholder="e.g. Ground beef" autocomplete="off" />
@@ -2859,6 +2863,27 @@
       document.getElementById("imLoc").value = item ? item.loc : "pantry";
       document.getElementById("imExpiry").value = item && item.expiry ? item.expiry : "";
       document.getElementById("imDelete").style.display = item ? "inline-flex" : "none";
+      // Show product image + UPC if we have them.
+      const wrap = document.getElementById("imImageWrap");
+      const img = document.getElementById("imImage");
+      const upcLabel = document.getElementById("imUpcLabel");
+      if (item && item.image) {
+        img.src = item.image;
+        img.onerror = () => { wrap.style.display = "none"; };
+        wrap.style.display = "block";
+      } else {
+        img.removeAttribute("src");
+        wrap.style.display = "none";
+      }
+      if (item) {
+        const parts = [];
+        if (item.size) parts.push(item.size);
+        if (item.upc) parts.push("UPC " + item.upc);
+        upcLabel.textContent = parts.join(" · ");
+        if (parts.length && !item.image) wrap.style.display = "block";
+      } else {
+        upcLabel.textContent = "";
+      }
       showModal("itemModal");
       if (!item) setTimeout(() => document.getElementById("imName").focus(), 50);
     }
@@ -2879,6 +2904,9 @@
         loc: document.getElementById("imLoc").value,
         expiry,
         upc: (prev && prev.upc) ? prev.upc : "",
+        size: (prev && prev.size) ? prev.size : "",
+        image: (prev && prev.image) ? prev.image : "",
+        _imageTried: prev ? prev._imageTried : undefined,
       };
       const newKey = inventoryKey(item);
       if (editingItemKey && editingItemKey !== newKey) {
