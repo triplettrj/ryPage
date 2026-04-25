@@ -2045,6 +2045,8 @@
         canonicalName: normalize(entry.name),
         qty: entry.qty != null ? entry.qty : 1,
         unit: entry.unit || "",
+        size: entry.size || "",
+        upc: entry.upc ? String(entry.upc).replace(/\D/g, "") : "",
         reason: entry.reason || "manual",
         checked: false,
         addedAt: new Date().toISOString(),
@@ -4115,7 +4117,26 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     }
     // Lookup a product image from Open Food Facts by name + optional brand.
     // Free, no API key. Returns image URL or null.
-    async function lookupProductImage(name, brand) {
+    // Look up a product image from Open Food Facts.
+    // Prefers UPC/barcode lookup (exact match) when available; falls back to text search.
+    async function lookupProductImage(name, brand, upc) {
+      // 1) Try direct barcode lookup — most accurate, traceable to a single SKU.
+      if (upc) {
+        try {
+          const code = String(upc).replace(/\D/g, "");
+          if (code) {
+            const url = `https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=image_front_url,image_url,image_small_url,product_name,brands`;
+            const res = await fetch(url);
+            if (res.ok) {
+              const data = await res.json();
+              const p = data && data.product;
+              const img = p && (p.image_front_url || p.image_url || p.image_small_url);
+              if (img) return img;
+            }
+          }
+        } catch (e) { /* fall through to text search */ }
+      }
+      // 2) Fall back to text search by brand + name.
       try {
         const q = [brand, name].filter(Boolean).join(" ").trim();
         if (!q) return null;
@@ -4145,7 +4166,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         if (!items.length) return;
         let updated = 0;
         for (const [k, item] of items) {
-          const img = await lookupProductImage(item.name, item.brand);
+          const img = await lookupProductImage(item.name, item.brand, item.upc);
           if (img) {
             item.image = img;
             updated++;
@@ -4170,22 +4191,25 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       if (!confirm("Load demo inventory + shopping list? This adds sample items but won't delete existing ones.")) return;
       const today = new Date();
       const addDays = (d) => { const x = new Date(today); x.setDate(x.getDate() + d); return x.toISOString().slice(0,10); };
+      // Traceable demo SKUs — real US grocery products with UPC/EAN barcodes.
+      // UPCs let us pull exact product images from Open Food Facts and, eventually,
+      // map directly to Instacart catalog items via barcode rather than fuzzy text search.
       const demoInventory = [
-        { name: "Eggs",            brand: "Vital Farms",      qty: 12, unit: "",       loc: "fridge",  expiry: addDays(14) },
-        { name: "Whole milk",      brand: "Horizon Organic",  qty: 1,  unit: "gal",    loc: "fridge",  expiry: addDays(7)  },
-        { name: "Sourdough bread", brand: "Boudin",           qty: 1,  unit: "loaf",   loc: "pantry",  expiry: addDays(4)  },
-        { name: "Greek yogurt",    brand: "Fage",             qty: 0,  unit: "32oz",   loc: "fridge",  expiry: null         },
-        { name: "Chicken thighs",  brand: "",                 qty: 1,  unit: "lb",     loc: "freezer", expiry: addDays(60)  },
-        { name: "Spaghetti",       brand: "Barilla",          qty: 2,  unit: "lb",     loc: "pantry",  expiry: null         },
-        { name: "Olive oil",       brand: "California Olive Ranch", qty: 1, unit: "bottle", loc: "pantry", expiry: null    },
-        { name: "Yellow onion",    brand: "",                 qty: 3,  unit: "",       loc: "pantry",  expiry: null         },
-        { name: "Garlic",          brand: "",                 qty: 1,  unit: "head",   loc: "pantry",  expiry: null         },
-        { name: "Parmesan cheese", brand: "BelGioioso",       qty: 1,  unit: "wedge",  loc: "fridge",  expiry: addDays(30)  },
-        { name: "Bananas",         brand: "",                 qty: 5,  unit: "",       loc: "counter", expiry: addDays(5)   },
-        { name: "Avocado",         brand: "",                 qty: 0,  unit: "",       loc: "counter", expiry: null         },
-        { name: "Butter",          brand: "Kerrygold",        qty: 1,  unit: "stick",  loc: "fridge",  expiry: addDays(45)  },
-        { name: "Heinz ketchup",   brand: "Heinz",            qty: 1,  unit: "bottle", loc: "fridge",  expiry: null         },
-        { name: "Cheerios",        brand: "General Mills",    qty: 1,  unit: "box",    loc: "pantry",  expiry: addDays(180) },
+        { name: "Pasture-Raised Large Eggs",          brand: "Vital Farms",            size: "12 ct",   upc: "861745000107", qty: 12, unit: "",       loc: "fridge",  expiry: addDays(14) },
+        { name: "Organic Whole Milk",                 brand: "Horizon Organic",        size: "1 gal",   upc: "742365015229", qty: 1,  unit: "gal",    loc: "fridge",  expiry: addDays(7)  },
+        { name: "Sourdough Round",                    brand: "Boudin Bakery",          size: "1 lb",    upc: "073272000017", qty: 1,  unit: "loaf",   loc: "pantry",  expiry: addDays(4)  },
+        { name: "Total 0% Greek Yogurt",              brand: "Fage",                   size: "32 oz",   upc: "689544100066", qty: 0,  unit: "tub",    loc: "fridge",  expiry: null         },
+        { name: "Boneless Skinless Chicken Thighs",   brand: "Foster Farms",           size: "1 lb",    upc: "041222141004", qty: 1,  unit: "lb",     loc: "freezer", expiry: addDays(60)  },
+        { name: "Spaghetti No. 5",                    brand: "Barilla",                size: "1 lb",    upc: "076808280418", qty: 2,  unit: "box",    loc: "pantry",  expiry: null         },
+        { name: "Extra Virgin Olive Oil",             brand: "California Olive Ranch", size: "16.9 oz", upc: "850687000124", qty: 1,  unit: "bottle", loc: "pantry",  expiry: null         },
+        { name: "Yellow Onion",                       brand: "",                       size: "1 ct",    upc: "",             qty: 3,  unit: "",       loc: "pantry",  expiry: null         },
+        { name: "Garlic Bulb",                        brand: "",                       size: "1 ct",    upc: "",             qty: 1,  unit: "head",   loc: "pantry",  expiry: null         },
+        { name: "Parmigiano Reggiano Wedge",          brand: "BelGioioso",             size: "8 oz",    upc: "031142000146", qty: 1,  unit: "wedge",  loc: "fridge",  expiry: addDays(30)  },
+        { name: "Bananas",                            brand: "Chiquita",               size: "1 ct",    upc: "4011",         qty: 5,  unit: "",       loc: "counter", expiry: addDays(5)   },
+        { name: "Hass Avocado",                       brand: "",                       size: "1 ct",    upc: "4046",         qty: 0,  unit: "",       loc: "counter", expiry: null         },
+        { name: "Pure Irish Salted Butter",           brand: "Kerrygold",              size: "8 oz",    upc: "767707000113", qty: 1,  unit: "block",  loc: "fridge",  expiry: addDays(45)  },
+        { name: "Tomato Ketchup",                     brand: "Heinz",                  size: "32 oz",   upc: "013000006101", qty: 1,  unit: "bottle", loc: "fridge",  expiry: null         },
+        { name: "Original Cheerios",                  brand: "General Mills",          size: "18 oz",   upc: "016000275249", qty: 1,  unit: "box",    loc: "pantry",  expiry: addDays(180) },
       ];
       let invAdded = 0;
       demoInventory.forEach(d => {
@@ -4194,11 +4218,11 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         if (!state.inventory[key]) { state.inventory[key] = item; invAdded++; }
       });
       const demoShop = [
-        { name: "Ground beef",        brand: "",            qty: 1, unit: "lb",      reason: "manual" },
-        { name: "Crushed tomatoes",   brand: "San Marzano", qty: 1, unit: "28oz can", reason: "manual" },
-        { name: "Fresh basil",        brand: "",            qty: 1, unit: "bunch",   reason: "manual" },
-        { name: "Lemons",             brand: "",            qty: 4, unit: "",        reason: "manual" },
-        { name: "Cold brew coffee",   brand: "Stumptown",   qty: 1, unit: "bottle",  reason: "manual" },
+        { name: "85% Lean Ground Beef",            brand: "",                size: "1 lb",       upc: "",             qty: 1, unit: "lb",     reason: "manual" },
+        { name: "Crushed Tomatoes",                brand: "Cento San Marzano", size: "28 oz",   upc: "070796400025", qty: 1, unit: "can",    reason: "manual" },
+        { name: "Fresh Basil",                     brand: "",                size: "0.66 oz",    upc: "",             qty: 1, unit: "bunch",  reason: "manual" },
+        { name: "Lemons",                          brand: "",                size: "1 ct",       upc: "4053",         qty: 4, unit: "",       reason: "manual" },
+        { name: "Cold Brew Coffee Concentrate",    brand: "Stumptown",       size: "32 oz",      upc: "855661004161", qty: 1, unit: "bottle", reason: "manual" },
       ];
       let shopAdded = 0;
       demoShop.forEach(d => {
