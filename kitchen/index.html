@@ -3667,16 +3667,23 @@
       });
       state.history[r.id] = new Date().toISOString();
       saveState();
-      // Auto-add depleted items to the shopping list (one toast per cook session)
-      depletedToAutoAdd.forEach(inv => {
-        if (!shoppingListMatch(inv.name, inv.brand)) {
-          addToShoppingList({
-            name: inv.name, brand: inv.brand || "", qty: 1,
-            unit: inv.unit || "", reason: `ran out cooking ${r.name}`,
-          }, { allowDupe: false });
+      // Ask the user before adding depleted items to the shopping list.
+      const eligibleForList = depletedToAutoAdd.filter(inv => !shoppingListMatch(inv.name, inv.brand));
+      let actuallyAdded = [];
+      if (eligibleForList.length) {
+        const names = eligibleForList.map(i => `• ${i.name}${i.brand ? ` (${i.brand})` : ""}`).join("\n");
+        const ok = confirm(`These ran out:\n\n${names}\n\nAdd them to your shopping list?`);
+        if (ok) {
+          eligibleForList.forEach(inv => {
+            addToShoppingList({
+              name: inv.name, brand: inv.brand || "", qty: 1,
+              unit: inv.unit || "", reason: `ran out cooking ${r.name}`,
+            }, { allowDupe: false });
+            actuallyAdded.push(inv);
+          });
         }
-      });
-      const addedCount = depletedToAutoAdd.length;
+      }
+      const addedCount = actuallyAdded.length;
       const toastMsg = addedCount
         ? `Logged ${r.name} · added ${addedCount} to shopping list`
         : `Logged ${r.name}`;
