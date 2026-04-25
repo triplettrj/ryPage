@@ -1167,7 +1167,7 @@
 
       <div class="btn-row" style="flex-direction: column;">
         <button class="btn btn-green" id="rmStartCook">▶ Start cooking mode</button>
-        <button class="btn btn-secondary" id="rmCookedIt">✓ I cooked this — use up ingredients</button>
+        <button class="btn btn-primary" id="rmCookedIt">✅ Recipe made — remove ingredients from inventory</button>
         <button class="btn btn-ghost" id="rmAddToPlan">📅 Add to meal plan</button>
       </div>
     </div>
@@ -3651,6 +3651,8 @@
       const removed = [];
       const depletedToAutoAdd = [];
       r.ingredients.forEach(ing => {
+        // Skip trivial amounts entirely — 1 tsp oil doesn't deplete anything.
+        if (isTrivialUnit(ing.unit)) return;
         const inv = findInventoryFor(ing.name);
         if (!inv) return;
         removed.push({ key: inventoryKey(inv), before: { ...inv } });
@@ -3660,7 +3662,7 @@
           // Would deplete to 0. Keep the entry at qty:0 (Need to restock)
           // instead of deleting, so inventory keeps the product identity.
           inv.qty = 0;
-          if (!isTrivialUnit(ing.unit)) depletedToAutoAdd.push(inv);
+          depletedToAutoAdd.push(inv);
         }
       });
       state.history[r.id] = new Date().toISOString();
