@@ -12,7 +12,11 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%B3%3C/text%3E%3C/svg%3E" />
   <link rel="apple-touch-icon" href="icon.svg" />
   <title>My Kitchen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    /* ryrydev Design System — My Kitchen brand palette */
     :root {
       --green: #2e7d32;
       --green-dark: #1b5e20;
@@ -24,48 +28,77 @@
       --red-light: #ffebee;
       --blue: #1976d2;
       --blue-light: #e3f2fd;
-      --bg: #fafafa;
+      --bg: #f7f8f5;
       --card: #ffffff;
-      --text: #1a1a1a;
-      --muted: #666;
-      --muted2: #999;
-      --border: #e5e5e5;
+      --text: #0f1a10;
+      --muted: #5a6660;
+      --muted2: #8a948f;
+      --border: #e6ebe6;
       --instacart: #43b02a;
-      --shadow: 0 1px 3px rgba(0,0,0,0.05);
-      --shadow-lg: 0 4px 14px rgba(0,0,0,0.1);
+      /* Layered elevation tokens */
+      --shadow: 0 1px 2px rgba(15, 26, 16, 0.04), 0 1px 3px rgba(15, 26, 16, 0.06);
+      --shadow-lg: 0 8px 24px rgba(15, 26, 16, 0.08), 0 2px 6px rgba(15, 26, 16, 0.05);
+      --shadow-xl: 0 20px 40px rgba(15, 26, 16, 0.12), 0 4px 12px rgba(15, 26, 16, 0.06);
+      --shadow-green: 0 6px 18px rgba(67, 176, 42, 0.28);
+      --shadow-amber: 0 6px 18px rgba(249, 168, 37, 0.28);
+      --shadow-red: 0 6px 18px rgba(198, 40, 40, 0.24);
+      --shadow-blue: 0 6px 18px rgba(25, 118, 210, 0.24);
+      /* Gradient washes */
+      --grad-green: linear-gradient(135deg, #43b02a 0%, #2e7d32 100%);
+      --grad-green-soft: linear-gradient(135deg, rgba(67,176,42,0.10) 0%, rgba(46,125,50,0.04) 100%);
+      --grad-amber: linear-gradient(135deg, #ffb74d 0%, #f9a825 100%);
+      /* Motion */
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     }
     [data-theme="dark"] {
-      --green: #66bb6a;
-      --green-dark: #81c784;
-      --green-light: #1e3a1e;
-      --green-ring: #2e5e30;
-      --amber: #ffb74d;
-      --amber-light: #3a2e1a;
-      --red: #ef5350;
-      --red-light: #3a1e1e;
-      --blue: #64b5f6;
-      --blue-light: #1a2a3a;
-      --bg: #0d1117;
-      --card: #161b22;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --muted2: #6e7681;
-      --border: #30363d;
-      --instacart: #4caf50;
-      --shadow: 0 1px 3px rgba(0,0,0,0.3);
-      --shadow-lg: 0 4px 14px rgba(0,0,0,0.4);
+      --green: #4ade80;
+      --green-dark: #86efac;
+      --green-light: #14271a;
+      --green-ring: #1e4329;
+      --amber: #fbbf24;
+      --amber-light: #2a1f0a;
+      --red: #f87171;
+      --red-light: #2a1414;
+      --blue: #60a5fa;
+      --blue-light: #0f1f33;
+      --bg: #0a0f0a;
+      --card: #111714;
+      --text: #e7f0ea;
+      --muted: #8a9690;
+      --muted2: #5e6a64;
+      --border: #1e2a23;
+      --instacart: #4ade80;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+      --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-green: 0 6px 22px rgba(74, 222, 128, 0.35);
+      --shadow-amber: 0 6px 22px rgba(251, 191, 36, 0.30);
+      --shadow-red: 0 6px 22px rgba(248, 113, 113, 0.30);
+      --shadow-blue: 0 6px 22px rgba(96, 165, 250, 0.30);
+      --grad-green: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+      --grad-green-soft: linear-gradient(135deg, rgba(74,222,128,0.14) 0%, rgba(34,197,94,0.04) 100%);
+      --grad-amber: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; padding: 0; height: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-feature-settings: "cv11", "ss01", "ss03";
       background: var(--bg);
       color: var(--text);
       line-height: 1.4;
+      letter-spacing: -0.01em;
       min-height: 100vh;
       padding-bottom: calc(76px + env(safe-area-inset-bottom));
       transition: background 0.2s, color 0.2s;
+    }
+    [data-theme="dark"] body {
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(74,222,128,0.06), transparent 60%),
+        radial-gradient(900px 500px at -10% 20%, rgba(74,222,128,0.04), transparent 60%),
+        var(--bg);
     }
     input, select, textarea, button {
       font-family: inherit;
@@ -160,15 +193,24 @@
     }
     .search-input {
       flex: 1;
-      padding: 10px 14px;
+      padding: 12px 16px;
       border: 1px solid var(--border);
-      border-radius: 999px;
+      border-radius: 14px;
       font-size: 14px;
+      font-weight: 500;
       background: var(--card);
       color: var(--text);
       outline: none;
+      transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+      box-shadow: var(--shadow);
     }
-    .search-input:focus { border-color: var(--green); }
+    .search-input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 4px rgba(67, 176, 42, 0.18), var(--shadow);
+    }
+    [data-theme="dark"] .search-input:focus {
+      box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.22), var(--shadow);
+    }
 
     .chips {
       display: flex;
@@ -184,16 +226,23 @@
       flex-shrink: 0;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 7px 14px;
+      border-radius: 10px;
+      padding: 8px 14px;
       font-size: 12px;
       font-weight: 600;
+      letter-spacing: -0.01em;
       color: var(--text);
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.15s;
+      transition: transform 0.15s var(--ease-out), background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+      box-shadow: var(--shadow);
     }
-    .chip.active { background: var(--green); color: white; border-color: var(--green); }
+    .chip.active {
+      background: var(--grad-green);
+      color: white;
+      border-color: transparent;
+      box-shadow: var(--shadow-green);
+    }
     .chip:active { transform: scale(0.95); }
 
     /* Recipe row */
@@ -201,36 +250,51 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px;
+      padding: 12px;
       background: var(--card);
-      border-radius: 12px;
-      margin-bottom: 8px;
+      border-radius: 14px;
+      margin-bottom: 10px;
       cursor: pointer;
       border: 1px solid var(--border);
-      transition: transform 0.1s;
+      transition: transform 0.15s var(--ease-out), box-shadow 0.2s var(--ease-out), border-color 0.2s;
       position: relative;
+      box-shadow: var(--shadow);
     }
+    .recipe-row:hover { box-shadow: var(--shadow-lg); transform: translateY(-1px); }
     .recipe-row:active { transform: scale(0.98); }
     .recipe-row .emoji {
       font-size: 28px;
-      width: 46px; height: 46px;
+      width: 48px; height: 48px;
       display: flex; align-items: center; justify-content: center;
       background: var(--green-light);
-      border-radius: 12px;
+      border-radius: 14px;
       flex-shrink: 0;
+      transition: transform 0.2s var(--ease-spring), box-shadow 0.2s var(--ease-out);
     }
     .recipe-row .info { flex: 1; min-width: 0; }
     .recipe-row .name {
-      font-weight: 600;
+      font-weight: 700;
       font-size: 15px;
+      letter-spacing: -0.015em;
       display: flex;
       align-items: center;
       gap: 6px;
     }
-    .recipe-row .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .recipe-row .ready { font-size: 11px; font-weight: 600; margin-top: 2px; }
-    .recipe-row.ready-now .emoji { background: var(--green); color: white; }
+    .recipe-row .meta { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+    .recipe-row .ready { font-size: 11px; font-weight: 700; margin-top: 2px; letter-spacing: 0.02em; text-transform: uppercase; }
+    .recipe-row.ready-now {
+      background: var(--grad-green-soft), var(--card);
+      border-color: var(--green-ring);
+      box-shadow: var(--shadow-lg);
+    }
+    .recipe-row.ready-now .emoji {
+      background: var(--grad-green);
+      color: white;
+      box-shadow: var(--shadow-green);
+    }
+    .recipe-row.ready-now:hover .emoji { transform: scale(1.06) rotate(-3deg); }
     .recipe-row.ready-now .ready { color: var(--green-dark); }
+    [data-theme="dark"] .recipe-row.ready-now .ready { color: var(--green); }
     .recipe-row.almost .emoji { background: var(--amber-light); }
     .recipe-row.almost .ready { color: var(--amber); }
     .recipe-row.far .ready { color: var(--muted2); }
@@ -603,20 +667,42 @@
       align-items: center; justify-content: center;
       gap: 8px;
       width: 100%;
-      padding: 13px;
-      border-radius: 12px;
+      padding: 14px 16px;
+      border-radius: 14px;
       border: none;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: -0.01em;
       cursor: pointer;
+      transition: transform 0.15s var(--ease-out), box-shadow 0.2s var(--ease-out), filter 0.2s;
     }
-    .btn:active { transform: scale(0.98); }
-    .btn-primary { background: var(--instacart); color: white; }
-    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-    .btn-green { background: var(--green); color: white; }
-    .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--grad-green);
+      color: white;
+      box-shadow: var(--shadow-green);
+    }
+    .btn-primary:hover { filter: brightness(1.05); box-shadow: var(--shadow-green), var(--shadow-lg); }
+    .btn-primary:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; filter: none; }
+    .btn-green {
+      background: var(--grad-green);
+      color: white;
+      box-shadow: var(--shadow-green);
+    }
+    .btn-green:hover { filter: brightness(1.05); }
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .btn-secondary:hover { box-shadow: var(--shadow-lg); }
     .btn-ghost { background: transparent; color: var(--green); }
-    .btn-red { background: var(--red); color: white; }
+    .btn-red {
+      background: var(--red);
+      color: white;
+      box-shadow: var(--shadow-red);
+    }
     .btn-row { display: flex; gap: 8px; margin-top: 6px; }
     .btn-row > .btn { flex: 1; }
 
@@ -992,29 +1078,38 @@
       position: fixed;
       bottom: calc(100px + env(safe-area-inset-bottom));
       left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: var(--text);
-      color: var(--card);
-      padding: 12px 18px;
-      border-radius: 999px;
+      transform: translateX(-50%) translateY(120px) scale(0.92);
+      background: rgba(15, 26, 16, 0.88);
+      color: #ffffff;
+      padding: 13px 20px;
+      border-radius: 16px;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
+      letter-spacing: -0.01em;
       z-index: 250;
       opacity: 0;
-      transition: all 0.3s;
+      transition: opacity 0.25s var(--ease-out), transform 0.4s var(--ease-spring);
       white-space: nowrap;
       max-width: 90vw;
-      box-shadow: var(--shadow-lg);
+      box-shadow: var(--shadow-xl);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    [data-theme="dark"] .toast {
+      background: rgba(17, 23, 20, 0.85);
+      border-color: rgba(74, 222, 128, 0.15);
     }
     .toast.show {
       opacity: 1;
-      transform: translateX(-50%) translateY(0);
+      transform: translateX(-50%) translateY(0) scale(1);
     }
     .toast button {
       background: none; border: none; color: var(--green);
       font-weight: 700; margin-left: 12px;
       cursor: pointer; font-size: 13px;
     }
+    [data-theme="dark"] .toast button { color: #4ade80; }
   </style>
 </head>
 <body>
