@@ -562,6 +562,25 @@
       position: relative;
     }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes aiPulse { 0%,100% { opacity:.6; transform:scale(1); } 50% { opacity:1; transform:scale(1.04); } }
+    .ai-analyzing-state {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; padding: 18px 0 6px; text-align: center;
+    }
+    .ai-analyzing-state .ai-spinner {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 3px solid var(--green-ring);
+      border-top-color: var(--green);
+      animation: spin 0.9s linear infinite;
+    }
+    .ai-analyzing-state .ai-label {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      animation: aiPulse 1.8s ease-in-out infinite;
+    }
+    .ai-analyzing-state .ai-sub {
+      font-size: 12px; color: var(--muted); margin: 0;
+    }
     .modal h2 { margin: 0 0 2px; font-size: 19px; }
     .modal .subtitle { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
     .close-x {
@@ -3266,6 +3285,12 @@
       document.getElementById("bsPhotoPreview").innerHTML = "";
       document.getElementById("bsCustomZone").value = "";
       document.getElementById("customStorageName").value = "";
+      // Restore hidden buttons from a previous analysis run
+      const uploadLbl = document.querySelector("#bsStep2 label");
+      const skipBtn = document.getElementById("bsSkipPhoto");
+      if (uploadLbl) uploadLbl.style.display = "";
+      if (skipBtn) skipBtn.style.display = "";
+      document.getElementById("bsAnalyzingState")?.remove();
       bsShowStep(1);
 
       const grid = document.getElementById("storagePresetGrid");
@@ -3311,22 +3336,41 @@
       if (!file || !bsPending) return;
       e.target.value = "";
 
-      // Show thumbnail
       const reader = new FileReader();
       reader.onload = async (ev) => {
         const dataUrl = ev.target.result;
-        document.getElementById("bsPhotoPreview").innerHTML = `
-          <img src="${dataUrl}" style="width:100%; border-radius:12px; margin-bottom:8px; max-height:200px; object-fit:cover;" />
-          <p style="text-align:center; color:var(--muted); font-size:13px; margin:0 0 8px;">🔍 Claude is mapping your layout…</p>`;
-        bsShowStep(2); // keep step 2 visible during analysis
-
         const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
+
+        // Replace step 2 content with photo + prominent analyzing state
+        document.getElementById("bsPhotoPreview").innerHTML = `
+          <img src="${dataUrl}" style="width:100%; border-radius:12px; margin-bottom:12px; max-height:200px; object-fit:cover;" />`;
+
+        // Hide the upload button and skip button, show spinner in their place
+        const uploadBtn = document.querySelector("label[for='bsPhotoInput'], #bsStep2 label");
+        const skipBtn = document.getElementById("bsSkipPhoto");
+        if (uploadBtn) uploadBtn.style.display = "none";
+        if (skipBtn) skipBtn.style.display = "none";
+
+        const analyzeEl = document.createElement("div");
+        analyzeEl.className = "ai-analyzing-state";
+        analyzeEl.id = "bsAnalyzingState";
+        analyzeEl.innerHTML = `
+          <div class="ai-spinner"></div>
+          <div class="ai-label">${hasKey ? "Analyzing with Claude AI…" : "Reading photo…"}</div>
+          <p class="ai-sub">${hasKey ? "Identifying your shelves, drawers, and compartments" : "Getting your photo ready"}</p>`;
+        document.getElementById("bsStep2").appendChild(analyzeEl);
+
         if (hasKey) {
           try {
             const aiZones = await analyzeStorageLayoutPhoto(dataUrl, bsPending.type, bsPending.name);
             if (aiZones.length) bsZones = aiZones;
           } catch (err) {
             console.warn("Layout AI failed, using presets:", err.message);
+            // Show a brief error note before proceeding
+            analyzeEl.innerHTML = `
+              <div class="ai-label" style="color:var(--amber);">⚠️ AI couldn't read the photo</div>
+              <p class="ai-sub">Using preset zones instead — you can edit them next</p>`;
+            await new Promise(r => setTimeout(r, 1800));
           }
         }
         bsShowZoneReview();
