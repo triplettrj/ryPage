@@ -1158,99 +1158,95 @@
     }
     [data-theme="dark"] .toast button { color: #4ade80; }
 
-    /* Storage Layout */
-    .storage-layout {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      margin-bottom: 14px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
+    /* Storage Layout — build-first architecture */
+    .sl-setup-empty {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px 20px; text-align: center;
+      margin-bottom: 14px; box-shadow: var(--shadow);
     }
-    .storage-layout-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 16px 12px;
-      cursor: pointer;
-      user-select: none;
+    .sl-setup-empty .big { font-size: 44px; display: block; margin-bottom: 10px; }
+    .sl-setup-empty h3 { margin: 0 0 6px; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+    .sl-setup-empty p { margin: 0 0 16px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    .sl-location-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; margin-bottom: 12px; overflow: hidden;
+      box-shadow: var(--shadow); transition: box-shadow 0.2s;
     }
-    .storage-layout-header h3 {
-      margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em;
+    .sl-loc-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px; cursor: pointer; user-select: none;
+    }
+    .sl-loc-icon { font-size: 24px; flex-shrink: 0; }
+    .sl-loc-name { font-size: 16px; font-weight: 800; flex: 1; letter-spacing: -0.02em; }
+    .sl-loc-meta { font-size: 11px; color: var(--muted); font-weight: 500; }
+    .sl-loc-chevron { font-size: 11px; color: var(--muted); transition: transform 0.2s var(--ease-out); }
+    .sl-location-card.open .sl-loc-chevron { transform: rotate(180deg); }
+    .sl-loc-body { display: none; border-top: 1px solid var(--border); }
+    .sl-location-card.open .sl-loc-body { display: block; }
+
+    .sl-zone-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .sl-zone-row:last-of-type { border-bottom: none; }
+    .sl-zone-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green); flex-shrink: 0;
+    }
+    .sl-zone-info { flex: 1; min-width: 0; }
+    .sl-zone-info .sz-name { font-size: 14px; font-weight: 700; }
+    .sl-zone-info .sz-count { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .sl-zone-scan {
+      padding: 7px 12px; border-radius: 10px; border: none;
+      background: var(--grad-green); color: white; font-size: 12px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; box-shadow: var(--shadow-green);
+      transition: filter 0.15s, transform 0.1s var(--ease-spring);
+    }
+    .sl-zone-scan:hover { filter: brightness(1.08); }
+    .sl-zone-scan:active { transform: scale(0.95); }
+
+    .sl-zone-items-list { padding: 0 16px 10px; }
+    .sl-zone-item {
       display: flex; align-items: center; gap: 8px;
+      padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px;
     }
-    .storage-layout-header .chevron {
-      font-size: 12px; color: var(--muted); transition: transform 0.2s var(--ease-out);
-    }
-    .storage-layout.open .chevron { transform: rotate(180deg); }
-    .storage-loc-tabs {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .storage-loc-tab {
-      padding: 10px 4px; text-align: center; cursor: pointer;
-      font-size: 12px; font-weight: 600; color: var(--muted);
-      background: none; border: none; border-right: 1px solid var(--border);
-      transition: color 0.15s, background 0.15s;
-    }
-    .storage-loc-tab:last-child { border-right: none; }
-    .storage-loc-tab.active { color: var(--green-dark); background: var(--green-light); }
-    [data-theme="dark"] .storage-loc-tab.active { color: var(--green); background: var(--green-light); }
-    .storage-loc-tab .tab-count {
-      display: block; font-size: 18px; line-height: 1; margin-bottom: 2px;
-    }
-    .storage-zones-body { padding: 10px 12px 14px; }
-    .storage-zone-row {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 8px;
-      overflow: hidden;
-    }
-    .storage-zone-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 12px;
-      background: var(--bg);
-      gap: 8px;
-    }
-    .storage-zone-name {
-      font-weight: 700; font-size: 13px; flex: 1;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .storage-zone-count {
-      font-size: 11px; font-weight: 500;
-      background: var(--border); color: var(--muted);
-      border-radius: 20px; padding: 2px 7px;
-    }
-    .storage-zone-scan-btn {
-      padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--card); color: var(--green); font-size: 11px; font-weight: 700;
-      cursor: pointer; white-space: nowrap; flex-shrink: 0;
-      transition: background 0.15s, box-shadow 0.15s;
-    }
-    .storage-zone-scan-btn:hover { background: var(--green-light); box-shadow: var(--shadow-green); }
-    .storage-zone-items { padding: 6px 12px 10px; }
-    .storage-zone-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 13px;
-    }
-    .storage-zone-item:last-child { border-bottom: none; }
-    .storage-zone-item .szi-img {
-      width: 26px; height: 26px; border-radius: 6px; object-fit: contain;
+    .sl-zone-item:last-child { border-bottom: none; }
+    .sl-zone-item-img {
+      width: 28px; height: 28px; border-radius: 6px;
       background: var(--green-light); flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; overflow: hidden;
     }
-    .storage-zone-item .szi-img img { width: 100%; height: 100%; border-radius: 6px; object-fit: contain; }
-    .storage-zone-empty {
-      font-size: 12px; color: var(--muted); padding: 6px 12px 10px; font-style: italic;
+    .sl-zone-item-img img { width: 100%; height: 100%; object-fit: contain; }
+    .sl-zone-empty { font-size: 12px; color: var(--muted); font-style: italic; padding: 4px 16px 12px; }
+
+    .sl-loc-footer {
+      display: flex; gap: 8px; padding: 10px 16px 14px; border-top: 1px solid var(--border);
     }
-    .storage-zone-actions {
-      display: flex; gap: 8px; align-items: center; padding: 2px 12px 12px;
-    }
-    .storage-edit-btn {
+    .sl-sm-btn {
       padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
       background: var(--card); color: var(--text); font-size: 12px; font-weight: 600;
       cursor: pointer; transition: background 0.15s;
     }
-    .storage-edit-btn:hover { background: var(--bg); }
+    .sl-sm-btn:hover { background: var(--green-light); }
+    .sl-sm-btn.danger { color: var(--red); }
+    .sl-sm-btn.danger:hover { background: var(--red-light); border-color: var(--red); }
+
+    /* Scan target banner */
+    .scan-target-banner {
+      background: var(--grad-green); color: white;
+      border-radius: 12px; padding: 10px 14px;
+      margin-bottom: 12px; display: none; align-items: center; gap: 10px;
+      font-size: 13px; font-weight: 600; box-shadow: var(--shadow-green);
+    }
+    .scan-target-banner.show { display: flex; }
+    .scan-target-banner .stb-clear {
+      margin-left: auto; background: rgba(255,255,255,0.25); border: none;
+      color: white; border-radius: 6px; padding: 3px 8px; font-size: 11px;
+      cursor: pointer; font-weight: 700;
+    }
 
     /* Firebase Auth */
     .auth-btn {
@@ -1324,32 +1320,36 @@
 
     <!-- INVENTORY VIEW -->
     <div class="view" id="viewInventory">
-      <!-- Storage Layout section -->
-      <div class="storage-layout" id="storageLayout">
-        <div class="storage-layout-header" id="storageLayoutToggle">
-          <h3>🗄️ Storage Layout</h3>
-          <span class="chevron">▼</span>
-        </div>
-        <div id="storageLayoutBody" style="display:none;">
-          <div class="storage-loc-tabs" id="storageLocTabs"></div>
-          <div class="storage-zones-body" id="storageZonesBody"></div>
-          <div class="storage-zone-actions">
-            <button class="storage-edit-btn" id="editZonesBtn">✏️ Edit zones</button>
-            <button class="storage-edit-btn" id="addZoneBtn">+ Add zone</button>
-          </div>
-        </div>
-      </div>
+      <div id="storageSection"></div>
       <div id="inventoryList"></div>
     </div>
 
-    <!-- Edit Zones modal -->
-    <div class="modal-backdrop" id="editZonesModal">
+    <!-- Build Storage Layout modal -->
+    <div class="modal-backdrop" id="buildStorageModal">
       <div class="modal">
-        <button class="close-x" data-close="editZonesModal">×</button>
-        <h2>✏️ Edit Zones</h2>
-        <p class="subtitle" id="editZonesSubtitle"></p>
-        <div id="editZonesList" style="margin-bottom:12px;"></div>
-        <button class="btn btn-green" id="editZonesDone">Done</button>
+        <button class="close-x" data-close="buildStorageModal">×</button>
+        <h2>🏗️ Add Storage Space</h2>
+        <p class="subtitle">Pick a type or give it a custom name. You'll add shelves next.</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;" id="storagePresetGrid"></div>
+        <div style="display:flex; gap:8px;">
+          <input id="customStorageName" type="text" placeholder="Custom name (e.g. Wine fridge)" style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px;" />
+          <button class="btn btn-green" id="addCustomStorageBtn" style="width:auto; padding:10px 16px;">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Zone modal -->
+    <div class="modal-backdrop" id="addZoneModal">
+      <div class="modal">
+        <button class="close-x" data-close="addZoneModal">×</button>
+        <h2 id="addZoneTitle">Add zones</h2>
+        <p class="subtitle" id="addZoneSubtitle"></p>
+        <div id="addZoneSuggestions" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
+        <div style="display:flex; gap:8px;">
+          <input id="customZoneName" type="text" placeholder="Custom zone name" style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px;" />
+          <button class="btn btn-green" id="addCustomZoneBtn" style="width:auto; padding:10px 16px;">Add</button>
+        </div>
+        <button class="btn btn-secondary" id="addZoneDone" style="margin-top:10px;">Done</button>
       </div>
     </div>
 
@@ -1365,19 +1365,14 @@
 
     <!-- SCAN VIEW -->
     <div class="view" id="viewScan">
-      <div class="info-banner">
-        <strong>Tip:</strong> Pick a location, then shoot your shelf. Claude maps every item to its exact zone — top shelf, door, crisper, and so on.
+      <!-- Scan target banner — set when arriving from a zone's Scan button -->
+      <div class="scan-target-banner" id="scanTargetBanner">
+        <span>📍</span>
+        <span id="scanTargetLabel">Scanning into: —</span>
+        <button class="stb-clear" id="scanTargetClear">✕ Clear</button>
       </div>
-
-      <!-- Location picker for whole-shelf AI scan -->
-      <div class="card" style="margin-bottom:12px; padding:14px;">
-        <div style="font-size:13px; font-weight:700; margin-bottom:10px; letter-spacing:-0.01em;">📍 Where are you scanning?</div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;" id="locationPicker">
-          <button class="location-pick-btn active" data-loc="fridge">🧊 Fridge</button>
-          <button class="location-pick-btn" data-loc="pantry">🗄️ Pantry</button>
-          <button class="location-pick-btn" data-loc="freezer">❄️ Freezer</button>
-          <button class="location-pick-btn" data-loc="counter">🍌 Counter</button>
-        </div>
+      <div class="info-banner">
+        <strong>Tip:</strong> Tap <strong>📷 Scan</strong> on any zone in your Storage Layout to auto-target it. Or shoot freely and items will land in your inventory without a zone.
       </div>
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
@@ -2207,7 +2202,7 @@
       applyTheme();
       if (typeof renderCook === "function") renderCook();
       if (typeof renderInventory === "function") renderInventory();
-      if (typeof renderStorageLayout === "function") renderStorageLayout();
+      if (typeof renderStorageSection === "function") renderStorageSection();
       if (typeof renderPlan === "function") renderPlan();
       if (typeof renderShoppingList === "function") renderShoppingList();
     };
@@ -2250,7 +2245,7 @@
           hasOnboarded: false,
           claudeKey: "",
           anyListEmail: "",
-          storageZones: {}, // per-location custom zone arrays; empty = use defaults
+          storageLayout: [], // [{ id, name, icon, type, zones: [{id, name}] }]
           prefs: {
             allergies: "",
             dietary: "",
@@ -2853,7 +2848,7 @@
       };
       document.getElementById("headerSubtitle").textContent = subs[name] || "";
       if (name === "cook") renderCook();
-      else if (name === "inventory") renderInventory();
+      else if (name === "inventory") { renderStorageSection(); renderInventory(); }
       else if (name === "plan") renderPlan();
       else if (name === "ask") renderChat();
       haptic(5);
@@ -3078,184 +3073,264 @@
     // INVENTORY
     // ============================================================
     // ============================================================
-    // STORAGE LAYOUT
+    // STORAGE LAYOUT — build-first architecture
+    // Layout is defined first; inventory items live inside it.
     // ============================================================
-    let activeStorageLoc = "fridge";
 
-    const LOCATION_META_STORAGE = {
-      fridge:  { icon: "🧊", label: "Fridge" },
-      pantry:  { icon: "🗄️", label: "Pantry" },
-      freezer: { icon: "❄️", label: "Freezer" },
-      counter: { icon: "🍌", label: "Counter" },
-    };
+    const STORAGE_PRESETS = [
+      { type:"fridge",  name:"Fridge",       icon:"🧊", zones:["Top shelf","Middle shelf","Bottom shelf","Crisper drawer","Door"] },
+      { type:"pantry",  name:"Pantry",        icon:"🗄️", zones:["Top shelf","Eye level","Lower shelf","Counter","Spice rack"] },
+      { type:"freezer", name:"Freezer",       icon:"❄️", zones:["Top","Middle","Bottom","Door"] },
+      { type:"counter", name:"Counter",       icon:"🍌", zones:["Counter","Fruit bowl","Bread area"] },
+      { type:"fridge",  name:"Mini fridge",   icon:"🧊", zones:["Top","Bottom","Door"] },
+      { type:"freezer", name:"Chest freezer", icon:"❄️", zones:["Top layer","Middle","Bottom"] },
+      { type:"pantry",  name:"Cabinet",       icon:"🪵", zones:["Top shelf","Middle shelf","Lower shelf"] },
+      { type:"custom",  name:"Custom…",       icon:"📦", zones:[] },
+    ];
 
-    function getZones(loc) {
-      const custom = state.settings.storageZones && state.settings.storageZones[loc];
-      return (custom && custom.length) ? custom : (LOCATION_ZONES[loc] || []);
+    // Scan target — set when arriving from a zone Scan button
+    let scanTarget = null; // { locId, zoneId, locName, zoneName, locIcon }
+
+    function slId() { return "sl-" + Math.random().toString(36).slice(2,9); }
+
+    function getStorageLayout() {
+      return state.settings.storageLayout || [];
     }
 
-    function renderStorageLayout() {
-      const body = document.getElementById("storageLayoutBody");
-      if (!body || body.style.display === "none") return;
+    function renderStorageSection() {
+      const section = document.getElementById("storageSection");
+      if (!section) return;
+      const layout = getStorageLayout();
 
-      // Location tab strip
-      const tabs = document.getElementById("storageLocTabs");
-      const locs = ["fridge","pantry","freezer","counter"];
-      tabs.innerHTML = locs.map(loc => {
-        const meta = LOCATION_META_STORAGE[loc];
-        const count = Object.values(state.inventory).filter(i => (i.loc || "pantry") === loc).length;
-        return `<button class="storage-loc-tab ${loc === activeStorageLoc ? "active" : ""}" data-loc="${loc}">
-          <span class="tab-count">${meta.icon}</span>
-          ${meta.label}${count ? ` <span style="font-size:10px;opacity:0.7;">(${count})</span>` : ""}
-        </button>`;
+      if (!layout.length) {
+        section.innerHTML = `
+          <div class="sl-setup-empty">
+            <span class="big">🏗️</span>
+            <h3>Build your storage layout first</h3>
+            <p>Add your fridge, pantry, freezer, and any other storage you have at home. Then scan items shelf-by-shelf to build your inventory.</p>
+            <button class="btn btn-green" id="openBuildStorage" style="max-width:260px; margin:0 auto;">+ Add storage space</button>
+          </div>`;
+        document.getElementById("openBuildStorage").addEventListener("click", openBuildStorageModal);
+        return;
+      }
+
+      const html = layout.map(loc => {
+        const itemsInLoc = Object.entries(state.inventory)
+          .filter(([,item]) => item.storageLocId === loc.id);
+        const totalItems = itemsInLoc.length;
+
+        const zonesHtml = (loc.zones || []).map(zone => {
+          const zoneItems = itemsInLoc.filter(([,item]) => item.storageZoneId === zone.id);
+          const count = zoneItems.length;
+          const itemsHtml = zoneItems.length
+            ? `<div class="sl-zone-items-list">${zoneItems.slice(0,6).map(([,item]) => {
+                const img = item.image
+                  ? `<div class="sl-zone-item-img"><img src="${escapeHtml(item.image)}" alt="" onerror="this.style.display='none'" /></div>`
+                  : `<div class="sl-zone-item-img">${loc.icon}</div>`;
+                const qty = item.qty != null ? ` · ${formatQty(item.qty)}${item.unit ? " "+item.unit : ""}` : "";
+                return `<div class="sl-zone-item">${img}<span style="flex:1;font-weight:600;">${escapeHtml(item.name)}</span><span style="color:var(--muted);font-size:11px;">${escapeHtml(item.brand||"")}${qty}</span></div>`;
+              }).join("")}${zoneItems.length > 6 ? `<div style="font-size:12px;color:var(--muted);padding:4px 0;">+${zoneItems.length-6} more</div>` : ""}</div>`
+            : `<div class="sl-zone-empty">Empty — tap Scan to stock this zone</div>`;
+
+          return `<div>
+            <div class="sl-zone-row">
+              <div class="sl-zone-dot"></div>
+              <div class="sl-zone-info">
+                <div class="sz-name">${escapeHtml(zone.name)}</div>
+                <div class="sz-count">${count} item${count !== 1 ? "s" : ""}</div>
+              </div>
+              <button class="sl-zone-scan" data-loc-id="${escapeHtml(loc.id)}" data-zone-id="${escapeHtml(zone.id)}">📷 Scan</button>
+            </div>
+            ${itemsHtml}
+          </div>`;
+        }).join("");
+
+        return `<div class="sl-location-card" data-loc-id="${escapeHtml(loc.id)}">
+          <div class="sl-loc-header">
+            <span class="sl-loc-icon">${loc.icon}</span>
+            <span class="sl-loc-name">${escapeHtml(loc.name)}</span>
+            <span class="sl-loc-meta">${totalItems} item${totalItems !== 1 ? "s" : ""} · ${(loc.zones||[]).length} zone${(loc.zones||[]).length !== 1?"s":""}</span>
+            <span class="sl-loc-chevron">▼</span>
+          </div>
+          <div class="sl-loc-body">
+            ${zonesHtml || `<div class="sl-zone-empty">No zones yet — add one below</div>`}
+            <div class="sl-loc-footer">
+              <button class="sl-sm-btn" data-action="add-zone" data-loc-id="${escapeHtml(loc.id)}">+ Add zone</button>
+              <button class="sl-sm-btn danger" data-action="del-loc" data-loc-id="${escapeHtml(loc.id)}">Remove</button>
+            </div>
+          </div>
+        </div>`;
       }).join("");
-      tabs.querySelectorAll(".storage-loc-tab").forEach(btn => {
-        btn.addEventListener("click", () => {
-          activeStorageLoc = btn.dataset.loc;
-          renderStorageLayout();
-        });
+
+      section.innerHTML = html + `<button class="btn btn-secondary" id="addMoreStorageBtn" style="margin-bottom:14px;">+ Add another storage space</button>`;
+
+      // Toggle location cards open/close
+      section.querySelectorAll(".sl-loc-header").forEach(h => {
+        h.addEventListener("click", () => h.closest(".sl-location-card").classList.toggle("open"));
       });
 
-      // Zones for active location
-      const zonesBody = document.getElementById("storageZonesBody");
-      const zones = getZones(activeStorageLoc);
-      const locItems = Object.entries(state.inventory)
-        .filter(([,item]) => (item.loc || "pantry") === activeStorageLoc);
-
-      // Items that have no zone assigned yet
-      const unzoned = locItems.filter(([,item]) => !item.zone);
-
-      zonesBody.innerHTML = zones.map(zone => {
-        const zoneItems = locItems.filter(([,item]) => item.zone === zone);
-        const itemsHtml = zoneItems.length
-          ? zoneItems.map(([key, item]) => {
-              const img = item.image
-                ? `<div class="szi-img"><img src="${escapeHtml(item.image)}" alt="" onerror="this.parentNode.innerHTML='${LOCATION_META_STORAGE[activeStorageLoc]?.icon || "📦"}'" /></div>`
-                : `<div class="szi-img">${LOCATION_META_STORAGE[activeStorageLoc]?.icon || "📦"}</div>`;
-              const qty = item.qty != null ? ` · ${formatQty(item.qty)}${item.unit ? " " + item.unit : ""}` : "";
-              return `<div class="storage-zone-item">
-                ${img}
-                <span style="flex:1; font-weight:600;">${escapeHtml(item.name)}</span>
-                <span style="color:var(--muted); font-size:11px;">${escapeHtml(item.brand || "")}${qty}</span>
-              </div>`;
-            }).join("")
-          : `<div class="storage-zone-empty">Empty — scan or add items here</div>`;
-
-        return `<div class="storage-zone-row">
-          <div class="storage-zone-header">
-            <div class="storage-zone-name">
-              ${escapeHtml(zone)}
-              <span class="storage-zone-count">${zoneItems.length}</span>
-            </div>
-            <button class="storage-zone-scan-btn" data-zone="${escapeHtml(zone)}" data-loc="${activeStorageLoc}">📷 Scan</button>
-          </div>
-          <div class="storage-zone-items">${itemsHtml}</div>
-        </div>`;
-      }).join("") + (unzoned.length ? `
-        <div class="storage-zone-row" style="opacity:0.7;">
-          <div class="storage-zone-header">
-            <div class="storage-zone-name">Unassigned <span class="storage-zone-count">${unzoned.length}</span></div>
-          </div>
-          <div class="storage-zone-items">${unzoned.map(([,item]) => `
-            <div class="storage-zone-item">
-              <div class="szi-img">${LOCATION_META_STORAGE[activeStorageLoc]?.icon || "📦"}</div>
-              <span style="flex:1; font-weight:600;">${escapeHtml(item.name)}</span>
-            </div>`).join("")}
-          </div>
-        </div>` : "");
-
-      // Wire scan buttons — jump to Scan tab with location + zone pre-selected
-      zonesBody.querySelectorAll(".storage-zone-scan-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const loc = btn.dataset.loc;
-          scanCurrentLoc = loc;
-          // Update location picker in scan tab
-          document.querySelectorAll(".location-pick-btn").forEach(b =>
-            b.classList.toggle("active", b.dataset.loc === loc)
-          );
-          // Switch to scan tab
+      // Scan button → set target + go to scan tab
+      section.querySelectorAll(".sl-zone-scan").forEach(btn => {
+        btn.addEventListener("click", e => {
+          e.stopPropagation();
+          const locId = btn.dataset.locId;
+          const zoneId = btn.dataset.zoneId;
+          const loc = getStorageLayout().find(l => l.id === locId);
+          const zone = loc?.zones?.find(z => z.id === zoneId);
+          if (!loc || !zone) return;
+          setScanTarget({ locId, zoneId, locName: loc.name, zoneName: zone.name, locIcon: loc.icon });
           document.querySelector('[data-view="scan"]')?.click();
         });
       });
-    }
 
-    // Toggle open/close
-    document.getElementById("storageLayoutToggle").addEventListener("click", () => {
-      const body = document.getElementById("storageLayoutBody");
-      const layout = document.getElementById("storageLayout");
-      const isOpen = body.style.display !== "none";
-      body.style.display = isOpen ? "none" : "block";
-      layout.classList.toggle("open", !isOpen);
-      if (!isOpen) renderStorageLayout();
-    });
-
-    // Edit zones modal
-    document.getElementById("editZonesBtn").addEventListener("click", () => {
-      openEditZones(activeStorageLoc);
-    });
-    document.getElementById("addZoneBtn").addEventListener("click", () => {
-      const name = prompt(`New zone name for ${LOCATION_META_STORAGE[activeStorageLoc].label}:`);
-      if (!name || !name.trim()) return;
-      if (!state.settings.storageZones) state.settings.storageZones = {};
-      if (!state.settings.storageZones[activeStorageLoc]) {
-        state.settings.storageZones[activeStorageLoc] = [...getZones(activeStorageLoc)];
-      }
-      state.settings.storageZones[activeStorageLoc].push(name.trim());
-      saveState();
-      renderStorageLayout();
-    });
-
-    function openEditZones(loc) {
-      const meta = LOCATION_META_STORAGE[loc];
-      document.getElementById("editZonesSubtitle").textContent = `${meta.icon} ${meta.label} — rename or remove zones`;
-      const zones = getZones(loc);
-      const list = document.getElementById("editZonesList");
-      list.innerHTML = zones.map((z, i) => `
-        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-          <input type="text" value="${escapeHtml(z)}" data-idx="${i}"
-            style="flex:1; padding:9px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; font-family:inherit;" />
-          <button data-del="${i}" style="background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer; padding:4px 6px; border-radius:6px;">×</button>
-        </div>`).join("");
-      list.querySelectorAll("input").forEach(inp => {
-        inp.addEventListener("input", e => {
-          if (!state.settings.storageZones) state.settings.storageZones = {};
-          if (!state.settings.storageZones[loc]) state.settings.storageZones[loc] = [...zones];
-          state.settings.storageZones[loc][Number(e.target.dataset.idx)] = e.target.value;
-        });
+      // Add zone button
+      section.querySelectorAll('[data-action="add-zone"]').forEach(btn => {
+        btn.addEventListener("click", e => { e.stopPropagation(); openAddZoneModal(btn.dataset.locId); });
       });
-      list.querySelectorAll("[data-del]").forEach(btn => {
+
+      // Remove location
+      section.querySelectorAll('[data-action="del-loc"]').forEach(btn => {
         btn.addEventListener("click", e => {
-          const idx = Number(e.target.dataset.del);
-          if (!state.settings.storageZones) state.settings.storageZones = {};
-          const cur = [...getZones(loc)];
-          cur.splice(idx, 1);
-          state.settings.storageZones[loc] = cur;
-          saveState();
-          openEditZones(loc); // re-render list
-          renderStorageLayout();
+          e.stopPropagation();
+          const loc = getStorageLayout().find(l => l.id === btn.dataset.locId);
+          if (!loc) return;
+          if (!confirm(`Remove "${loc.name}" and all its zones? Items in this location will remain in inventory (unassigned).`)) return;
+          state.settings.storageLayout = getStorageLayout().filter(l => l.id !== btn.dataset.locId);
+          saveState(); renderStorageSection();
         });
       });
-      showModal("editZonesModal");
+
+      document.getElementById("addMoreStorageBtn")?.addEventListener("click", openBuildStorageModal);
     }
 
-    document.getElementById("editZonesDone").addEventListener("click", () => {
-      saveState();
-      hideModal("editZonesModal");
-      renderStorageLayout();
+    // ── Scan target ───────────────────────────────────────────────
+    function setScanTarget(target) {
+      scanTarget = target;
+      const banner = document.getElementById("scanTargetBanner");
+      const label = document.getElementById("scanTargetLabel");
+      if (banner && label) {
+        label.textContent = `Scanning into: ${target.locIcon} ${target.locName} › ${target.zoneName}`;
+        banner.classList.add("show");
+      }
+    }
+    function clearScanTarget() {
+      scanTarget = null;
+      const banner = document.getElementById("scanTargetBanner");
+      if (banner) banner.classList.remove("show");
+    }
+    document.getElementById("scanTargetClear")?.addEventListener("click", clearScanTarget);
+
+    // ── Build Storage modal ───────────────────────────────────────
+    function openBuildStorageModal() {
+      const grid = document.getElementById("storagePresetGrid");
+      grid.innerHTML = STORAGE_PRESETS.map(p => `
+        <button class="location-pick-btn" data-preset="${escapeHtml(p.name)}" style="padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:4px;">
+          <span style="font-size:24px;">${p.icon}</span>
+          <span>${p.name}</span>
+        </button>`).join("");
+      grid.querySelectorAll(".location-pick-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const preset = STORAGE_PRESETS.find(p => p.name === btn.dataset.preset);
+          if (!preset) return;
+          if (preset.type === "custom") {
+            document.getElementById("customStorageName").focus();
+            return;
+          }
+          addStorageLocation(preset.name, preset.icon, preset.type, preset.zones);
+          hideModal("buildStorageModal");
+        });
+      });
+      showModal("buildStorageModal");
+    }
+
+    document.getElementById("addCustomStorageBtn")?.addEventListener("click", () => {
+      const name = document.getElementById("customStorageName").value.trim();
+      if (!name) return;
+      addStorageLocation(name, "📦", "custom", []);
+      document.getElementById("customStorageName").value = "";
+      hideModal("buildStorageModal");
+      // Immediately open add-zone modal for the new location
+      const layout = getStorageLayout();
+      if (layout.length) openAddZoneModal(layout[layout.length - 1].id);
     });
+
+    function addStorageLocation(name, icon, type, defaultZones) {
+      if (!state.settings.storageLayout) state.settings.storageLayout = [];
+      const loc = {
+        id: slId(), name, icon, type,
+        zones: defaultZones.map(n => ({ id: slId(), name: n })),
+      };
+      state.settings.storageLayout.push(loc);
+      saveState();
+      renderStorageSection();
+      // Auto-open the new card
+      setTimeout(() => {
+        const card = document.querySelector(`[data-loc-id="${loc.id}"]`);
+        if (card) card.classList.add("open");
+      }, 50);
+    }
+
+    // ── Add Zone modal ────────────────────────────────────────────
+    let addZoneTargetLocId = null;
+    function openAddZoneModal(locId) {
+      addZoneTargetLocId = locId;
+      const loc = getStorageLayout().find(l => l.id === locId);
+      if (!loc) return;
+      document.getElementById("addZoneTitle").textContent = `Add zones to ${loc.icon} ${loc.name}`;
+      document.getElementById("addZoneSubtitle").textContent = "Tap suggestions to add, or type a custom name.";
+      const existing = new Set((loc.zones || []).map(z => z.name));
+      const preset = STORAGE_PRESETS.find(p => p.type === loc.type);
+      const suggestions = (preset?.zones || []).filter(z => !existing.has(z));
+      const sugg = document.getElementById("addZoneSuggestions");
+      sugg.innerHTML = suggestions.map(s =>
+        `<button class="chip" data-zone="${escapeHtml(s)}">${s}</button>`
+      ).join("");
+      sugg.querySelectorAll(".chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+          addZoneToLoc(addZoneTargetLocId, chip.dataset.zone);
+          chip.classList.add("active");
+          chip.disabled = true;
+        });
+      });
+      document.getElementById("customZoneName").value = "";
+      showModal("addZoneModal");
+    }
+
+    document.getElementById("addCustomZoneBtn")?.addEventListener("click", () => {
+      const name = document.getElementById("customZoneName").value.trim();
+      if (!name || !addZoneTargetLocId) return;
+      addZoneToLoc(addZoneTargetLocId, name);
+      document.getElementById("customZoneName").value = "";
+    });
+
+    document.getElementById("addZoneDone")?.addEventListener("click", () => {
+      hideModal("addZoneModal");
+      renderStorageSection();
+    });
+
+    function addZoneToLoc(locId, name) {
+      const layout = getStorageLayout();
+      const loc = layout.find(l => l.id === locId);
+      if (!loc) return;
+      if (!loc.zones) loc.zones = [];
+      if (loc.zones.find(z => z.name === name)) return;
+      loc.zones.push({ id: slId(), name });
+      state.settings.storageLayout = layout;
+      saveState();
+    }
 
     function renderInventory() {
       const container = document.getElementById("inventoryList");
       const allItems = Object.entries(state.inventory);
       if (allItems.length === 0) {
-        container.innerHTML = `
-          <div class="card empty-state">
-            <span class="big">📦</span>
-            Your inventory is empty.<br/>
-            <small>Tap + below to add, or use the Scan tab.</small>
-          </div>`;
+        container.innerHTML = "";
+        renderStorageSection();
         return;
       }
+
+      // Items in the new storage layout are shown inside renderStorageSection().
+      // The inventoryList shows only legacy items (no storageLocId) and "need to restock".
+      const legacyItems = allItems.filter(([, i]) => !i.storageLocId);
 
       // Split: in-stock (qty > 0 or qty null) vs need-to-restock (qty === 0)
       const stocked = [];
@@ -3263,45 +3338,50 @@
       allItems.forEach(([k, i]) => {
         const entry = { key: k, item: i };
         if (i.qty === 0) restock.push(entry);
-        else stocked.push(entry);
+        else if (!i.storageLocId) stocked.push(entry);
       });
 
       let html = "";
 
-      // In-stock grouped by location
-      const grouped = {};
-      stocked.forEach(({key, item}) => {
-        const loc = item.loc || "pantry";
-        if (!grouped[loc]) grouped[loc] = [];
-        grouped[loc].push({key, item});
-      });
-      const order = ["pantry","fridge","freezer","counter"];
-      html += order.filter(loc => grouped[loc]).map(loc => {
-        const meta = LOCATION_META[loc];
-        const rows = grouped[loc].sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
-          const qtyText = formatQty(item.qty) + (item.unit ? " " + item.unit : "");
-          const badges = [];
-          if (isExpired(item)) badges.push(`<span class="badge expired">expired</span>`);
-          else if (item.expiry) {
-            const diff = (new Date(item.expiry).getTime() - Date.now()) / (24*3600*1000);
-            if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
-          }
-          if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
-          if (item.zone) badges.push(`<span class="badge" style="background:var(--green-light);color:var(--green-dark);font-size:10px;">${escapeHtml(item.zone)}</span>`);
-          const iconHtml = item.image
-            ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='${meta.icon}'" />`
-            : meta.icon;
-          return `
-            <div class="inv-item" data-key="${escapeHtml(key)}">
-              <div class="icon">${iconHtml}</div>
-              <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
-              <div class="badges">${badges.join("")}</div>
-              <div class="qty">${qtyText}</div>
-              <button class="delete" data-action="delete" aria-label="Delete">×</button>
-            </div>`;
+      // Legacy in-stock items grouped by location
+      if (stocked.length) {
+        const grouped = {};
+        stocked.forEach(({key, item}) => {
+          const loc = (item.loc || "pantry").toLowerCase();
+          if (!grouped[loc]) grouped[loc] = [];
+          grouped[loc].push({key, item});
+        });
+        const order = ["pantry","fridge","freezer","counter"];
+        const metaFallback = { icon: "📦", title: "Other" };
+        // Also include any locs not in order (e.g. custom)
+        const allLocs = [...new Set([...order, ...Object.keys(grouped)])];
+        html += allLocs.filter(loc => grouped[loc]).map(loc => {
+          const meta = LOCATION_META[loc] || metaFallback;
+          const rows = grouped[loc].sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
+            const qtyText = formatQty(item.qty) + (item.unit ? " " + item.unit : "");
+            const badges = [];
+            if (isExpired(item)) badges.push(`<span class="badge expired">expired</span>`);
+            else if (item.expiry) {
+              const diff = (new Date(item.expiry).getTime() - Date.now()) / (24*3600*1000);
+              if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
+            }
+            if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
+            if (item.zone) badges.push(`<span class="badge" style="background:var(--green-light);color:var(--green-dark);font-size:10px;">${escapeHtml(item.zone)}</span>`);
+            const iconHtml = item.image
+              ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='${meta.icon}'" />`
+              : meta.icon;
+            return `
+              <div class="inv-item" data-key="${escapeHtml(key)}">
+                <div class="icon">${iconHtml}</div>
+                <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
+                <div class="badges">${badges.join("")}</div>
+                <div class="qty">${qtyText}</div>
+                <button class="delete" data-action="delete" aria-label="Delete">×</button>
+              </div>`;
+          }).join("");
+          return `<div class="inv-group-title">${meta.icon} ${meta.title} <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${grouped[loc].length})</span></div>${rows}`;
         }).join("");
-        return `<div class="inv-group-title">${meta.icon} ${meta.title} <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${grouped[loc].length})</span></div>${rows}`;
-      }).join("");
+      }
 
       // Need to restock section
       if (restock.length) {
@@ -3322,6 +3402,8 @@
       }
 
       container.innerHTML = html;
+      // Sync the storage layout view (above inventoryList) with latest item counts
+      renderStorageSection();
 
       container.querySelectorAll(".inv-item").forEach(el => {
         el.addEventListener("click", (e) => {
@@ -3914,17 +3996,8 @@
     // ---- END Phase 2 additions ----
 
     // In-memory list of items being reviewed in the Scan tab (bulk / whole-shelf mode).
-    // Shape per item: { included: bool, name, brand, qty, unit, zone }
+    // Shape per item: { included: bool, name, brand, qty, unit }
     let scanDraftItems = [];
-    let scanCurrentLoc = "fridge"; // set by location picker
-
-    // Zone definitions per location — drives Claude's prompt and the per-item zone selector.
-    const LOCATION_ZONES = {
-      fridge:  ["Top shelf","Middle shelf","Bottom shelf","Crisper drawer","Door","Deli drawer"],
-      pantry:  ["Eye level","Top shelf","Lower shelf","Counter","Spice rack","Deep storage"],
-      freezer: ["Top","Middle","Bottom","Door"],
-      counter: ["Counter","Fruit bowl","Bread box","Appliance top"],
-    };
 
     function renderScanResult(dataUrl) {
       const container = document.getElementById("scanResult");
@@ -3952,7 +4025,14 @@
           <div class="card" style="text-align:center; padding:16px;">
             <p style="margin:0;">🔍 Claude is looking at your photo…</p>
           </div>`;
-        analyzePhotoWithClaude(dataUrl, scanCurrentLoc).then((items) => {
+        // Pass location context to Claude from the active scanTarget
+        const _locName = scanTarget
+          ? `${scanTarget.locName} (${scanTarget.zoneName})`
+          : "storage area";
+        const _zoneNames = scanTarget
+          ? [scanTarget.zoneName]
+          : ["Top shelf","Middle shelf","Bottom shelf"];
+        analyzePhotoWithClaude(dataUrl, _locName, _zoneNames).then((items) => {
           scanDraftItems = items.map(i => ({ included: true, ...i }));
           if (!scanDraftItems.length) scanDraftItems.push(emptyScanItem());
           renderScanItemsList();
@@ -3989,15 +4069,13 @@
     }
 
     function emptyScanItem() {
-      const zones = LOCATION_ZONES[scanCurrentLoc] || LOCATION_ZONES.fridge;
-      return { included: true, name: "", brand: "", qty: null, unit: "", zone: zones[0] };
+      return { included: true, name: "", brand: "", qty: null, unit: "" };
     }
 
     function renderScanItemsList(targetId) {
       const listEl = document.getElementById(targetId || "scanItemsList");
       if (!listEl) return;
       const unitOptions = ["","oz","fl oz","lb","g","kg","cup","tbsp","tsp","piece","can","bottle","jar","bag","box","packet","bunch","head"];
-      const zones = LOCATION_ZONES[scanCurrentLoc] || LOCATION_ZONES.fridge;
       listEl.innerHTML = scanDraftItems.map((i, idx) => `
         <div class="scan-item-card ${i.included ? "" : "excluded"}" data-idx="${idx}">
           <input type="checkbox" class="include-cb" ${i.included ? "checked" : ""} aria-label="Include" />
@@ -4012,9 +4090,6 @@
                 ${unitOptions.map(u => `<option value="${u}" ${i.unit === u ? "selected" : ""}>${u || "— unit —"}</option>`).join("")}
               </select>
             </div>
-            <select class="zone-select">
-              ${zones.map(z => `<option value="${z}" ${(i.zone || zones[0]) === z ? "selected" : ""}>${z}</option>`).join("")}
-            </select>
           </div>
           <button class="scan-remove-btn" data-action="remove" aria-label="Remove">×</button>
         </div>
@@ -4042,9 +4117,6 @@
         card.querySelector(".unit-input").addEventListener("change", (e) => {
           scanDraftItems[idx].unit = e.target.value;
         });
-        card.querySelector(".zone-select").addEventListener("change", (e) => {
-          scanDraftItems[idx].zone = e.target.value;
-        });
         card.querySelector('[data-action="remove"]').addEventListener("click", () => {
           scanDraftItems.splice(idx, 1);
           if (!scanDraftItems.length) scanDraftItems.push(emptyScanItem());
@@ -4066,27 +4138,22 @@
       }
     }
 
-    async function analyzePhotoWithClaude(dataUrl, location = "fridge") {
+    async function analyzePhotoWithClaude(dataUrl, locLabel = "storage area", zoneNames = ["Top shelf","Middle shelf","Bottom shelf"]) {
       const key = (state.settings.claudeKey || "").trim();
       if (!key) throw new Error("No API key set");
       const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
       if (!match) throw new Error("Bad image format");
       const mediaType = match[1];
       const b64 = match[2];
-      const zones = LOCATION_ZONES[location] || LOCATION_ZONES.fridge;
-      const locLabel = { fridge: "refrigerator", pantry: "pantry", freezer: "freezer", counter: "kitchen counter" }[location] || location;
 
       const prompt = [
-        `This is a photo of a ${locLabel}. Identify every food, drink, or cooking ingredient visible.`,
+        `This is a photo of ${locLabel}. Identify every food, drink, or cooking ingredient visible.`,
         "",
         "For each item return a JSON object with these fields:",
         '- "name": generic item name, lowercase (e.g. "marinara sauce", "whole milk", "cheddar cheese")',
         '- "brand": brand name if readable on the label; empty string "" if not visible',
         '- "qty": numeric quantity from the label (e.g. 32 for "32 oz"); null if unknown',
         '- "unit": unit of measure (e.g. "oz", "lb", "gal", "can", "bottle", "bag", "box"); empty string "" if unknown',
-        `- "zone": which part of the ${locLabel} the item is in, based on its position in the image.`,
-        `  Must be one of: ${zones.map(z => `"${z}"`).join(", ")}.`,
-        `  Use the item's visual position — top of frame = top shelf, bottom = bottom shelf, door/side = door, etc.`,
         "",
         "Rules:",
         "- Food, drink, and cooking ingredients only. Ignore containers, cookware, bags, packaging without food.",
@@ -4094,7 +4161,7 @@
         "- Never guess brands or sizes you cannot read.",
         "",
         "Return ONLY a valid JSON array, no prose, no markdown. Example:",
-        `[{"name":"whole milk","brand":"Horizon","qty":1,"unit":"gal","zone":"${zones[0]}"},{"name":"greek yogurt","brand":"Fage","qty":32,"unit":"oz","zone":"${zones[1] || zones[0]}"}]`,
+        '[{"name":"whole milk","brand":"Horizon","qty":1,"unit":"gal"},{"name":"greek yogurt","brand":"Fage","qty":32,"unit":"oz"}]',
       ].join("\n");
 
       const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -4127,7 +4194,7 @@
       const jsonMatch = text.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
         return text.split("\n").map(l => l.replace(/^[-•*\d.)\s]+/, "").trim()).filter(Boolean)
-          .map(name => ({ name, brand: "", qty: null, unit: "", zone: zones[0] }));
+          .map(name => ({ name, brand: "", qty: null, unit: "" }));
       }
       let parsed;
       try { parsed = JSON.parse(jsonMatch[0]); }
@@ -4138,7 +4205,6 @@
         brand: String(p.brand || "").trim(),
         qty: (p.qty == null || p.qty === "" || isNaN(Number(p.qty))) ? null : Number(p.qty),
         unit: String(p.unit || "").trim(),
-        zone: zones.includes(p.zone) ? p.zone : zones[0],
       })).filter(i => i.name);
     }
 
@@ -4154,18 +4220,23 @@
           canonicalName: normalize(name),
           qty: i.qty,
           unit: i.unit || "",
-          loc: scanCurrentLoc,
-          zone: i.zone || "",
+          loc: scanTarget?.locName || "",
+          zone: scanTarget?.zoneName || "",
+          storageLocId: scanTarget?.locId || "",
+          storageZoneId: scanTarget?.zoneId || "",
           expiry: null,
           upc: "",
         };
         state.inventory[inventoryKey(item)] = item;
       });
       saveState();
+      const destination = scanTarget
+        ? `${scanTarget.locIcon || "📦"} ${scanTarget.locName} › ${scanTarget.zoneName}`
+        : "your inventory";
       document.getElementById("scanResult").innerHTML = `
         <div class="card empty-state" style="background:var(--green-light);">
           <span class="big">✅</span>
-          Added ${selected.length} item${selected.length === 1 ? "" : "s"} to your ${loc}.<br/>
+          Added ${selected.length} item${selected.length === 1 ? "" : "s"} to ${escapeHtml(destination)}.<br/>
           <small>Check the Inventory tab to review.</small>
         </div>`;
       haptic(15);
@@ -4996,14 +5067,6 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     document.getElementById("crCancel").addEventListener("click", () => hideModal("customModal"));
 
     // Scan — close-up (one item, Phase 2)
-    // Location picker — updates scanCurrentLoc and highlights active button
-    document.getElementById("locationPicker").addEventListener("click", e => {
-      const btn = e.target.closest(".location-pick-btn");
-      if (!btn) return;
-      scanCurrentLoc = btn.dataset.loc;
-      document.querySelectorAll(".location-pick-btn").forEach(b => b.classList.toggle("active", b === btn));
-    });
-
     document.getElementById("scanOneInput").addEventListener("change", async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) { return; }
