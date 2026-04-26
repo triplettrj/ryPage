@@ -1374,6 +1374,7 @@
 
         <!-- Step 3: Review AI-suggested zones -->
         <div id="bsStep3" style="display:none;">
+          <div id="bsStep3Photo"></div>
           <h2 id="bsStep3Title">Review zones</h2>
           <p class="subtitle" id="bsStep3Sub">Claude mapped these zones from your photo. Tap × to remove any, or add more.</p>
           <div id="bsZoneList" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
@@ -3270,8 +3271,9 @@
 
     // ── Build Storage modal — 3-step wizard ──────────────────────
     // Wizard state
-    let bsPending = null; // { name, icon, type } — set in step 1
-    let bsZones   = [];   // string[] — built in step 3
+    let bsPending  = null; // { name, icon, type } — set in step 1
+    let bsZones    = [];   // string[] — built in step 3
+    let bsPhotoUrl = null; // dataUrl of the photo taken in step 2
 
     function bsShowStep(n) {
       [1,2,3].forEach(i => {
@@ -3282,6 +3284,7 @@
     function openBuildStorageModal() {
       bsPending = null;
       bsZones = [];
+      bsPhotoUrl = null;
       document.getElementById("bsPhotoPreview").innerHTML = "";
       document.getElementById("bsCustomZone").value = "";
       document.getElementById("customStorageName").value = "";
@@ -3339,6 +3342,7 @@
       const reader = new FileReader();
       reader.onload = async (ev) => {
         const dataUrl = ev.target.result;
+        bsPhotoUrl = dataUrl; // persist so step 3 can show it
         const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
 
         // Replace step 2 content with photo + prominent analyzing state
@@ -3386,9 +3390,18 @@
     function bsShowZoneReview() {
       const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
       document.getElementById("bsStep3Title").textContent = `${bsPending?.icon || "📦"} ${bsPending?.name || "Storage"} zones`;
-      document.getElementById("bsStep3Sub").textContent = hasKey && bsZones.length
-        ? "Claude identified these zones from your photo. Remove any that don't apply, or add more."
+      document.getElementById("bsStep3Sub").textContent = hasKey && bsPhotoUrl && bsZones.length
+        ? "Claude identified these zones from your photo. Tap × to remove any, or add your own."
         : "These zones come from a preset. Remove any that don't apply, or add your own.";
+
+      // Show photo reference above the zone list if we have one
+      const photoEl = document.getElementById("bsStep3Photo");
+      if (bsPhotoUrl) {
+        photoEl.innerHTML = `<img src="${bsPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; max-height:220px; object-fit:cover;" alt="Your photo" />`;
+      } else {
+        photoEl.innerHTML = "";
+      }
+
       bsRenderZoneList();
       bsShowStep(3);
     }
