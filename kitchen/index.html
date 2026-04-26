@@ -1158,6 +1158,100 @@
     }
     [data-theme="dark"] .toast button { color: #4ade80; }
 
+    /* Storage Layout */
+    .storage-layout {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .storage-layout-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .storage-layout-header h3 {
+      margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .storage-layout-header .chevron {
+      font-size: 12px; color: var(--muted); transition: transform 0.2s var(--ease-out);
+    }
+    .storage-layout.open .chevron { transform: rotate(180deg); }
+    .storage-loc-tabs {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .storage-loc-tab {
+      padding: 10px 4px; text-align: center; cursor: pointer;
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      background: none; border: none; border-right: 1px solid var(--border);
+      transition: color 0.15s, background 0.15s;
+    }
+    .storage-loc-tab:last-child { border-right: none; }
+    .storage-loc-tab.active { color: var(--green-dark); background: var(--green-light); }
+    [data-theme="dark"] .storage-loc-tab.active { color: var(--green); background: var(--green-light); }
+    .storage-loc-tab .tab-count {
+      display: block; font-size: 18px; line-height: 1; margin-bottom: 2px;
+    }
+    .storage-zones-body { padding: 10px 12px 14px; }
+    .storage-zone-row {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .storage-zone-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--bg);
+      gap: 8px;
+    }
+    .storage-zone-name {
+      font-weight: 700; font-size: 13px; flex: 1;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .storage-zone-count {
+      font-size: 11px; font-weight: 500;
+      background: var(--border); color: var(--muted);
+      border-radius: 20px; padding: 2px 7px;
+    }
+    .storage-zone-scan-btn {
+      padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: var(--green); font-size: 11px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .storage-zone-scan-btn:hover { background: var(--green-light); box-shadow: var(--shadow-green); }
+    .storage-zone-items { padding: 6px 12px 10px; }
+    .storage-zone-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .storage-zone-item:last-child { border-bottom: none; }
+    .storage-zone-item .szi-img {
+      width: 26px; height: 26px; border-radius: 6px; object-fit: contain;
+      background: var(--green-light); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+    .storage-zone-item .szi-img img { width: 100%; height: 100%; border-radius: 6px; object-fit: contain; }
+    .storage-zone-empty {
+      font-size: 12px; color: var(--muted); padding: 6px 12px 10px; font-style: italic;
+    }
+    .storage-zone-actions {
+      display: flex; gap: 8px; align-items: center; padding: 2px 12px 12px;
+    }
+    .storage-edit-btn {
+      padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .storage-edit-btn:hover { background: var(--bg); }
+
     /* Firebase Auth */
     .auth-btn {
       width: 36px; height: 36px;
@@ -1230,7 +1324,33 @@
 
     <!-- INVENTORY VIEW -->
     <div class="view" id="viewInventory">
+      <!-- Storage Layout section -->
+      <div class="storage-layout" id="storageLayout">
+        <div class="storage-layout-header" id="storageLayoutToggle">
+          <h3>🗄️ Storage Layout</h3>
+          <span class="chevron">▼</span>
+        </div>
+        <div id="storageLayoutBody" style="display:none;">
+          <div class="storage-loc-tabs" id="storageLocTabs"></div>
+          <div class="storage-zones-body" id="storageZonesBody"></div>
+          <div class="storage-zone-actions">
+            <button class="storage-edit-btn" id="editZonesBtn">✏️ Edit zones</button>
+            <button class="storage-edit-btn" id="addZoneBtn">+ Add zone</button>
+          </div>
+        </div>
+      </div>
       <div id="inventoryList"></div>
+    </div>
+
+    <!-- Edit Zones modal -->
+    <div class="modal-backdrop" id="editZonesModal">
+      <div class="modal">
+        <button class="close-x" data-close="editZonesModal">×</button>
+        <h2>✏️ Edit Zones</h2>
+        <p class="subtitle" id="editZonesSubtitle"></p>
+        <div id="editZonesList" style="margin-bottom:12px;"></div>
+        <button class="btn btn-green" id="editZonesDone">Done</button>
+      </div>
     </div>
 
     <!-- PLAN VIEW -->
@@ -2087,6 +2207,7 @@
       applyTheme();
       if (typeof renderCook === "function") renderCook();
       if (typeof renderInventory === "function") renderInventory();
+      if (typeof renderStorageLayout === "function") renderStorageLayout();
       if (typeof renderPlan === "function") renderPlan();
       if (typeof renderShoppingList === "function") renderShoppingList();
     };
@@ -2129,6 +2250,7 @@
           hasOnboarded: false,
           claudeKey: "",
           anyListEmail: "",
+          storageZones: {}, // per-location custom zone arrays; empty = use defaults
           prefs: {
             allergies: "",
             dietary: "",
@@ -2955,6 +3077,173 @@
     // ============================================================
     // INVENTORY
     // ============================================================
+    // ============================================================
+    // STORAGE LAYOUT
+    // ============================================================
+    let activeStorageLoc = "fridge";
+
+    const LOCATION_META_STORAGE = {
+      fridge:  { icon: "🧊", label: "Fridge" },
+      pantry:  { icon: "🗄️", label: "Pantry" },
+      freezer: { icon: "❄️", label: "Freezer" },
+      counter: { icon: "🍌", label: "Counter" },
+    };
+
+    function getZones(loc) {
+      const custom = state.settings.storageZones && state.settings.storageZones[loc];
+      return (custom && custom.length) ? custom : (LOCATION_ZONES[loc] || []);
+    }
+
+    function renderStorageLayout() {
+      const body = document.getElementById("storageLayoutBody");
+      if (!body || body.style.display === "none") return;
+
+      // Location tab strip
+      const tabs = document.getElementById("storageLocTabs");
+      const locs = ["fridge","pantry","freezer","counter"];
+      tabs.innerHTML = locs.map(loc => {
+        const meta = LOCATION_META_STORAGE[loc];
+        const count = Object.values(state.inventory).filter(i => (i.loc || "pantry") === loc).length;
+        return `<button class="storage-loc-tab ${loc === activeStorageLoc ? "active" : ""}" data-loc="${loc}">
+          <span class="tab-count">${meta.icon}</span>
+          ${meta.label}${count ? ` <span style="font-size:10px;opacity:0.7;">(${count})</span>` : ""}
+        </button>`;
+      }).join("");
+      tabs.querySelectorAll(".storage-loc-tab").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeStorageLoc = btn.dataset.loc;
+          renderStorageLayout();
+        });
+      });
+
+      // Zones for active location
+      const zonesBody = document.getElementById("storageZonesBody");
+      const zones = getZones(activeStorageLoc);
+      const locItems = Object.entries(state.inventory)
+        .filter(([,item]) => (item.loc || "pantry") === activeStorageLoc);
+
+      // Items that have no zone assigned yet
+      const unzoned = locItems.filter(([,item]) => !item.zone);
+
+      zonesBody.innerHTML = zones.map(zone => {
+        const zoneItems = locItems.filter(([,item]) => item.zone === zone);
+        const itemsHtml = zoneItems.length
+          ? zoneItems.map(([key, item]) => {
+              const img = item.image
+                ? `<div class="szi-img"><img src="${escapeHtml(item.image)}" alt="" onerror="this.parentNode.innerHTML='${LOCATION_META_STORAGE[activeStorageLoc]?.icon || "📦"}'" /></div>`
+                : `<div class="szi-img">${LOCATION_META_STORAGE[activeStorageLoc]?.icon || "📦"}</div>`;
+              const qty = item.qty != null ? ` · ${formatQty(item.qty)}${item.unit ? " " + item.unit : ""}` : "";
+              return `<div class="storage-zone-item">
+                ${img}
+                <span style="flex:1; font-weight:600;">${escapeHtml(item.name)}</span>
+                <span style="color:var(--muted); font-size:11px;">${escapeHtml(item.brand || "")}${qty}</span>
+              </div>`;
+            }).join("")
+          : `<div class="storage-zone-empty">Empty — scan or add items here</div>`;
+
+        return `<div class="storage-zone-row">
+          <div class="storage-zone-header">
+            <div class="storage-zone-name">
+              ${escapeHtml(zone)}
+              <span class="storage-zone-count">${zoneItems.length}</span>
+            </div>
+            <button class="storage-zone-scan-btn" data-zone="${escapeHtml(zone)}" data-loc="${activeStorageLoc}">📷 Scan</button>
+          </div>
+          <div class="storage-zone-items">${itemsHtml}</div>
+        </div>`;
+      }).join("") + (unzoned.length ? `
+        <div class="storage-zone-row" style="opacity:0.7;">
+          <div class="storage-zone-header">
+            <div class="storage-zone-name">Unassigned <span class="storage-zone-count">${unzoned.length}</span></div>
+          </div>
+          <div class="storage-zone-items">${unzoned.map(([,item]) => `
+            <div class="storage-zone-item">
+              <div class="szi-img">${LOCATION_META_STORAGE[activeStorageLoc]?.icon || "📦"}</div>
+              <span style="flex:1; font-weight:600;">${escapeHtml(item.name)}</span>
+            </div>`).join("")}
+          </div>
+        </div>` : "");
+
+      // Wire scan buttons — jump to Scan tab with location + zone pre-selected
+      zonesBody.querySelectorAll(".storage-zone-scan-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const loc = btn.dataset.loc;
+          scanCurrentLoc = loc;
+          // Update location picker in scan tab
+          document.querySelectorAll(".location-pick-btn").forEach(b =>
+            b.classList.toggle("active", b.dataset.loc === loc)
+          );
+          // Switch to scan tab
+          document.querySelector('[data-view="scan"]')?.click();
+        });
+      });
+    }
+
+    // Toggle open/close
+    document.getElementById("storageLayoutToggle").addEventListener("click", () => {
+      const body = document.getElementById("storageLayoutBody");
+      const layout = document.getElementById("storageLayout");
+      const isOpen = body.style.display !== "none";
+      body.style.display = isOpen ? "none" : "block";
+      layout.classList.toggle("open", !isOpen);
+      if (!isOpen) renderStorageLayout();
+    });
+
+    // Edit zones modal
+    document.getElementById("editZonesBtn").addEventListener("click", () => {
+      openEditZones(activeStorageLoc);
+    });
+    document.getElementById("addZoneBtn").addEventListener("click", () => {
+      const name = prompt(`New zone name for ${LOCATION_META_STORAGE[activeStorageLoc].label}:`);
+      if (!name || !name.trim()) return;
+      if (!state.settings.storageZones) state.settings.storageZones = {};
+      if (!state.settings.storageZones[activeStorageLoc]) {
+        state.settings.storageZones[activeStorageLoc] = [...getZones(activeStorageLoc)];
+      }
+      state.settings.storageZones[activeStorageLoc].push(name.trim());
+      saveState();
+      renderStorageLayout();
+    });
+
+    function openEditZones(loc) {
+      const meta = LOCATION_META_STORAGE[loc];
+      document.getElementById("editZonesSubtitle").textContent = `${meta.icon} ${meta.label} — rename or remove zones`;
+      const zones = getZones(loc);
+      const list = document.getElementById("editZonesList");
+      list.innerHTML = zones.map((z, i) => `
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+          <input type="text" value="${escapeHtml(z)}" data-idx="${i}"
+            style="flex:1; padding:9px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px; font-family:inherit;" />
+          <button data-del="${i}" style="background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer; padding:4px 6px; border-radius:6px;">×</button>
+        </div>`).join("");
+      list.querySelectorAll("input").forEach(inp => {
+        inp.addEventListener("input", e => {
+          if (!state.settings.storageZones) state.settings.storageZones = {};
+          if (!state.settings.storageZones[loc]) state.settings.storageZones[loc] = [...zones];
+          state.settings.storageZones[loc][Number(e.target.dataset.idx)] = e.target.value;
+        });
+      });
+      list.querySelectorAll("[data-del]").forEach(btn => {
+        btn.addEventListener("click", e => {
+          const idx = Number(e.target.dataset.del);
+          if (!state.settings.storageZones) state.settings.storageZones = {};
+          const cur = [...getZones(loc)];
+          cur.splice(idx, 1);
+          state.settings.storageZones[loc] = cur;
+          saveState();
+          openEditZones(loc); // re-render list
+          renderStorageLayout();
+        });
+      });
+      showModal("editZonesModal");
+    }
+
+    document.getElementById("editZonesDone").addEventListener("click", () => {
+      saveState();
+      hideModal("editZonesModal");
+      renderStorageLayout();
+    });
+
     function renderInventory() {
       const container = document.getElementById("inventoryList");
       const allItems = Object.entries(state.inventory);
