@@ -826,6 +826,53 @@
     .scan-summary {
       font-size: 13px; color: var(--muted); margin: 8px 2px;
     }
+    .location-pick-btn {
+      padding: 12px 8px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s var(--ease-out);
+      box-shadow: var(--shadow);
+    }
+    .location-pick-btn.active {
+      background: var(--grad-green);
+      color: white;
+      border-color: transparent;
+      box-shadow: var(--shadow-green);
+    }
+    .zone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--green-light);
+      color: var(--green-dark);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 4px;
+      letter-spacing: 0.01em;
+    }
+    [data-theme="dark"] .zone-badge {
+      background: var(--green-light);
+      color: var(--green);
+    }
+    .scan-fields .zone-select {
+      margin-top: 2px;
+      font-size: 12px;
+      padding: 5px 8px;
+      background: var(--green-light);
+      border-color: var(--green-ring);
+      color: var(--green-dark);
+      font-weight: 600;
+    }
+    [data-theme="dark"] .scan-fields .zone-select {
+      color: var(--green);
+    }
 
     .info-banner {
       background: var(--amber-light);
@@ -1199,8 +1246,20 @@
     <!-- SCAN VIEW -->
     <div class="view" id="viewScan">
       <div class="info-banner">
-        <strong>Tip:</strong> For best matching, snap one item up close. Claude reads the label. Tap 📷 Scan barcode to lock in the exact product.
+        <strong>Tip:</strong> Pick a location, then shoot your shelf. Claude maps every item to its exact zone — top shelf, door, crisper, and so on.
       </div>
+
+      <!-- Location picker for whole-shelf AI scan -->
+      <div class="card" style="margin-bottom:12px; padding:14px;">
+        <div style="font-size:13px; font-weight:700; margin-bottom:10px; letter-spacing:-0.01em;">📍 Where are you scanning?</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;" id="locationPicker">
+          <button class="location-pick-btn active" data-loc="fridge">🧊 Fridge</button>
+          <button class="location-pick-btn" data-loc="pantry">🗄️ Pantry</button>
+          <button class="location-pick-btn" data-loc="freezer">❄️ Freezer</button>
+          <button class="location-pick-btn" data-loc="counter">🍌 Counter</button>
+        </div>
+      </div>
+
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
         <label class="scan-dropzone" for="scanOneInput" style="padding: 18px 10px;">
           <span class="big">📸</span>
@@ -1211,7 +1270,7 @@
         <label class="scan-dropzone" for="scanInput" style="padding: 18px 10px;">
           <span class="big">🗄️</span>
           <h3 style="margin:4px 0 2px; font-size:15px;">Whole shelf</h3>
-          <p style="font-size:11px; margin:0;">Bulk capture</p>
+          <p style="font-size:11px; margin:0;">AI maps zones automatically</p>
           <input id="scanInput" type="file" accept="image/*" capture="environment" />
         </label>
       </div>
@@ -2939,6 +2998,7 @@
             if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
           }
           if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
+          if (item.zone) badges.push(`<span class="badge" style="background:var(--green-light);color:var(--green-dark);font-size:10px;">${escapeHtml(item.zone)}</span>`);
           const iconHtml = item.image
             ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='${meta.icon}'" />`
             : meta.icon;
@@ -3565,8 +3625,17 @@
     // ---- END Phase 2 additions ----
 
     // In-memory list of items being reviewed in the Scan tab (bulk / whole-shelf mode).
-    // Shape per item: { included: bool, name, brand, qty, unit }
+    // Shape per item: { included: bool, name, brand, qty, unit, zone }
     let scanDraftItems = [];
+    let scanCurrentLoc = "fridge"; // set by location picker
+
+    // Zone definitions per location — drives Claude's prompt and the per-item zone selector.
+    const LOCATION_ZONES = {
+      fridge:  ["Top shelf","Middle shelf","Bottom shelf","Crisper drawer","Door","Deli drawer"],
+      pantry:  ["Eye level","Top shelf","Lower shelf","Counter","Spice rack","Deep storage"],
+      freezer: ["Top","Middle","Bottom","Door"],
+      counter: ["Counter","Fruit bowl","Bread box","Appliance top"],
+    };
 
     function renderScanResult(dataUrl) {
       const container = document.getElementById("scanResult");
@@ -3583,16 +3652,7 @@
           <div id="scanItemsList"></div>
           <div class="scan-summary" id="scanSummary"></div>
           <button class="btn btn-ghost" id="addScanItem" style="width:100%;">+ Add another item</button>
-          <div class="field" style="margin-top:12px;">
-            <label>Where do these go?</label>
-            <select id="bulkLoc">
-              <option value="pantry">Pantry</option>
-              <option value="fridge">Fridge</option>
-              <option value="freezer">Freezer</option>
-              <option value="counter">Counter</option>
-            </select>
-          </div>
-          <button class="btn btn-green" id="bulkSave" style="width:100%;">Add selected to inventory</button>
+          <button class="btn btn-green" id="bulkSave" style="width:100%; margin-top:8px;">Add selected to inventory</button>
         </div>`;
 
       // Reset draft
@@ -3603,7 +3663,7 @@
           <div class="card" style="text-align:center; padding:16px;">
             <p style="margin:0;">🔍 Claude is looking at your photo…</p>
           </div>`;
-        analyzePhotoWithClaude(dataUrl).then((items) => {
+        analyzePhotoWithClaude(dataUrl, scanCurrentLoc).then((items) => {
           scanDraftItems = items.map(i => ({ included: true, ...i }));
           if (!scanDraftItems.length) scanDraftItems.push(emptyScanItem());
           renderScanItemsList();
@@ -3640,13 +3700,15 @@
     }
 
     function emptyScanItem() {
-      return { included: true, name: "", brand: "", qty: null, unit: "" };
+      const zones = LOCATION_ZONES[scanCurrentLoc] || LOCATION_ZONES.fridge;
+      return { included: true, name: "", brand: "", qty: null, unit: "", zone: zones[0] };
     }
 
     function renderScanItemsList(targetId) {
       const listEl = document.getElementById(targetId || "scanItemsList");
       if (!listEl) return;
       const unitOptions = ["","oz","fl oz","lb","g","kg","cup","tbsp","tsp","piece","can","bottle","jar","bag","box","packet","bunch","head"];
+      const zones = LOCATION_ZONES[scanCurrentLoc] || LOCATION_ZONES.fridge;
       listEl.innerHTML = scanDraftItems.map((i, idx) => `
         <div class="scan-item-card ${i.included ? "" : "excluded"}" data-idx="${idx}">
           <input type="checkbox" class="include-cb" ${i.included ? "checked" : ""} aria-label="Include" />
@@ -3661,6 +3723,9 @@
                 ${unitOptions.map(u => `<option value="${u}" ${i.unit === u ? "selected" : ""}>${u || "— unit —"}</option>`).join("")}
               </select>
             </div>
+            <select class="zone-select">
+              ${zones.map(z => `<option value="${z}" ${(i.zone || zones[0]) === z ? "selected" : ""}>${z}</option>`).join("")}
+            </select>
           </div>
           <button class="scan-remove-btn" data-action="remove" aria-label="Remove">×</button>
         </div>
@@ -3688,6 +3753,9 @@
         card.querySelector(".unit-input").addEventListener("change", (e) => {
           scanDraftItems[idx].unit = e.target.value;
         });
+        card.querySelector(".zone-select").addEventListener("change", (e) => {
+          scanDraftItems[idx].zone = e.target.value;
+        });
         card.querySelector('[data-action="remove"]').addEventListener("click", () => {
           scanDraftItems.splice(idx, 1);
           if (!scanDraftItems.length) scanDraftItems.push(emptyScanItem());
@@ -3709,30 +3777,37 @@
       }
     }
 
-    async function analyzePhotoWithClaude(dataUrl) {
+    async function analyzePhotoWithClaude(dataUrl, location = "fridge") {
       const key = (state.settings.claudeKey || "").trim();
       if (!key) throw new Error("No API key set");
       const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
       if (!match) throw new Error("Bad image format");
       const mediaType = match[1];
       const b64 = match[2];
+      const zones = LOCATION_ZONES[location] || LOCATION_ZONES.fridge;
+      const locLabel = { fridge: "refrigerator", pantry: "pantry", freezer: "freezer", counter: "kitchen counter" }[location] || location;
+
       const prompt = [
-        "Identify every kitchen food item visible in this photo.",
+        `This is a photo of a ${locLabel}. Identify every food, drink, or cooking ingredient visible.`,
         "",
-        "For each item, return a JSON object with these fields:",
-        '- "name": generic item name, lowercase, short (e.g. "marinara sauce", "peanuts", "rice vinegar")',
-        '- "brand": brand name if clearly readable on a label (e.g. "Rao\'s", "Planters", "Marukan"); use empty string "" if unclear',
-        '- "qty": numeric quantity if visible on the label or by counting items (e.g. 24 for "24 oz", 3 for three apples); use null if unknown',
-        '- "unit": unit of measure if visible (e.g. "oz", "fl oz", "lb", "piece", "jar", "can", "bottle", "bag", "box"); use empty string "" if unknown',
+        "For each item return a JSON object with these fields:",
+        '- "name": generic item name, lowercase (e.g. "marinara sauce", "whole milk", "cheddar cheese")',
+        '- "brand": brand name if readable on the label; empty string "" if not visible',
+        '- "qty": numeric quantity from the label (e.g. 32 for "32 oz"); null if unknown',
+        '- "unit": unit of measure (e.g. "oz", "lb", "gal", "can", "bottle", "bag", "box"); empty string "" if unknown',
+        `- "zone": which part of the ${locLabel} the item is in, based on its position in the image.`,
+        `  Must be one of: ${zones.map(z => `"${z}"`).join(", ")}.`,
+        `  Use the item's visual position — top of frame = top shelf, bottom = bottom shelf, door/side = door, etc.`,
         "",
         "Rules:",
-        "- Include only food / drink / cooking ingredients. Ignore bubble wrap, plastic bags, containers, cookware.",
-        "- One entry per distinct item. If you see 3 apples, that's one entry with qty:3, unit:\"piece\".",
-        "- Do not guess brands or sizes you can't actually see.",
+        "- Food, drink, and cooking ingredients only. Ignore containers, cookware, bags, packaging without food.",
+        "- One entry per distinct product. Three apples = qty:3, unit:\"piece\".",
+        "- Never guess brands or sizes you cannot read.",
         "",
-        "Return ONLY a JSON array. No prose. No markdown fences. Example:",
-        '[{"name":"marinara sauce","brand":"Rao\'s","qty":24,"unit":"oz"},{"name":"peanuts","brand":"Planters","qty":null,"unit":"box"}]',
+        "Return ONLY a valid JSON array, no prose, no markdown. Example:",
+        `[{"name":"whole milk","brand":"Horizon","qty":1,"unit":"gal","zone":"${zones[0]}"},{"name":"greek yogurt","brand":"Fage","qty":32,"unit":"oz","zone":"${zones[1] || zones[0]}"}]`,
       ].join("\n");
+
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -3743,7 +3818,7 @@
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
-          max_tokens: 1500,
+          max_tokens: 2000,
           messages: [{
             role: "user",
             content: [
@@ -3762,9 +3837,8 @@
       const text = (data.content || []).map(c => c.text || "").join("\n");
       const jsonMatch = text.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
-        // Fallback: treat each non-empty line as a plain name
         return text.split("\n").map(l => l.replace(/^[-•*\d.)\s]+/, "").trim()).filter(Boolean)
-          .map(name => ({ name, brand: "", qty: null, unit: "" }));
+          .map(name => ({ name, brand: "", qty: null, unit: "", zone: zones[0] }));
       }
       let parsed;
       try { parsed = JSON.parse(jsonMatch[0]); }
@@ -3775,11 +3849,11 @@
         brand: String(p.brand || "").trim(),
         qty: (p.qty == null || p.qty === "" || isNaN(Number(p.qty))) ? null : Number(p.qty),
         unit: String(p.unit || "").trim(),
+        zone: zones.includes(p.zone) ? p.zone : zones[0],
       })).filter(i => i.name);
     }
 
     function saveScannedItems() {
-      const loc = document.getElementById("bulkLoc").value;
       const selected = scanDraftItems.filter(i => i.included && (i.name || "").trim());
       if (!selected.length) { alert("Nothing selected. Check the items you want to keep."); return; }
       selected.forEach(i => {
@@ -3791,7 +3865,8 @@
           canonicalName: normalize(name),
           qty: i.qty,
           unit: i.unit || "",
-          loc,
+          loc: scanCurrentLoc,
+          zone: i.zone || "",
           expiry: null,
           upc: "",
         };
@@ -4632,6 +4707,14 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     document.getElementById("crCancel").addEventListener("click", () => hideModal("customModal"));
 
     // Scan — close-up (one item, Phase 2)
+    // Location picker — updates scanCurrentLoc and highlights active button
+    document.getElementById("locationPicker").addEventListener("click", e => {
+      const btn = e.target.closest(".location-pick-btn");
+      if (!btn) return;
+      scanCurrentLoc = btn.dataset.loc;
+      document.querySelectorAll(".location-pick-btn").forEach(b => b.classList.toggle("active", b === btn));
+    });
+
     document.getElementById("scanOneInput").addEventListener("change", async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) { return; }
