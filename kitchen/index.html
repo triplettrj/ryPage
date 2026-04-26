@@ -1325,20 +1325,49 @@
     </div>
 
     <!-- Build Storage Layout modal -->
+    <!-- Build Storage modal — 3-step wizard -->
     <div class="modal-backdrop" id="buildStorageModal">
       <div class="modal">
         <button class="close-x" data-close="buildStorageModal">×</button>
-        <h2>🏗️ Add Storage Space</h2>
-        <p class="subtitle">Pick a type or give it a custom name. You'll add shelves next.</p>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;" id="storagePresetGrid"></div>
-        <div style="display:flex; gap:8px;">
-          <input id="customStorageName" type="text" placeholder="Custom name (e.g. Wine fridge)" style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px;" />
-          <button class="btn btn-green" id="addCustomStorageBtn" style="width:auto; padding:10px 16px;">Add</button>
+
+        <!-- Step 1: Pick type -->
+        <div id="bsStep1">
+          <h2>🏗️ Add storage space</h2>
+          <p class="subtitle">What kind of storage are you adding?</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;" id="storagePresetGrid"></div>
+          <div style="display:flex; gap:8px;">
+            <input id="customStorageName" type="text" placeholder="Custom name (e.g. Wine fridge)" style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px;" />
+            <button class="btn btn-green" id="addCustomStorageBtn" style="width:auto; padding:10px 16px;">Add</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Photo capture -->
+        <div id="bsStep2" style="display:none;">
+          <h2 id="bsStep2Title">📷 Photo your interior</h2>
+          <p class="subtitle" id="bsStep2Sub">Take a photo of the inside so Claude can map your shelves and zones automatically.</p>
+          <div id="bsPhotoPreview" style="margin-bottom:12px;"></div>
+          <label class="btn btn-green" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; cursor:pointer; margin-bottom:8px;">
+            📷 Take or upload photo
+            <input type="file" id="bsPhotoInput" accept="image/*" capture="environment" style="display:none;">
+          </label>
+          <button class="btn btn-secondary" id="bsSkipPhoto" style="width:100%;">Skip — add zones manually</button>
+        </div>
+
+        <!-- Step 3: Review AI-suggested zones -->
+        <div id="bsStep3" style="display:none;">
+          <h2 id="bsStep3Title">Review zones</h2>
+          <p class="subtitle" id="bsStep3Sub">Claude mapped these zones from your photo. Tap × to remove any, or add more.</p>
+          <div id="bsZoneList" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;"></div>
+          <div style="display:flex; gap:8px; margin-bottom:14px;">
+            <input id="bsCustomZone" type="text" placeholder="Add a zone…" style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:14px;" />
+            <button class="btn btn-green" id="bsAddZoneBtn" style="width:auto; padding:10px 16px;">Add</button>
+          </div>
+          <button class="btn btn-green" id="bsConfirm" style="width:100%;">✓ Save this layout</button>
         </div>
       </div>
     </div>
 
-    <!-- Add Zone modal -->
+    <!-- Add Zone modal (for adding more zones to existing locations) -->
     <div class="modal-backdrop" id="addZoneModal">
       <div class="modal">
         <button class="close-x" data-close="addZoneModal">×</button>
@@ -3220,8 +3249,25 @@
     }
     document.getElementById("scanTargetClear")?.addEventListener("click", clearScanTarget);
 
-    // ── Build Storage modal ───────────────────────────────────────
+    // ── Build Storage modal — 3-step wizard ──────────────────────
+    // Wizard state
+    let bsPending = null; // { name, icon, type } — set in step 1
+    let bsZones   = [];   // string[] — built in step 3
+
+    function bsShowStep(n) {
+      [1,2,3].forEach(i => {
+        document.getElementById(`bsStep${i}`).style.display = i === n ? "" : "none";
+      });
+    }
+
     function openBuildStorageModal() {
+      bsPending = null;
+      bsZones = [];
+      document.getElementById("bsPhotoPreview").innerHTML = "";
+      document.getElementById("bsCustomZone").value = "";
+      document.getElementById("customStorageName").value = "";
+      bsShowStep(1);
+
       const grid = document.getElementById("storagePresetGrid");
       grid.innerHTML = STORAGE_PRESETS.map(p => `
         <button class="location-pick-btn" data-preset="${escapeHtml(p.name)}" style="padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:4px;">
@@ -3236,8 +3282,14 @@
             document.getElementById("customStorageName").focus();
             return;
           }
-          addStorageLocation(preset.name, preset.icon, preset.type, preset.zones);
-          hideModal("buildStorageModal");
+          bsPending = { name: preset.name, icon: preset.icon, type: preset.type };
+          // Pre-load preset zones as fallback for step 3
+          bsZones = [...preset.zones];
+          // Move to photo step
+          const locLabel = { fridge:"refrigerator", freezer:"freezer", pantry:"pantry", counter:"countertop" }[preset.type] || preset.name.toLowerCase();
+          document.getElementById("bsStep2Title").textContent = `📷 Photo your ${preset.icon} ${preset.name}`;
+          document.getElementById("bsStep2Sub").textContent = `Open your ${preset.name.toLowerCase()} and take a photo of the inside. Claude will identify your shelves and zones.`;
+          bsShowStep(2);
         });
       });
       showModal("buildStorageModal");
@@ -3246,13 +3298,153 @@
     document.getElementById("addCustomStorageBtn")?.addEventListener("click", () => {
       const name = document.getElementById("customStorageName").value.trim();
       if (!name) return;
-      addStorageLocation(name, "📦", "custom", []);
-      document.getElementById("customStorageName").value = "";
-      hideModal("buildStorageModal");
-      // Immediately open add-zone modal for the new location
-      const layout = getStorageLayout();
-      if (layout.length) openAddZoneModal(layout[layout.length - 1].id);
+      bsPending = { name, icon: "📦", type: "custom" };
+      bsZones = [];
+      document.getElementById("bsStep2Title").textContent = `📷 Photo your ${name}`;
+      document.getElementById("bsStep2Sub").textContent = `Take a photo of the inside so Claude can map the layout. Or skip to add zones manually.`;
+      bsShowStep(2);
     });
+
+    // Step 2 → photo input
+    document.getElementById("bsPhotoInput")?.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file || !bsPending) return;
+      e.target.value = "";
+
+      // Show thumbnail
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target.result;
+        document.getElementById("bsPhotoPreview").innerHTML = `
+          <img src="${dataUrl}" style="width:100%; border-radius:12px; margin-bottom:8px; max-height:200px; object-fit:cover;" />
+          <p style="text-align:center; color:var(--muted); font-size:13px; margin:0 0 8px;">🔍 Claude is mapping your layout…</p>`;
+        bsShowStep(2); // keep step 2 visible during analysis
+
+        const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
+        if (hasKey) {
+          try {
+            const aiZones = await analyzeStorageLayoutPhoto(dataUrl, bsPending.type, bsPending.name);
+            if (aiZones.length) bsZones = aiZones;
+          } catch (err) {
+            console.warn("Layout AI failed, using presets:", err.message);
+          }
+        }
+        bsShowZoneReview();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Step 2 → skip photo
+    document.getElementById("bsSkipPhoto")?.addEventListener("click", () => {
+      bsShowZoneReview();
+    });
+
+    function bsShowZoneReview() {
+      const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
+      document.getElementById("bsStep3Title").textContent = `${bsPending?.icon || "📦"} ${bsPending?.name || "Storage"} zones`;
+      document.getElementById("bsStep3Sub").textContent = hasKey && bsZones.length
+        ? "Claude identified these zones from your photo. Remove any that don't apply, or add more."
+        : "These zones come from a preset. Remove any that don't apply, or add your own.";
+      bsRenderZoneList();
+      bsShowStep(3);
+    }
+
+    function bsRenderZoneList() {
+      const el = document.getElementById("bsZoneList");
+      el.innerHTML = bsZones.map((z, i) => `
+        <div class="chip active" style="display:flex; align-items:center; gap:6px; padding-right:6px;">
+          <span>${escapeHtml(z)}</span>
+          <button style="background:none; border:none; cursor:pointer; font-size:14px; color:var(--muted); line-height:1; padding:0;" data-i="${i}" aria-label="Remove">×</button>
+        </div>`).join("");
+      el.querySelectorAll("button[data-i]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          bsZones.splice(Number(btn.dataset.i), 1);
+          bsRenderZoneList();
+        });
+      });
+    }
+
+    document.getElementById("bsAddZoneBtn")?.addEventListener("click", () => {
+      const val = document.getElementById("bsCustomZone").value.trim();
+      if (!val) return;
+      if (!bsZones.includes(val)) bsZones.push(val);
+      document.getElementById("bsCustomZone").value = "";
+      bsRenderZoneList();
+    });
+    document.getElementById("bsCustomZone")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("bsAddZoneBtn").click();
+    });
+
+    document.getElementById("bsConfirm")?.addEventListener("click", () => {
+      if (!bsPending) return;
+      addStorageLocation(bsPending.name, bsPending.icon, bsPending.type, bsZones);
+      hideModal("buildStorageModal");
+    });
+
+    // ── AI: analyze a photo and return zone names ─────────────────
+    async function analyzeStorageLayoutPhoto(dataUrl, locType, locName) {
+      const key = (state.settings.claudeKey || "").trim();
+      if (!key) throw new Error("No API key");
+      const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
+      if (!match) throw new Error("Bad image format");
+      const mediaType = match[1];
+      const b64 = match[2];
+
+      const locLabel = { fridge:"refrigerator", freezer:"freezer", pantry:"pantry", counter:"kitchen countertop" }[locType] || locName;
+      const examples = {
+        fridge:  '["Top shelf","Middle shelf","Bottom shelf","Crisper drawer","Door - top","Door - bottom"]',
+        freezer: '["Top shelf","Middle drawer","Bottom basket","Door shelf"]',
+        pantry:  '["Top shelf","Eye-level shelf","Lower shelf","Bottom shelf","Door rack"]',
+        counter: '["Main counter","Fruit bowl area","Appliance corner"]',
+      };
+
+      const prompt = [
+        `This is a photo of the inside of a ${locLabel}.`,
+        "",
+        "Identify every distinct shelf, drawer, compartment, and storage zone that is visible.",
+        "Give each one a short, descriptive name (2–5 words).",
+        "",
+        "Rules:",
+        "- Be specific: 'Top shelf', 'Egg tray', 'Crisper drawer', 'Door top rack', etc.",
+        "- If there are two side-by-side drawers, name them separately (e.g. 'Left crisper', 'Right crisper')",
+        "- List zones top-to-bottom, front-to-back as they appear",
+        "- 3–10 zones is typical; don't over-split",
+        "",
+        `Return ONLY a valid JSON array of strings, no prose, no markdown. Example: ${examples[locType] || examples.fridge}`,
+      ].join("\n");
+
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 500,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
+              { type: "text", text: prompt },
+            ],
+          }],
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(`Claude API ${res.status}: ${j.error?.message || ""}`);
+      }
+      const data = await res.json();
+      const text = (data.content || []).map(c => c.text || "").join("\n");
+      const jsonMatch = text.match(/\[[\s\S]*?\]/);
+      if (!jsonMatch) throw new Error("No JSON array in response");
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (!Array.isArray(parsed)) throw new Error("Not an array");
+      return parsed.map(s => String(s).trim()).filter(Boolean);
+    }
 
     function addStorageLocation(name, icon, type, defaultZones) {
       if (!state.settings.storageLayout) state.settings.storageLayout = [];
