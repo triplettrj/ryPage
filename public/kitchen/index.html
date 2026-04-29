@@ -1406,9 +1406,21 @@
 </head>
 <body>
   <!-- Update banner — shown once per version, dismissed on tap -->
-  <div id="updateBanner" style="display:none; background:#1565c0; color:white; padding:10px 16px; font-size:13px; align-items:center; justify-content:space-between; gap:8px;">
-    <span>✨ <strong>Update:</strong> Barcode scanner improved — better iOS detection!</span>
-    <button onclick="document.getElementById('updateBanner').style.display='none'; localStorage.setItem('seenUpdate','v10');" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer;">Got it</button>
+  <div id="updateBanner" style="display:none; background:var(--grad-green); color:white; padding:0; font-size:13px;">
+    <div style="padding:12px 16px 4px; display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+      <span style="font-size:15px; font-weight:700; letter-spacing:-0.01em;">✨ What's new in My Kitchen</span>
+      <button onclick="document.getElementById('updateBanner').style.display='none'; localStorage.setItem('seenUpdate','v11');" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; white-space:nowrap; flex-shrink:0;">Got it</button>
+    </div>
+    <ul style="margin:4px 0 12px; padding:0 16px 0 32px; line-height:1.8; opacity:0.95;">
+      <li><strong>Cleaner Inventory</strong> — one view, storage layout cards only. No more duplicate flat list.</li>
+      <li><strong>Unassigned items</strong> — items without a zone now show at the bottom so nothing is lost.</li>
+      <li><strong>Need to restock</strong> — out-of-stock items surface in one place with a quick ↺ restock button.</li>
+      <li><strong>Barcode scan hero</strong> — scan barcodes is now the big primary action on the Scan tab.</li>
+      <li><strong>Meal planning in Cook</strong> — weekly plan lives inside the Cook tab, not a separate screen.</li>
+      <li><strong>AI expiry dates</strong> — Claude suggests best-by dates for any food item, not just 40 hardcoded ones.</li>
+      <li><strong>Cook → depletion review</strong> — after cooking, the app asks what you used and updates quantities.</li>
+      <li><strong>AI shelf layout</strong> — photo your fridge or pantry and Claude maps the zones for you.</li>
+    </ul>
   </div>
 
   <header>
@@ -2389,7 +2401,7 @@
     // STATE
     // ============================================================
     const STORAGE_KEY = "myKitchen:v2";
-    const UPDATE_VERSION = "v10";
+    const UPDATE_VERSION = "v11";
     let state = loadState();
 
     // Bridge for Firebase module (runs in a separate module scope)
