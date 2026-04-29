@@ -432,11 +432,79 @@
       return s;
     }
     function saveState() {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        // QuotaExceededError — storage full
+        if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
+          showToast("⚠️ Storage full — some data may not be saved. Clear old data in Settings.");
+        }
+      }
       window._state = state;
       if (window._fbScheduleSave) window._fbScheduleSave(state);
       scheduleAutoFetchPhotos();
     }
+
+    // ── Error handling utilities ──────────────────────────────────
+
+    /**
+     * Classify any thrown error into a short, user-friendly string.
+     * Handles: network offline, fetch abort/timeout, Claude API HTTP codes,
+     * OpenFoodFacts errors, and camera permission denial.
+     */
+    function apiError(err) {
+      if (!err) return "Something went wrong";
+      const msg = String(err.message || err);
+
+      // Offline / network unreachable
+      if (!navigator.onLine) return "You're offline — connect to the internet and try again";
+      if (err.name === "TypeError" && (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("fetch")))
+        return "Couldn't reach the server — check your connection";
+
+      // Timeout (AbortController)
+      if (err.name === "AbortError") return "Request timed out — try again";
+
+      // Camera permission
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")
+        return "Camera access denied — allow camera in your browser settings and try again";
+      if (err.name === "NotFoundError") return "No camera found on this device";
+      if (err.name === "NotReadableError") return "Camera is already in use by another app";
+
+      // Claude API HTTP codes
+      if (msg.includes("401")) return "Invalid API key — check your Claude API key in Settings";
+      if (msg.includes("403")) return "API key doesn't have permission for this action";
+      if (msg.includes("429")) return "Too many requests — wait a moment and try again";
+      if (msg.includes("500") || msg.includes("529")) return "Claude service error — try again in a moment";
+      if (msg.includes("Claude API")) return msg.replace(/^Claude API \d+:?\s*/, "") || "Claude API error";
+
+      // OpenFoodFacts
+      if (msg.includes("OpenFoodFacts")) return "Product database unavailable — try again or enter details manually";
+
+      // No API key
+      if (msg.includes("API key") || msg.includes("api key")) return msg;
+
+      return msg || "Something went wrong";
+    }
+
+    /**
+     * fetch() with a built-in timeout. Throws AbortError if ms exceeded.
+     * Default: 15 seconds.
+     */
+    function fetchWithTimeout(url, options = {}, ms = 15000) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, { ...options, signal: ctrl.signal })
+        .finally(() => clearTimeout(timer));
+    }
+
+    // ── Offline detection ─────────────────────────────────────────
+    function setOfflineBanner(offline) {
+      document.getElementById("offlineBanner")?.classList.toggle("show", offline);
+    }
+    window.addEventListener("online",  () => { setOfflineBanner(false); showToast("Back online ✓"); });
+    window.addEventListener("offline", () => setOfflineBanner(true));
+    // Set on load if already offline (e.g. airplane mode before opening app)
+    if (!navigator.onLine) setOfflineBanner(true);
 
     // Debounced auto-fetch of product photos. Runs ~3s after the last state change.
     let _autoFetchTimer = null;
@@ -639,7 +707,7 @@
       if (suggestExpiry(itemName)) return suggestExpiry(itemName);
 
       try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
+        const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
           method: "POST",
           headers: {
             "content-type": "application/json",
@@ -1822,7 +1890,7 @@ Return ONLY valid JSON — no prose:
         `Return ONLY a valid JSON array of strings, no prose, no markdown. Example: ${examples[locType] || examples.fridge}`,
       ].join("\n");
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -2160,7 +2228,7 @@ Return ONLY valid JSON — no prose:
         const jpegDataUrl = await normalizeImageToJpeg(rawDataUrl);
         renderCloseUpReview(jpegDataUrl);
       } catch (err) {
-        scanEl.innerHTML = `<div class="card" style="background:var(--red-light);"><p style="margin:0; color:var(--red);"><strong>Couldn't read that photo.</strong></p><p style="margin:6px 0 0; font-size:13px; color:var(--red);">${escapeHtml(err.message)}</p></div>`;
+        scanEl.innerHTML = `<div class="card" style="background:var(--red-light);"><p style="margin:0; color:var(--red);"><strong>Couldn't read that photo.</strong></p><p style="margin:6px 0 0; font-size:13px; color:var(--red);">${escapeHtml(apiError(err))}</p></div>`;
       }
     }
 
@@ -2264,7 +2332,7 @@ Return ONLY valid JSON — no prose:
           applyCloseUpInfo(info, "Claude");
           document.getElementById("closeUpStatus").textContent = "✓ Claude filled in what it could read. Fix anything wrong, then save.";
         }).catch((err) => {
-          document.getElementById("closeUpStatus").innerHTML = `<span style="color:var(--red);">Scan failed: ${escapeHtml(err.message)}.</span> Fill in manually below.`;
+          document.getElementById("closeUpStatus").innerHTML = `<span style="color:var(--red);">Scan failed: ${escapeHtml(apiError(err))}.</span> Fill in manually below.`;
         });
       }
     }
@@ -2315,7 +2383,7 @@ Return ONLY valid JSON — no prose:
         '',
         'Example: {"name":"marinara sauce","brand":"Rao\'s Homemade","canonicalName":"marinara sauce","qty":24,"unit":"oz","upc":"715365110012"}',
       ].join("\n");
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -2360,7 +2428,7 @@ Return ONLY valid JSON — no prose:
       const cleaned = String(upc || "").trim().replace(/\D/g, "");
       if (!cleaned || cleaned.length < 8) throw new Error("UPC must be 8–14 digits");
       const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cleaned)}.json?fields=product_name,brands,quantity,product_quantity,product_quantity_unit,categories_tags,generic_name`;
-      const res = await fetch(url);
+      const res = await fetchWithTimeout(url, {}, 10000);
       if (!res.ok) throw new Error(`OpenFoodFacts ${res.status}`);
       const data = await res.json();
       if (data.status !== 1 || !data.product) return null;
@@ -2412,7 +2480,7 @@ Return ONLY valid JSON — no prose:
           () => { /* scan errors are normal, ignore */ }
         );
       } catch (err) {
-        statusEl.innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(err.message)}</span>`;
+        statusEl.innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(apiError(err))}</span>`;
       }
     }
 
@@ -2449,7 +2517,7 @@ Return ONLY valid JSON — no prose:
           if (hint) hint.textContent = `UPC ${code} — not in OpenFoodFacts, fill in details manually`;
         }
       } catch (err) {
-        showToast(`Lookup failed: ${err.message}`);
+        showToast(`Lookup failed: ${apiError(err)}`);
       } finally {
         closeBarcodeScanner();
       }
@@ -2503,7 +2571,7 @@ Return ONLY valid JSON — no prose:
         );
         statusEl.textContent = "Point the barcode at the green box";
       } catch (err) {
-        statusEl.innerHTML = `<span style="color:var(--red);">Camera error: ${escapeHtml(err.message)}</span>`;
+        statusEl.innerHTML = `<span style="color:var(--red);">Camera error: ${escapeHtml(apiError(err))}</span>`;
       }
     }
 
@@ -2846,7 +2914,7 @@ Return ONLY valid JSON — no prose:
           document.getElementById("scanItemsList").innerHTML = `
             <div class="card" style="background:var(--red-light);">
               <p style="margin:0; color:var(--red);"><strong>Scan failed.</strong></p>
-              <p style="margin:6px 0 0; font-size:13px; color:var(--red);">${escapeHtml(err.message)}</p>
+              <p style="margin:6px 0 0; font-size:13px; color:var(--red);">${escapeHtml(apiError(err))}</p>
               <p style="margin:8px 0 0; font-size:13px;">You can still add items manually below.</p>
             </div>`;
           scanDraftItems = [emptyScanItem()];
@@ -2969,7 +3037,7 @@ Return ONLY valid JSON — no prose:
         '[{"name":"whole milk","brand":"Horizon","qty":1,"unit":"gal"},{"name":"greek yogurt","brand":"Fage","qty":32,"unit":"oz"}]',
       ].join("\n");
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -3362,7 +3430,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const messages = (state.chatHistory || []).slice(-10).map(m => ({ role: m.role, content: m.content }));
       messages.push({ role: "user", content: userMessage });
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "content-type": "application/json",
@@ -3427,7 +3495,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         haptic(10);
       } catch (err) {
         typing.remove();
-        state.chatHistory.push({ role: "assistant", content: `⚠️ ${err.message}`, ts: new Date().toISOString() });
+        state.chatHistory.push({ role: "assistant", content: `⚠️ ${apiError(err)}`, ts: new Date().toISOString() });
         saveState();
         renderChat();
       }
@@ -3463,7 +3531,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         showToast(`✨ Planned ${applied} meal${applied === 1 ? "" : "s"}`);
         haptic(20);
       } catch (err) {
-        alert(`Auto-plan failed: ${err.message}`);
+        showToast(`Auto-plan failed: ${apiError(err)}`);
       } finally {
         btn.disabled = false;
         btn.textContent = original;
@@ -3578,7 +3646,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         state.settings.claudeKey = k; saveState();
         status.textContent = "Testing…";
         try {
-          const res = await fetch("https://api.anthropic.com/v1/messages", {
+          const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
               "content-type": "application/json",
@@ -3599,7 +3667,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
             status.textContent = `❌ ${msg}`;
           }
         } catch (err) {
-          status.textContent = `❌ ${err.message}`;
+          status.textContent = `❌ ${apiError(err)}`;
         }
       });
       document.getElementById("clearClaudeKey").addEventListener("click", () => {
@@ -3655,7 +3723,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
           const code = String(upc).replace(/\D/g, "");
           if (code) {
             const url = `https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=image_front_url,image_url,image_small_url,product_name,brands`;
-            const res = await fetch(url);
+            const res = await fetchWithTimeout(url, {}, 10000);
             if (res.ok) {
               const data = await res.json();
               const p = data && data.product;
@@ -3670,7 +3738,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         const q = [brand, name].filter(Boolean).join(" ").trim();
         if (!q) return null;
         const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=5&fields=image_front_url,image_url,image_small_url,product_name`;
-        const res = await fetch(url);
+        const res = await fetchWithTimeout(url, {}, 10000);
         if (!res.ok) return null;
         const data = await res.json();
         const products = (data && data.products) || [];
@@ -3777,7 +3845,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
           saveState(); applyTheme(); renderCook(); renderInventory(); renderPlan();
           showToast("Import complete");
         } catch (err) {
-          alert("Couldn't read that file. Is it a valid export?");
+          showToast("Couldn't read that file — is it a valid Kitchen export?");
         }
       };
       reader.readAsText(f);
@@ -4003,7 +4071,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         renderScanResult(jpegDataUrl);
       } catch (err) {
         if (scanEl) {
-          scanEl.innerHTML = `<div class="card" style="background:#fde8e8;"><p style="margin:0; color:#7b1f1f;"><strong>Couldn't read that photo.</strong></p><p style="margin:6px 0 0; font-size:13px; color:#7b1f1f;">${err.message}. Try a JPEG or PNG.</p></div>`;
+          scanEl.innerHTML = `<div class="card" style="background:#fde8e8;"><p style="margin:0; color:#7b1f1f;"><strong>Couldn't read that photo.</strong></p><p style="margin:6px 0 0; font-size:13px; color:#7b1f1f;">${escapeHtml(apiError(err))}. Try a JPEG or PNG.</p></div>`;
         }
       }
       // Reset input so picking the same file again re-triggers change.
