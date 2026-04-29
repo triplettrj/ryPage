@@ -467,6 +467,26 @@
     .dupe-warn .dupe-cancel { background: transparent; color: var(--muted); }
     .dupe-warn .dupe-add { background: var(--amber); color: #000; }
 
+    /* Depletion review modal */
+    .dm-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .dm-row:last-child { border-bottom: none; }
+    .dm-row input[type="checkbox"] {
+      width: 18px; height: 18px; accent-color: var(--green);
+      flex-shrink: 0; margin-top: 2px; cursor: pointer;
+    }
+    .dm-row-body { flex: 1; min-width: 0; }
+    .dm-ing-name { font-weight: 600; font-size: 14px; }
+    .dm-ing-amount { font-size: 13px; color: var(--muted); margin-top: 1px; }
+    .dm-stock { font-size: 12px; margin-top: 3px; }
+    .dm-stock.has { color: var(--green); }
+    .dm-stock.out { color: var(--red); font-weight: 600; }
+    .dm-stock.none { color: var(--muted2); font-style: italic; }
+    .dm-row.skip .dm-ing-name,
+    .dm-row.skip .dm-ing-amount { color: var(--muted2); }
+
     /* FAB */
     .fab {
       position: fixed;
@@ -1630,6 +1650,21 @@
         <button class="btn btn-green" id="rmStartCook">▶ Start cooking mode</button>
         <button class="btn btn-primary" id="rmCookedIt">✅ Recipe made — remove ingredients from inventory</button>
         <button class="btn btn-ghost" id="rmAddToPlan">📅 Add to meal plan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Depletion review modal -->
+  <div class="modal-backdrop" id="depleteModal">
+    <div class="modal">
+      <button class="close-x" data-close="depleteModal">×</button>
+      <h2 id="dmTitle">✅ Update inventory?</h2>
+      <p class="subtitle" id="dmSub">Uncheck anything you didn't actually use. We'll subtract the rest from your inventory.</p>
+      <div id="dmList"></div>
+      <div id="dmDepleted" style="display:none; margin-top:10px; padding:10px 12px; border-radius:10px; background:var(--amber-light); font-size:13px; color:var(--text);"></div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn btn-secondary" id="dmSkip">Just log it</button>
+        <button class="btn btn-green" id="dmConfirm">Update inventory</button>
       </div>
     </div>
   </div>
@@ -4455,6 +4490,10 @@
     });
     document.getElementById("bbSaveAll")?.addEventListener("click", saveBulkBarcodeItems);
 
+    // Depletion modal
+    document.getElementById("dmConfirm")?.addEventListener("click", applyDepletion);
+    document.getElementById("dmSkip")?.addEventListener("click", logCookedOnly);
+
     function saveCloseUpItem() {
       if (!closeUpDraft) return;
       const nameEl = document.getElementById("cuName");
@@ -4838,64 +4877,148 @@
       document.getElementById("cookMode").classList.remove("show");
     }
 
-    function recordCooked() {
+    function openDepleteModal() {
       if (!openRecipeId) return;
       const r = getRecipe(openRecipeId);
       if (!r) return;
-      // Subtract 1 of each ingredient from inventory; track which entries depleted
-      // to qty:0 so we can auto-add to shopping list (unless the recipe unit is
-      // trivial like tsp/tbsp — 1 tsp of oil doesn't actually empty a bottle).
-      const removed = [];
-      const depletedToAutoAdd = [];
-      r.ingredients.forEach(ing => {
-        // Skip trivial amounts entirely — 1 tsp oil doesn't deplete anything.
-        if (isTrivialUnit(ing.unit)) return;
-        const inv = findInventoryFor(ing.name);
-        if (!inv) return;
-        removed.push({ key: inventoryKey(inv), before: { ...inv } });
-        if (inv.qty != null && inv.qty > 1) {
-          inv.qty = Math.max(0, inv.qty - 1);
-        } else {
-          // Would deplete to 0. Keep the entry at qty:0 (Need to restock)
-          // instead of deleting, so inventory keeps the product identity.
-          inv.qty = 0;
-          depletedToAutoAdd.push(inv);
-        }
+
+      // Close cook mode if open
+      closeCookMode();
+
+      document.getElementById("dmTitle").textContent = `✅ Did you use these?`;
+      document.getElementById("dmSub").textContent = `Cooked: ${r.name}. Uncheck anything you didn't use — we'll subtract the rest from your inventory.`;
+      document.getElementById("dmDepleted").style.display = "none";
+
+      // Build row data for each ingredient
+      const scale = familySize / (r.baseServings || 4);
+      const rows = r.ingredients.map(ing => {
+        const trivial = isTrivialUnit(ing.unit);
+        const inv = trivial ? null : findInventoryFor(ing.name);
+        const scaledQty = ing.qty != null ? Math.round(ing.qty * scale * 100) / 100 : null;
+        return { ing, trivial, inv, scaledQty };
       });
-      state.history[r.id] = new Date().toISOString();
-      saveState();
-      // Ask the user before adding depleted items to the shopping list.
-      const eligibleForList = depletedToAutoAdd.filter(inv => !shoppingListMatch(inv.name, inv.brand));
-      let actuallyAdded = [];
-      if (eligibleForList.length) {
-        const names = eligibleForList.map(i => `• ${i.name}${i.brand ? ` (${i.brand})` : ""}`).join("\n");
-        const ok = confirm(`These ran out:\n\n${names}\n\nAdd them to your shopping list?`);
-        if (ok) {
-          eligibleForList.forEach(inv => {
-            addToShoppingList({
-              name: inv.name, brand: inv.brand || "", qty: 1,
-              unit: inv.unit || "", reason: `ran out cooking ${r.name}`,
-            }, { allowDupe: false });
-            actuallyAdded.push(inv);
-          });
+
+      document.getElementById("dmList").innerHTML = rows.map((row, i) => {
+        const { ing, trivial, inv, scaledQty } = row;
+        const amtText = scaledQty != null ? `${scaledQty}${ing.unit ? " " + ing.unit : ""}` : (ing.unit || "");
+        const disabled = trivial || !inv;
+        const checked = !disabled;
+
+        let stockHtml = "";
+        if (trivial) {
+          stockHtml = `<div class="dm-stock none">Small amount — not tracked</div>`;
+        } else if (!inv) {
+          stockHtml = `<div class="dm-stock none">Not in your inventory</div>`;
+        } else {
+          const cur = inv.qty != null ? `${formatQty(inv.qty)}${inv.unit ? " " + inv.unit : ""}` : "some";
+          const after = inv.qty != null ? Math.max(0, inv.qty - (scaledQty || 1)) : null;
+          const afterText = after != null ? `${formatQty(after)}${inv.unit ? " " + inv.unit : ""}` : "unknown";
+          const cls = after === 0 ? "out" : "has";
+          const runOut = after === 0 ? " — runs out!" : "";
+          stockHtml = `<div class="dm-stock ${cls}">In stock: ${cur} → ${afterText}${runOut}</div>`;
+        }
+
+        return `
+          <label class="dm-row${disabled ? " skip" : ""}" data-i="${i}">
+            <input type="checkbox" class="dm-cb" data-i="${i}" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""} />
+            <div class="dm-row-body">
+              <div class="dm-ing-name">${escapeHtml(ing.name)}</div>
+              <div class="dm-ing-amount">${escapeHtml(amtText)}</div>
+              ${stockHtml}
+            </div>
+          </label>`;
+      }).join("");
+
+      // Preview: update "runs out" warning when checkboxes change
+      function updateDepletePreview() {
+        const runningOut = rows.filter((row, i) => {
+          const cb = document.querySelector(`.dm-cb[data-i="${i}"]`);
+          if (!cb || !cb.checked || row.trivial || !row.inv) return false;
+          const after = row.inv.qty != null ? Math.max(0, row.inv.qty - (row.scaledQty || 1)) : null;
+          return after === 0;
+        }).map(row => row.ing.name);
+        const depEl = document.getElementById("dmDepleted");
+        if (runningOut.length) {
+          depEl.style.display = "";
+          depEl.innerHTML = `⚠️ <strong>Will run out:</strong> ${runningOut.map(n => escapeHtml(n)).join(", ")} — we'll add them to your shopping list.`;
+        } else {
+          depEl.style.display = "none";
         }
       }
-      const addedCount = actuallyAdded.length;
+      updateDepletePreview();
+      document.getElementById("dmList").querySelectorAll(".dm-cb").forEach(cb => {
+        cb.addEventListener("change", updateDepletePreview);
+      });
+
+      showModal("depleteModal");
+    }
+
+    function applyDepletion() {
+      if (!openRecipeId) return;
+      const r = getRecipe(openRecipeId);
+      if (!r) return;
+
+      const scale = familySize / (r.baseServings || 4);
+      const removed = [];
+      const depletedItems = [];
+
+      r.ingredients.forEach((ing, i) => {
+        const cb = document.querySelector(`.dm-cb[data-i="${i}"]`);
+        if (!cb || !cb.checked || isTrivialUnit(ing.unit)) return;
+        const inv = findInventoryFor(ing.name);
+        if (!inv) return;
+        const scaledQty = ing.qty != null ? Math.round(ing.qty * scale * 100) / 100 : 1;
+        removed.push({ key: inventoryKey(inv), before: { ...inv } });
+        const newQty = inv.qty != null ? Math.max(0, inv.qty - scaledQty) : null;
+        inv.qty = newQty;
+        if (newQty === 0) depletedItems.push(inv);
+      });
+
+      state.history[r.id] = new Date().toISOString();
+      saveState();
+      hideModal("depleteModal");
+
+      // Prompt to add depleted items to shopping list
+      const eligible = depletedItems.filter(inv => !shoppingListMatch(inv.name, inv.brand));
+      let addedCount = 0;
+      eligible.forEach(inv => {
+        addToShoppingList({
+          name: inv.name, brand: inv.brand || "", qty: 1,
+          unit: inv.unit || "", reason: `ran out cooking ${r.name}`,
+        }, { allowDupe: false });
+        addedCount++;
+      });
+
       const toastMsg = addedCount
         ? `Logged ${r.name} · added ${addedCount} to shopping list`
         : `Logged ${r.name}`;
       showToast(toastMsg, "Undo", () => {
-        removed.forEach(({key, before}) => { state.inventory[key] = before; });
+        removed.forEach(({ key, before }) => { state.inventory[key] = before; });
         delete state.history[r.id];
-        // Roll back auto-adds
-        depletedToAutoAdd.forEach(inv => {
-          const idx = (state.shoppingList || []).findIndex(s => !s.checked && normalize(s.name) === normalize(inv.name) && normalize(s.brand) === normalize(inv.brand || ""));
+        eligible.forEach(inv => {
+          const idx = (state.shoppingList || []).findIndex(s =>
+            !s.checked && normalize(s.name) === normalize(inv.name) && normalize(s.brand || "") === normalize(inv.brand || ""));
           if (idx >= 0) state.shoppingList.splice(idx, 1);
         });
         saveState(); renderCook(); renderInventory();
         if (typeof renderShoppingList === "function") renderShoppingList();
       });
       haptic(20);
+      renderCook();
+      renderInventory();
+    }
+
+    // "Just log it" — mark as cooked, skip inventory update
+    function logCookedOnly() {
+      if (!openRecipeId) return;
+      const r = getRecipe(openRecipeId);
+      if (!r) return;
+      state.history[r.id] = new Date().toISOString();
+      saveState();
+      hideModal("depleteModal");
+      showToast(`Logged ${r.name}`);
+      haptic(10);
+      renderCook();
     }
 
     // ============================================================
@@ -5531,8 +5654,8 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     });
     document.getElementById("rmStartCook").addEventListener("click", startCookMode);
     document.getElementById("rmCookedIt").addEventListener("click", () => {
-      recordCooked();
       hideModal("recipeModal");
+      openDepleteModal();
     });
     document.getElementById("rmAddToPlan").addEventListener("click", () => {
       hideModal("recipeModal");
@@ -5550,8 +5673,8 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       if (cookStep < r.steps.length - 1) {
         cookStep++; renderCookStep(); haptic(5);
       } else {
-        closeCookMode();
-        recordCooked();
+        // Last step — show depletion review (closeCookMode is called inside openDepleteModal)
+        openDepleteModal();
       }
     });
     document.getElementById("cmClose").addEventListener("click", closeCookMode);
