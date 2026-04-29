@@ -4929,25 +4929,34 @@
           </label>`;
       }).join("");
 
-      // Preview: update "runs out" warning when checkboxes change
-      function updateDepletePreview() {
+      // Rebuild the shopping list section whenever ingredient checkboxes change
+      function updateShopSection() {
         const runningOut = rows.filter((row, i) => {
           const cb = document.querySelector(`.dm-cb[data-i="${i}"]`);
           if (!cb || !cb.checked || row.trivial || !row.inv) return false;
           const after = row.inv.qty != null ? Math.max(0, row.inv.qty - (row.scaledQty || 1)) : null;
           return after === 0;
-        }).map(row => row.ing.name);
+        });
         const depEl = document.getElementById("dmDepleted");
-        if (runningOut.length) {
-          depEl.style.display = "";
-          depEl.innerHTML = `⚠️ <strong>Will run out:</strong> ${runningOut.map(n => escapeHtml(n)).join(", ")} — we'll add them to your shopping list.`;
-        } else {
+        if (!runningOut.length) {
           depEl.style.display = "none";
+          depEl.innerHTML = "";
+          return;
         }
+        depEl.style.display = "";
+        depEl.innerHTML = `
+          <div style="font-weight:600; margin-bottom:8px;">🛒 Add to shopping list?</div>
+          ${runningOut.map(row => `
+            <label style="display:flex; align-items:center; gap:8px; padding:4px 0; cursor:pointer;">
+              <input type="checkbox" class="dm-shop-cb" data-name="${escapeHtml(row.ing.name)}"
+                style="width:16px; height:16px; accent-color:var(--green); flex-shrink:0;" />
+              <span style="font-size:13px;">${escapeHtml(row.ing.name)}${row.inv.brand ? ` <span style="color:var(--muted);">· ${escapeHtml(row.inv.brand)}</span>` : ""}</span>
+            </label>`).join("")}
+          <div style="font-size:11px; color:var(--muted); margin-top:6px;">Uncheck anything you don't need to buy again.</div>`;
       }
-      updateDepletePreview();
+      updateShopSection();
       document.getElementById("dmList").querySelectorAll(".dm-cb").forEach(cb => {
-        cb.addEventListener("change", updateDepletePreview);
+        cb.addEventListener("change", updateShopSection);
       });
 
       showModal("depleteModal");
@@ -4974,14 +4983,13 @@
         if (newQty === 0) depletedItems.push(inv);
       });
 
-      state.history[r.id] = new Date().toISOString();
-      saveState();
-      hideModal("depleteModal");
-
-      // Prompt to add depleted items to shopping list
-      const eligible = depletedItems.filter(inv => !shoppingListMatch(inv.name, inv.brand));
+      // Only add items the user explicitly checked in the shopping list section
+      const shopChecked = new Set(
+        [...document.querySelectorAll(".dm-shop-cb:checked")].map(cb => cb.dataset.name)
+      );
+      const toAdd = depletedItems.filter(inv => shopChecked.has(inv.name));
       let addedCount = 0;
-      eligible.forEach(inv => {
+      toAdd.forEach(inv => {
         addToShoppingList({
           name: inv.name, brand: inv.brand || "", qty: 1,
           unit: inv.unit || "", reason: `ran out cooking ${r.name}`,
@@ -4989,13 +4997,17 @@
         addedCount++;
       });
 
+      state.history[r.id] = new Date().toISOString();
+      saveState();
+      hideModal("depleteModal");
+
       const toastMsg = addedCount
         ? `Logged ${r.name} · added ${addedCount} to shopping list`
         : `Logged ${r.name}`;
       showToast(toastMsg, "Undo", () => {
         removed.forEach(({ key, before }) => { state.inventory[key] = before; });
         delete state.history[r.id];
-        eligible.forEach(inv => {
+        toAdd.forEach(inv => {
           const idx = (state.shoppingList || []).findIndex(s =>
             !s.checked && normalize(s.name) === normalize(inv.name) && normalize(s.brand || "") === normalize(inv.brand || ""));
           if (idx >= 0) state.shoppingList.splice(idx, 1);
