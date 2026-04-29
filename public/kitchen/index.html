@@ -2382,12 +2382,6 @@
       { name: "Frozen peas",       qty: 1,   unit: "bag",     loc: "freezer" },
     ];
 
-    const LOCATION_META = {
-      pantry:  { icon: "🥫", title: "Pantry" },
-      fridge:  { icon: "🧊", title: "Fridge" },
-      freezer: { icon: "❄️", title: "Freezer" },
-      counter: { icon: "🍞", title: "Counter" },
-    };
 
     const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
@@ -2963,7 +2957,10 @@ Return ONLY valid JSON — no prose:
       if (existingOnList || existingInInv) {
         const reasons = [];
         if (existingOnList) reasons.push(`already on the list${existingOnList.brand ? ` as "${existingOnList.brand}"` : ""}`);
-        if (existingInInv) reasons.push(`already in your ${existingInInv.loc || "inventory"}${existingInInv.brand ? ` (${existingInInv.brand})` : ""}`);
+        if (existingInInv) {
+          const invLoc = (() => { const l = getStorageLayout().find(l => l.id === existingInInv.storageLocId); const z = l?.zones?.find(z => z.id === existingInInv.storageZoneId); return l ? `${l.icon} ${l.name}${z ? " › " + z.name : ""}` : "inventory"; })();
+          reasons.push(`already in your ${invLoc}${existingInInv.brand ? ` (${existingInInv.brand})` : ""}`);
+        }
         showDupeWarn(reasons.join(" · "), entry);
         return;
       }
@@ -3997,133 +3994,6 @@ Return ONLY valid JSON — no prose:
       renderStorageSection();
     }
 
-    function _renderInventoryLegacy() {
-      const container = document.getElementById("inventoryList");
-      if (!container) return;
-      const allItems = Object.entries(state.inventory);
-      if (allItems.length === 0) {
-        container.innerHTML = "";
-        return;
-      }
-
-      // Legacy flat-list path (kept for reference; not used in current UI)
-      const legacyItems = allItems.filter(([, i]) => !i.storageLocId);
-
-      // Split: in-stock (qty > 0 or qty null) vs need-to-restock (qty === 0)
-      const stocked = [];
-      const restock = [];
-      allItems.forEach(([k, i]) => {
-        const entry = { key: k, item: i };
-        if (i.qty === 0) restock.push(entry);
-        else if (!i.storageLocId) stocked.push(entry);
-      });
-
-      let html = "";
-
-      // Legacy in-stock items grouped by location
-      if (stocked.length) {
-        const grouped = {};
-        stocked.forEach(({key, item}) => {
-          const loc = (item.loc || "pantry").toLowerCase();
-          if (!grouped[loc]) grouped[loc] = [];
-          grouped[loc].push({key, item});
-        });
-        const order = ["pantry","fridge","freezer","counter"];
-        const metaFallback = { icon: "📦", title: "Other" };
-        // Also include any locs not in order (e.g. custom)
-        const allLocs = [...new Set([...order, ...Object.keys(grouped)])];
-        html += allLocs.filter(loc => grouped[loc]).map(loc => {
-          const meta = LOCATION_META[loc] || metaFallback;
-          const rows = grouped[loc].sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
-            const qtyText = formatQty(item.qty) + (item.unit ? " " + item.unit : "");
-            const badges = [];
-            if (isExpired(item)) badges.push(`<span class="badge expired">expired</span>`);
-            else if (item.expiry) {
-              const diff = (new Date(item.expiry).getTime() - Date.now()) / (24*3600*1000);
-              if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
-            }
-            if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
-            if (item.zone) badges.push(`<span class="badge" style="background:var(--green-light);color:var(--green-dark);font-size:10px;">${escapeHtml(item.zone)}</span>`);
-            const iconHtml = item.image
-              ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='${meta.icon}'" />`
-              : meta.icon;
-            return `
-              <div class="inv-item" data-key="${escapeHtml(key)}">
-                <div class="icon">${iconHtml}</div>
-                <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
-                <div class="badges">${badges.join("")}</div>
-                <div class="qty">${qtyText}</div>
-                <button class="delete" data-action="delete" aria-label="Delete">×</button>
-              </div>`;
-          }).join("");
-          return `<div class="inv-group-title">${meta.icon} ${meta.title} <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${grouped[loc].length})</span></div>${rows}`;
-        }).join("");
-      }
-
-      // Need to restock section
-      if (restock.length) {
-        const rows = restock.sort((a,b) => a.item.name.localeCompare(b.item.name)).map(({key, item}) => {
-          const restockIconHtml = item.image
-            ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='🛒'" />`
-            : "🛒";
-          return `
-            <div class="inv-item restock" data-key="${escapeHtml(key)}">
-              <div class="icon" style="background:var(--red-light);">${restockIconHtml}</div>
-              <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400; color:var(--muted); font-size:12px; margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
-              <div class="badges"><span class="badge expired" style="background:var(--red-light); color:var(--red);">out</span></div>
-              <button class="btn-mini" data-action="restock" aria-label="Mark as restocked">↺</button>
-              <button class="delete" data-action="delete" aria-label="Delete">×</button>
-            </div>`;
-        }).join("");
-        html += `<div class="inv-group-title" style="color:var(--red);">🛒 Need to restock <span style="color:var(--muted2); font-weight:500; text-transform:none; letter-spacing:0;">(${restock.length})</span></div>${rows}`;
-      }
-
-      container.innerHTML = html;
-      // Sync the storage layout view (above inventoryList) with latest item counts
-      renderStorageSection();
-
-      container.querySelectorAll(".inv-item").forEach(el => {
-        el.addEventListener("click", (e) => {
-          const action = e.target.dataset.action;
-          const k = el.dataset.key;
-          if (action === "delete") {
-            const removed = state.inventory[k];
-            delete state.inventory[k];
-            // Also remove any open shopping-list entry for it
-            const shopIdx = (state.shoppingList || []).findIndex(s => !s.checked && inventoryKey({canonicalName: s.canonicalName || s.name, brand: s.brand}) === k);
-            let removedShop = null;
-            if (shopIdx >= 0) { removedShop = state.shoppingList.splice(shopIdx, 1)[0]; }
-            saveState(); renderInventory();
-            showToast(`Removed ${removed.name}`, "Undo", () => {
-              state.inventory[k] = removed;
-              if (removedShop) state.shoppingList.splice(shopIdx, 0, removedShop);
-              saveState(); renderInventory();
-            });
-            haptic(10);
-          } else if (action === "restock") {
-            // Quick restock from "Need to restock" row: set qty back to 1, remove from shopping list
-            const item = state.inventory[k];
-            if (!item) return;
-            const prev = { ...item };
-            item.qty = 1;
-            const shopIdx = (state.shoppingList || []).findIndex(s => !s.checked && inventoryKey({canonicalName: s.canonicalName || s.name, brand: s.brand}) === k);
-            let removedShop = null;
-            if (shopIdx >= 0) removedShop = state.shoppingList.splice(shopIdx, 1)[0];
-            saveState(); renderInventory();
-            if (typeof renderShoppingList === "function") renderShoppingList();
-            showToast(`${item.name} back in stock`, "Undo", () => {
-              state.inventory[k] = prev;
-              if (removedShop) state.shoppingList.splice(shopIdx, 0, removedShop);
-              saveState(); renderInventory();
-              if (typeof renderShoppingList === "function") renderShoppingList();
-            });
-            haptic(10);
-          } else {
-            openItem(k);
-          }
-        });
-      });
-    }
 
     function openItem(key) {
       editingItemKey = key;
@@ -4365,7 +4235,7 @@ Return ONLY valid JSON — no prose:
 
     function renderCloseUpReview(dataUrl) {
       const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
-      closeUpDraft = { dataUrl, name: "", brand: "", canonicalName: "", qty: null, unit: "", upc: "", loc: "pantry", size: "" };
+      closeUpDraft = { dataUrl, name: "", brand: "", canonicalName: "", qty: null, unit: "", upc: "", storageLocId: scanTarget?.locId || "", storageZoneId: scanTarget?.zoneId || "", size: "" };
 
       const container = document.getElementById("scanResult");
       container.innerHTML = `
@@ -4407,18 +4277,36 @@ Return ONLY valid JSON — no prose:
             </div>
             <p id="cuUpcHint" style="color:var(--muted); font-size:11px; margin:4px 0 0;"></p>
           </div>
-          <div class="field">
-            <label>Where does it go?</label>
-            <select id="cuLoc">
-              <option value="pantry">Pantry</option>
-              <option value="fridge">Fridge</option>
-              <option value="freezer">Freezer</option>
-              <option value="counter">Counter</option>
+          <div class="field" id="cuZoneField">
+            <label>Storage zone</label>
+            <select id="cuZone">
+              <option value="">— Unassigned —</option>
             </select>
           </div>
           <div id="cuDupeWarn"></div>
           <button class="btn btn-green" id="cuSave" style="width:100%;">Save to inventory</button>
         </div>`;
+
+      // Populate zone picker
+      const cuZoneLayout = getStorageLayout();
+      const cuZoneSelect = document.getElementById("cuZone");
+      if (cuZoneLayout.length) {
+        cuZoneSelect.innerHTML = `<option value="">— Unassigned —</option>` +
+          cuZoneLayout.map(loc =>
+            `<optgroup label="${escapeHtml(loc.icon + " " + loc.name)}">${
+              (loc.zones || []).map(zone =>
+                `<option value="${escapeHtml(loc.id)}|${escapeHtml(zone.id)}">${escapeHtml(zone.name)}</option>`
+              ).join("")
+            }</optgroup>`
+          ).join("");
+        // Pre-select scan target zone if active
+        if (scanTarget) cuZoneSelect.value = `${scanTarget.locId}|${scanTarget.zoneId}`;
+      }
+      cuZoneSelect.addEventListener("change", (e) => {
+        const [locId = "", zoneId = ""] = e.target.value ? e.target.value.split("|") : [];
+        closeUpDraft.storageLocId = locId;
+        closeUpDraft.storageZoneId = zoneId;
+      });
 
       // Wire inputs → draft
       const syncField = (id, key) => {
@@ -4436,7 +4324,6 @@ Return ONLY valid JSON — no prose:
       syncField("cuUpc", "upc");
       document.getElementById("cuQty").addEventListener("input", (e) => { closeUpDraft.qty = e.target.value ? Number(e.target.value) : null; });
       document.getElementById("cuUnit").addEventListener("change", (e) => { closeUpDraft.unit = e.target.value; });
-      document.getElementById("cuLoc").addEventListener("change", (e) => { closeUpDraft.loc = e.target.value; });
 
       document.getElementById("cuScanBarcode").addEventListener("click", openBarcodeScanner);
       document.getElementById("cuSave").addEventListener("click", saveCloseUpItem);
@@ -4871,11 +4758,14 @@ Return ONLY valid JSON — no prose:
       const qtyEl = document.getElementById("cuQty");
       const unitEl = document.getElementById("cuUnit");
       const upcEl = document.getElementById("cuUpc");
-      const locEl = document.getElementById("cuLoc");
       const name = (nameEl.value || "").trim();
       if (!name) { nameEl.focus(); alert("Name is required."); return; }
       const upc = (upcEl.value || "").replace(/\D/g, "");
       const canonical = (canonicalEl.value || "").trim().toLowerCase() || normalize(name);
+
+      // Zone from picker or draft (set via change listener)
+      const cuZoneVal = document.getElementById("cuZone")?.value || "";
+      const [cuLocId = "", cuZoneId = ""] = cuZoneVal ? cuZoneVal.split("|") : [];
 
       const item = {
         name,
@@ -4883,7 +4773,8 @@ Return ONLY valid JSON — no prose:
         canonicalName: canonical,
         qty: qtyEl.value ? Number(qtyEl.value) : 1,
         unit: unitEl.value || "",
-        loc: locEl.value || "pantry",
+        storageLocId: cuLocId || closeUpDraft.storageLocId || "",
+        storageZoneId: cuZoneId || closeUpDraft.storageZoneId || "",
         expiry: null,
         upc: upc || "",
       };
@@ -4892,9 +4783,12 @@ Return ONLY valid JSON — no prose:
       const dupe = findInventoryDupe(item);
       if (dupe) {
         const warnEl = document.getElementById("cuDupeWarn");
+        const dupeZone = dupe.storageLocId
+          ? (() => { const l = getStorageLayout().find(l => l.id === dupe.storageLocId); const z = l?.zones?.find(z => z.id === dupe.storageZoneId); return l ? `${l.icon} ${l.name}${z ? " › " + z.name : ""}` : ""; })()
+          : "inventory";
         const reason = dupe.upc && dupe.upc === item.upc
-          ? `Same UPC already in your ${dupe.loc || "inventory"}`
-          : `Same item/brand already in your ${dupe.loc || "inventory"}`;
+          ? `Same UPC already in your ${dupeZone}`
+          : `Same item/brand already in your ${dupeZone}`;
         warnEl.innerHTML = `
           <div class="dupe-warn">
             <strong>⚠️ Already have this?</strong><br/>
@@ -4934,7 +4828,12 @@ Return ONLY valid JSON — no prose:
       });
       if (slIdx >= 0) state.shoppingList.splice(slIdx, 1);
       saveState();
-      finishCloseUpSave(`Added ${item.name}${item.brand ? " (" + item.brand + ")" : ""} to ${item.loc}`);
+      // Toast: show zone name if assigned
+      const layout = getStorageLayout();
+      const loc = layout.find(l => l.id === item.storageLocId);
+      const zone = loc?.zones?.find(z => z.id === item.storageZoneId);
+      const dest = loc ? `${loc.icon} ${loc.name}${zone ? " › " + zone.name : ""}` : "inventory";
+      finishCloseUpSave(`Added ${item.name}${item.brand ? " (" + item.brand + ")" : ""} to ${dest}`);
     }
 
     function finishCloseUpSave(msg) {
