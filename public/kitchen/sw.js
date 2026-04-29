@@ -1,10 +1,13 @@
-// My Kitchen - Service Worker
+// My Kitchen — Service Worker
 // Network-first strategy: always tries to fetch latest, falls back to cache when offline.
 
-const CACHE_VERSION = "my-kitchen-v11";
+const CACHE_VERSION = "my-kitchen-v12";
 const SHELL = [
   "./",
   "./index.html",
+  "./app.js",
+  "./styles.css",
+  "./firebase.js",
   "./manifest.json"
 ];
 
@@ -44,5 +47,25 @@ self.addEventListener("fetch", (event) => {
       .catch(() =>
         caches.match(req).then((cached) => cached || caches.match("./index.html"))
       )
+  );
+});
+
+// ── Notification click → open app to inventory tab ───────────
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || "/kitchen/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      // Focus existing tab if open
+      for (const client of clients) {
+        if (client.url.includes("/kitchen") && "focus" in client) {
+          client.focus();
+          client.postMessage({ type: "NOTIF_CLICK_INVENTORY" });
+          return;
+        }
+      }
+      // Otherwise open a new window
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+    })
   );
 });

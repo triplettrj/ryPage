@@ -384,6 +384,8 @@
           familyDefault: 4,
           lowStockThreshold: 1,
           hasOnboarded: false,
+          onboardStep: 0,
+          expiryNotifications: false,
           claudeKey: "",
           anyListEmail: "",
           storageLayout: [], // [{ id, name, icon, type, zones: [{id, name}] }]
@@ -3605,6 +3607,8 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const p = state.settings.prefs || {};
       document.getElementById("setTheme").value = state.settings.theme;
       document.getElementById("setHaptic").checked = !!state.settings.haptic;
+      document.getElementById("setNotif").checked = !!state.settings.expiryNotifications;
+      updateNotifToggleUI();
       document.getElementById("setFamily").value = state.settings.familyDefault;
       document.getElementById("setLowStock").value = state.settings.lowStockThreshold;
       document.getElementById("setClaudeKey").value = state.settings.claudeKey || "";
@@ -3623,6 +3627,28 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       });
       document.getElementById("setHaptic").addEventListener("change", e => {
         state.settings.haptic = e.target.checked; saveState();
+      });
+      document.getElementById("setNotif").checked = !!state.settings.expiryNotifications;
+      document.getElementById("setNotif").addEventListener("change", async e => {
+        if (e.target.checked) {
+          const perm = await requestNotifPermission();
+          if (perm === "granted") {
+            state.settings.expiryNotifications = true;
+            saveState();
+            showToast("Expiry alerts on — you'll be notified when items are about to expire");
+            updateNotifToggleUI();
+          } else if (perm === "denied") {
+            e.target.checked = false;
+            showToast("Notifications blocked — allow them in your browser settings");
+            updateNotifToggleUI();
+          } else {
+            e.target.checked = false;
+          }
+        } else {
+          state.settings.expiryNotifications = false;
+          saveState();
+          updateNotifToggleUI();
+        }
       });
       document.getElementById("setFamily").addEventListener("input", e => {
         state.settings.familyDefault = Number(e.target.value) || 4; saveState();
@@ -3853,25 +3879,193 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     }
 
     // ============================================================
-    // ONBOARDING
+    // ============================================================
+    // ONBOARDING — 3-step actionable setup
     // ============================================================
     const ONBOARD_SCREENS = [
-      { emoji:"🍳", title:"Welcome to My Kitchen", body:"Track what's in your kitchen, see what you can cook, and shop the gaps — all in one place." },
-      { emoji:"📦", title:"Your inventory is pre-loaded", body:"We seeded common staples so you can see recipe matching in action right away. Swap in what you really have under the Inventory tab." },
-      { emoji:"🛒", title:"Tap any recipe", body:"Pick one, scale for your family, and 'Shop missing' sends just the gaps to Instacart. That's it — start cooking!" },
+      {
+        emoji: "🍳",
+        title: "Welcome to My Kitchen",
+        bodyHtml: `<p>Track what's in your fridge and pantry, see what you can cook tonight, and never wonder what's for dinner.</p>
+          <div class="onboard-steps">
+            <div class="onboard-step"><div class="onboard-step-num">1</div><div class="onboard-step-text"><strong>Map your storage</strong>Add your fridge, pantry, and freezer so items have a home.</div></div>
+            <div class="onboard-step"><div class="onboard-step-num">2</div><div class="onboard-step-text"><strong>Scan your items</strong>Barcode scan a shelf in about 60 seconds.</div></div>
+            <div class="onboard-step"><div class="onboard-step-num">3</div><div class="onboard-step-text"><strong>See what you can cook</strong>The app matches your inventory to recipes automatically.</div></div>
+          </div>`,
+        actionLabel: "Let's set up my kitchen →",
+        actionFn: null, // advances to step 2
+        skipLabel: "Skip setup",
+      },
+      {
+        emoji: "🏗️",
+        title: "Add your storage spaces",
+        bodyHtml: `<p>Tell us what you have — fridge, pantry, freezer, counter. We'll map the shelves and zones so every item has a specific home.</p>
+          <p style="font-size:12px; color:var(--green); font-weight:600;">Tap the button below to add your first storage space.</p>`,
+        actionLabel: "🏗️ Add storage space",
+        actionFn: () => { openBuildStorageModal(); },
+        skipLabel: "Skip →",
+      },
+      {
+        emoji: "📷",
+        title: "Scan your first items",
+        bodyHtml: `<p>Point your camera at any barcode to add it instantly. You can scan an entire shelf at once — the app looks up each item automatically.</p>
+          <p style="font-size:12px; color:var(--muted);">No barcodes handy? Type items manually on the Inventory tab.</p>`,
+        actionLabel: "📷 Open scanner",
+        actionFn: () => { setView("scan"); document.getElementById("scanBarcodeBtn")?.click(); },
+        skipLabel: "Done →",
+      },
     ];
+
     function renderOnboard() {
       const s = ONBOARD_SCREENS[onboardStep];
       document.getElementById("obEmoji").textContent = s.emoji;
       document.getElementById("obTitle").textContent = s.title;
-      document.getElementById("obBody").textContent = s.body;
+      document.getElementById("obBody").innerHTML = s.bodyHtml;
+      document.getElementById("obSkip").textContent = s.skipLabel || "Skip";
+
+      const actionBtn = document.getElementById("obAction");
+      if (s.actionLabel) {
+        actionBtn.textContent = s.actionLabel;
+        actionBtn.style.display = "";
+        actionBtn.onclick = () => {
+          if (s.actionFn) {
+            document.getElementById("onboard").classList.remove("show");
+            s.actionFn();
+            // If it's the last step, finish. Otherwise store progress.
+            if (onboardStep === ONBOARD_SCREENS.length - 1) {
+              finishOnboard();
+            } else {
+              // Advance so next time onboard shows it's on the next step
+              onboardStep++;
+              state.settings.onboardStep = onboardStep;
+              saveState();
+            }
+          } else {
+            // No actionFn — just advance
+            onboardStep++;
+            renderOnboard();
+          }
+        };
+      } else {
+        actionBtn.style.display = "none";
+      }
+
+      // "Skip →" advances one step (or finishes on last)
+      document.getElementById("obNext").textContent = onboardStep === ONBOARD_SCREENS.length - 1 ? "Done" : "Skip →";
+
       const dots = document.querySelectorAll(".onboard-dots span");
       dots.forEach((d, i) => d.classList.toggle("active", i === onboardStep));
-      document.getElementById("obNext").textContent = onboardStep === ONBOARD_SCREENS.length - 1 ? "Let's go!" : "Next";
     }
+
     function finishOnboard() {
-      state.settings.hasOnboarded = true; saveState();
+      state.settings.hasOnboarded = true;
+      state.settings.onboardStep = ONBOARD_SCREENS.length;
+      saveState();
       document.getElementById("onboard").classList.remove("show");
+    }
+
+    // Resume onboard mid-flow (e.g. user did storage setup, now see step 3 on next open)
+    function maybeResumeOnboard() {
+      if (state.settings.hasOnboarded) return;
+      const savedStep = state.settings.onboardStep || 0;
+      // If they've already added storage, skip the storage step
+      const hasLayout = getStorageLayout().length > 0;
+      onboardStep = savedStep;
+      if (hasLayout && onboardStep === 1) onboardStep = 2;
+      renderOnboard();
+      document.getElementById("onboard").classList.add("show");
+    }
+
+    // ============================================================
+    // PUSH NOTIFICATIONS — expiry alerts
+    // ============================================================
+    const NOTIF_CHECK_KEY = "kitchenLastNotifCheck";
+
+    function notifSupported() {
+      return "Notification" in window && "serviceWorker" in navigator;
+    }
+
+    async function requestNotifPermission() {
+      if (!notifSupported()) return "unsupported";
+      if (Notification.permission === "granted") return "granted";
+      if (Notification.permission === "denied") return "denied";
+      const result = await Notification.requestPermission();
+      return result;
+    }
+
+    async function checkExpiryNotifications() {
+      if (!state.settings.expiryNotifications) return;
+      if (!notifSupported() || Notification.permission !== "granted") return;
+
+      // Only check once per 20 hours (prevents spam on every page load)
+      const last = parseInt(localStorage.getItem(NOTIF_CHECK_KEY) || "0", 10);
+      if (Date.now() - last < 20 * 60 * 60 * 1000) return;
+      localStorage.setItem(NOTIF_CHECK_KEY, String(Date.now()));
+
+      const now = Date.now();
+      const soon = [];
+
+      Object.values(state.inventory || {}).forEach(item => {
+        if (!item.expiry || item.qty === 0) return;
+        const exp = new Date(item.expiry).getTime();
+        const daysLeft = Math.ceil((exp - now) / (24 * 60 * 60 * 1000));
+        if (daysLeft < 0) {
+          soon.push({ name: item.name, daysLeft, label: "expired" });
+        } else if (daysLeft === 0) {
+          soon.push({ name: item.name, daysLeft, label: "expires today" });
+        } else if (daysLeft === 1) {
+          soon.push({ name: item.name, daysLeft, label: "expires tomorrow" });
+        } else if (daysLeft <= 3) {
+          soon.push({ name: item.name, daysLeft, label: `expires in ${daysLeft} days` });
+        }
+      });
+
+      if (!soon.length) return;
+
+      // Sort by urgency
+      soon.sort((a, b) => a.daysLeft - b.daysLeft);
+
+      const sw = await navigator.serviceWorker.ready.catch(() => null);
+      if (!sw) return;
+
+      if (soon.length === 1) {
+        sw.showNotification("🥛 My Kitchen — Expiry Alert", {
+          body: `${soon[0].name} ${soon[0].label}`,
+          icon: "/kitchen/icon.svg",
+          badge: "/kitchen/icon.svg",
+          tag: "kitchen-expiry",
+          data: { url: "/kitchen/" },
+        });
+      } else {
+        const top = soon.slice(0, 3).map(i => `${i.name} (${i.label})`).join(", ");
+        const more = soon.length > 3 ? ` and ${soon.length - 3} more` : "";
+        sw.showNotification(`🧊 My Kitchen — ${soon.length} items expiring`, {
+          body: top + more,
+          icon: "/kitchen/icon.svg",
+          badge: "/kitchen/icon.svg",
+          tag: "kitchen-expiry",
+          data: { url: "/kitchen/" },
+        });
+      }
+    }
+
+    function updateNotifToggleUI() {
+      const sub = document.getElementById("notifSub");
+      if (!sub) return;
+      if (!notifSupported()) {
+        sub.textContent = "Not supported in this browser";
+        document.getElementById("setNotif").disabled = true;
+        return;
+      }
+      const perm = Notification.permission;
+      if (perm === "denied") {
+        sub.textContent = "Blocked — allow notifications in browser settings";
+        document.getElementById("setNotif").disabled = true;
+      } else if (perm === "granted" && state.settings.expiryNotifications) {
+        sub.textContent = "Alerts when items expire in ≤ 3 days";
+      } else {
+        sub.textContent = "Alert me when items are about to expire";
+      }
     }
 
     // ============================================================
@@ -4113,6 +4307,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       else finishOnboard();
     });
     document.getElementById("obSkip").addEventListener("click", finishOnboard);
+    document.getElementById("obAction")?.addEventListener("click", () => {}); // wired in renderOnboard
 
     // Theme reactivity
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
@@ -4130,16 +4325,29 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     // Auto-fetch product photos for any inventory items missing one (runs once at startup, then quietly in the background)
     setTimeout(() => { fillMissingProductImages(); }, 1500);
 
-    // Service worker registration (offline support)
+    // Service worker registration (offline support + push notifications)
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("sw.js").catch(() => {/* no-op */});
       });
+      // When SW tells us a notification was clicked, open inventory tab
+      navigator.serviceWorker.addEventListener("message", (e) => {
+        if (e.data && e.data.type === "NOTIF_CLICK_INVENTORY") {
+          setView("inventory");
+        }
+      });
     }
 
-    // Onboarding: show on first run
+    // Onboarding: show on first run (or resume mid-flow)
     if (!state.settings.hasOnboarded) {
-      onboardStep = 0;
-      renderOnboard();
-      document.getElementById("onboard").classList.add("show");
+      maybeResumeOnboard();
     }
+
+    // Expiry notifications: sync toggle UI + check on load
+    updateNotifToggleUI();
+    setTimeout(() => checkExpiryNotifications(), 3000); // after app has fully rendered
+
+    // Re-check expiry notifications when tab becomes visible again
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) checkExpiryNotifications();
+    });

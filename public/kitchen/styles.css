@@ -1171,7 +1171,12 @@
     }
     .onboard-card .big { font-size: 48px; display: block; margin-bottom: 12px; }
     .onboard-card h3 { margin: 0 0 8px; font-size: 20px; }
-    .onboard-card p { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .onboard-card p { margin: 0 0 14px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .onboard-steps { display: flex; flex-direction: column; gap: 10px; margin: 0 0 16px; text-align: left; }
+    .onboard-step { display: flex; gap: 12px; align-items: flex-start; }
+    .onboard-step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--green); color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .onboard-step-text { font-size: 13px; line-height: 1.45; }
+    .onboard-step-text strong { display: block; font-size: 14px; margin-bottom: 1px; }
     .onboard-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 16px; }
     .onboard-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
     .onboard-dots span.active { background: var(--green); width: 22px; border-radius: 4px; }

@@ -533,6 +533,13 @@
           </div>
           <label class="switch"><input type="checkbox" id="setHaptic" /><span class="slider"></span></label>
         </div>
+        <div class="settings-row">
+          <div class="label-wrap">
+            <div>Expiry notifications</div>
+            <div class="label-sub" id="notifSub">Alert me when items are about to expire</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="setNotif" /><span class="slider"></span></label>
+        </div>
       </div>
 
       <div class="section-title"><h2>Defaults</h2></div>
@@ -670,9 +677,10 @@
       <span class="big" id="obEmoji">🍳</span>
       <h3 id="obTitle"></h3>
       <p id="obBody"></p>
+      <button class="btn btn-green" id="obAction" style="width:100%; display:none; margin-bottom:4px;"></button>
       <div class="btn-row">
-        <button class="btn btn-secondary" id="obSkip">Skip</button>
-        <button class="btn btn-green" id="obNext">Next</button>
+        <button class="btn btn-secondary" id="obSkip">Skip setup</button>
+        <button class="btn btn-ghost" id="obNext" style="color:var(--muted);">Skip →</button>
       </div>
     </div>
   </div>
