@@ -1435,12 +1435,23 @@
       <div id="cookNowWrap"></div>
       <div id="almostWrap"></div>
       <div id="farWrap"></div>
+
+      <!-- Meal plan — nested at the bottom of Cook, not a separate tab -->
+      <div style="margin-top:8px; border-top:1px solid var(--border); padding-top:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <h2 style="margin:0; font-size:17px;">📅 This week</h2>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary" id="generatePlanList" style="padding:7px 12px; font-size:13px;">🛒 List</button>
+            <button class="btn btn-green" id="autoPlanWeek" style="padding:7px 12px; font-size:13px;">✨ Auto-plan</button>
+          </div>
+        </div>
+        <div class="plan-grid" id="planGrid"></div>
+      </div>
     </div>
 
-    <!-- INVENTORY VIEW -->
+    <!-- INVENTORY VIEW — storage layout is the only view -->
     <div class="view" id="viewInventory">
       <div id="storageSection"></div>
-      <div id="inventoryList"></div>
     </div>
 
     <!-- Build Storage Layout modal -->
@@ -1503,15 +1514,6 @@
     </div>
 
     <!-- PLAN VIEW -->
-    <div class="view" id="viewPlan">
-      <div class="section-title"><h2>This week's meals</h2></div>
-      <div class="plan-grid" id="planGrid"></div>
-      <div style="display:flex; gap:8px; flex-wrap: wrap;">
-        <button class="btn btn-green" id="autoPlanWeek" style="flex:1; min-width: 140px;">✨ Auto-plan my week</button>
-        <button class="btn btn-primary" id="generatePlanList" style="flex:1; min-width: 140px;">🛒 Shopping list</button>
-      </div>
-    </div>
-
     <!-- SCAN VIEW -->
     <div class="view" id="viewScan">
       <!-- Scan target banner — set when arriving from a zone's Scan button -->
@@ -1520,25 +1522,32 @@
         <span id="scanTargetLabel">Scanning into: —</span>
         <button class="stb-clear" id="scanTargetClear">✕ Clear</button>
       </div>
-      <div class="info-banner">
-        <strong>Tip:</strong> Tap <strong>📷 Scan</strong> on any zone in your Storage Layout to auto-target it. Or shoot freely and items will land in your inventory without a zone.
-      </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-        <label class="scan-dropzone" for="scanOneInput" style="padding: 18px 10px;">
-          <span class="big">📸</span>
-          <h3 style="margin:4px 0 2px; font-size:15px;">One item</h3>
-          <p style="font-size:11px; margin:0;">Close-up of a label</p>
+      <!-- Hero: barcode scan -->
+      <button class="btn btn-green" id="scanBarcodeBtn" style="width:100%; padding:20px; font-size:17px; font-weight:700; border-radius:16px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:var(--shadow-green);">
+        <span style="font-size:26px;">🔲</span>
+        <div style="text-align:left;">
+          <div>Scan barcodes</div>
+          <div style="font-size:12px; font-weight:400; opacity:.85;">Scan every item on a shelf at once</div>
+        </div>
+      </button>
+
+      <!-- Secondary: photo options -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+        <label class="scan-dropzone" for="scanOneInput" style="padding:14px 10px;">
+          <span style="font-size:22px;">📸</span>
+          <div style="font-size:13px; font-weight:600; margin:3px 0 1px;">Single item</div>
+          <div style="font-size:11px; color:var(--muted);">Close-up photo of a label</div>
           <input id="scanOneInput" type="file" accept="image/*" />
         </label>
-        <label class="scan-dropzone" for="scanInput" style="padding: 18px 10px;">
-          <span class="big">🗄️</span>
-          <h3 style="margin:4px 0 2px; font-size:15px;">Whole shelf</h3>
-          <p style="font-size:11px; margin:0;">AI maps zones automatically</p>
+        <label class="scan-dropzone" for="scanInput" style="padding:14px 10px;">
+          <span style="font-size:22px;">🗄️</span>
+          <div style="font-size:13px; font-weight:600; margin:3px 0 1px;">Whole shelf</div>
+          <div style="font-size:11px; color:var(--muted);">AI reads everything at once</div>
           <input id="scanInput" type="file" accept="image/*" />
         </label>
       </div>
-      <button class="btn btn-green" id="scanBarcodeBtn" style="width:100%; margin-bottom:12px;">🔲 Scan barcodes — multi-item</button>
+
       <div id="scanResult"></div>
     </div>
 
@@ -1603,8 +1612,7 @@
 
   <nav class="tabs">
     <button class="tab-btn active" data-view="cook"><span class="tab-icon">🍲</span><span>Cook</span></button>
-    <button class="tab-btn" data-view="inventory"><span class="tab-icon">📦</span><span>Inv</span></button>
-    <button class="tab-btn" data-view="plan"><span class="tab-icon">📅</span><span>Plan</span></button>
+    <button class="tab-btn" data-view="inventory"><span class="tab-icon">📦</span><span>Inventory</span></button>
     <button class="tab-btn" data-view="scan"><span class="tab-icon">📷</span><span>Scan</span></button>
     <button class="tab-btn" data-view="ask"><span class="tab-icon">💬</span><span>Ask</span></button>
   </nav>
@@ -2392,8 +2400,7 @@
       state = window._state;
       applyTheme();
       if (typeof renderCook === "function") renderCook();
-      if (typeof renderInventory === "function") renderInventory();
-      if (typeof renderStorageSection === "function") renderStorageSection();
+      if (typeof renderInventory === "function") renderInventory(); // delegates to renderStorageSection
       if (typeof renderPlan === "function") renderPlan();
       if (typeof renderShoppingList === "function") renderShoppingList();
     };
@@ -3201,14 +3208,12 @@ Return ONLY valid JSON — no prose:
       const subs = {
         cook: "What can we cook today?",
         inventory: "What's in your kitchen",
-        plan: "Plan your week, generate the shopping list",
-        scan: "Add items by photo",
+        scan: "Add items to your inventory",
         ask: "Your kitchen assistant"
       };
       document.getElementById("headerSubtitle").textContent = subs[name] || "";
       if (name === "cook") renderCook();
-      else if (name === "inventory") { renderStorageSection(); renderInventory(); }
-      else if (name === "plan") renderPlan();
+      else if (name === "inventory") { renderStorageSection(); }
       else if (name === "ask") renderChat();
       haptic(5);
     }
@@ -3259,6 +3264,9 @@ Return ONLY valid JSON — no prose:
       );
       document.getElementById("almostWrap").innerHTML = sectionHtml("Almost have everything", almost, "almost", "🛒", "", "");
       document.getElementById("farWrap").innerHTML = sectionHtml("Need more groceries", far, "far", "🧺", "", "");
+
+      // Render the inline meal plan at the bottom of the Cook view
+      renderPlan();
 
       document.querySelectorAll(".recipe-row").forEach(row => {
         row.addEventListener("click", (e) => {
@@ -3521,7 +3529,54 @@ Return ONLY valid JSON — no prose:
         </div>`;
       }).join("");
 
-      section.innerHTML = html + `<button class="btn btn-secondary" id="addMoreStorageBtn" style="margin-bottom:14px;">+ Add another storage space</button>`;
+      // ── Unassigned items ─────────────────────────────────────────
+      const allItems = Object.entries(state.inventory);
+      const unassigned = allItems.filter(([, i]) => !i.storageLocId && i.qty !== 0);
+      const restock    = allItems.filter(([, i]) => i.qty === 0);
+
+      let extraHtml = `<button class="btn btn-secondary" id="addMoreStorageBtn" style="margin-bottom:14px;">+ Add another storage space</button>`;
+
+      if (unassigned.length) {
+        const rows = unassigned.sort((a,b) => a[1].name.localeCompare(b[1].name)).map(([k, item]) => {
+          const qtyText = item.qty != null ? formatQty(item.qty) + (item.unit ? " " + item.unit : "") : "";
+          const badges = [];
+          if (isExpired(item)) badges.push(`<span class="badge expired">expired</span>`);
+          else if (item.expiry) {
+            const diff = (new Date(item.expiry).getTime() - Date.now()) / (24*3600*1000);
+            if (diff <= 3) badges.push(`<span class="badge expiring">soon</span>`);
+          }
+          if (isLowStock(item)) badges.push(`<span class="badge low">low</span>`);
+          const iconHtml = item.image
+            ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='📦'" />`
+            : "📦";
+          return `<div class="inv-item" data-key="${escapeHtml(k)}">
+            <div class="icon">${iconHtml}</div>
+            <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
+            <div class="badges">${badges.join("")}</div>
+            <div class="qty">${qtyText}</div>
+            <button class="delete" data-action="delete" aria-label="Delete">×</button>
+          </div>`;
+        }).join("");
+        extraHtml += `<div class="inv-group-title" style="margin-top:8px;">📦 Unassigned <span style="color:var(--muted2);font-weight:500;text-transform:none;letter-spacing:0;">(${unassigned.length})</span></div>${rows}`;
+      }
+
+      if (restock.length) {
+        const rows = restock.sort((a,b) => a[1].name.localeCompare(b[1].name)).map(([k, item]) => {
+          const iconHtml = item.image
+            ? `<img src="${escapeHtml(item.image)}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='🛒'" />`
+            : "🛒";
+          return `<div class="inv-item restock" data-key="${escapeHtml(k)}">
+            <div class="icon" style="background:var(--red-light);">${iconHtml}</div>
+            <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
+            <div class="badges"><span class="badge expired" style="background:var(--red-light);color:var(--red);">out</span></div>
+            <button class="btn-mini" data-action="restock" aria-label="Mark as restocked">↺</button>
+            <button class="delete" data-action="delete" aria-label="Delete">×</button>
+          </div>`;
+        }).join("");
+        extraHtml += `<div class="inv-group-title" style="color:var(--red);margin-top:8px;">🛒 Need to restock <span style="color:var(--muted2);font-weight:500;text-transform:none;letter-spacing:0;">(${restock.length})</span></div>${rows}`;
+      }
+
+      section.innerHTML = html + extraHtml;
 
       // Toggle location cards open/close
       section.querySelectorAll(".sl-loc-header").forEach(h => {
@@ -3560,6 +3615,38 @@ Return ONLY valid JSON — no prose:
       });
 
       document.getElementById("addMoreStorageBtn")?.addEventListener("click", openBuildStorageModal);
+
+      // Unassigned + restock item interactions
+      section.querySelectorAll(".inv-item").forEach(el => {
+        el.addEventListener("click", e => {
+          const action = e.target.dataset.action;
+          const k = el.dataset.key;
+          if (!k) return;
+          if (action === "delete") {
+            const removed = state.inventory[k];
+            delete state.inventory[k];
+            saveState(); renderStorageSection();
+            showToast(`Removed ${removed.name}`, "Undo", () => {
+              state.inventory[k] = removed;
+              saveState(); renderStorageSection();
+            });
+            haptic(10);
+          } else if (action === "restock") {
+            const item = state.inventory[k];
+            if (!item) return;
+            const prev = { ...item };
+            item.qty = 1;
+            saveState(); renderStorageSection();
+            showToast(`${item.name} back in stock`, "Undo", () => {
+              state.inventory[k] = prev;
+              saveState(); renderStorageSection();
+            });
+            haptic(10);
+          } else {
+            openItem(k);
+          }
+        });
+      });
     }
 
     // ── Scan target ───────────────────────────────────────────────
@@ -3879,16 +3966,20 @@ Return ONLY valid JSON — no prose:
     }
 
     function renderInventory() {
+      // #inventoryList no longer exists — storage layout cards are the one inventory view.
+      renderStorageSection();
+    }
+
+    function _renderInventoryLegacy() {
       const container = document.getElementById("inventoryList");
+      if (!container) return;
       const allItems = Object.entries(state.inventory);
       if (allItems.length === 0) {
         container.innerHTML = "";
-        renderStorageSection();
         return;
       }
 
-      // Items in the new storage layout are shown inside renderStorageSection().
-      // The inventoryList shows only legacy items (no storageLocId) and "need to restock".
+      // Legacy flat-list path (kept for reference; not used in current UI)
       const legacyItems = allItems.filter(([, i]) => !i.storageLocId);
 
       // Split: in-stock (qty > 0 or qty null) vs need-to-restock (qty === 0)
