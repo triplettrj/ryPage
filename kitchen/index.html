@@ -2629,23 +2629,98 @@
     ];
 
     // Return { date: "YYYY-MM-DD", label: "~9 days (typical for milk)" } or null
+    // ── Expiry cache (persisted to localStorage) ─────────────────
+    // key: normalized item name → days (number) or 0 (shelf-stable/no expiry)
+    const EXPIRY_CACHE_KEY = "kitchenExpiryCache_v1";
+    let _expiryCache = null;
+    function getExpiryCache() {
+      if (!_expiryCache) {
+        try { _expiryCache = JSON.parse(localStorage.getItem(EXPIRY_CACHE_KEY) || "{}"); }
+        catch { _expiryCache = {}; }
+      }
+      return _expiryCache;
+    }
+    function setExpiryCache(normalizedName, days) {
+      const c = getExpiryCache();
+      c[normalizedName] = days;
+      try { localStorage.setItem(EXPIRY_CACHE_KEY, JSON.stringify(c)); } catch {}
+    }
+
+    // Build date + label from a days number
+    function expiryFromDays(days) {
+      if (!days) return null;
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      const dateStr = d.toISOString().slice(0, 10);
+      const label = days <= 7
+        ? `~${days} day${days !== 1 ? "s" : ""}`
+        : days <= 30
+          ? `~${Math.round(days / 7)} week${Math.round(days / 7) !== 1 ? "s" : ""}`
+          : `~${Math.round(days / 30)} month${Math.round(days / 30) !== 1 ? "s" : ""}`;
+      return { date: dateStr, label };
+    }
+
+    // Tier 1: instant local lookup from EXPIRY_DEFAULTS table
     function suggestExpiry(itemName) {
       if (!itemName) return null;
-      const lower = itemName.toLowerCase();
+      const lower = itemName.toLowerCase().trim();
+      // Check persistent cache first
+      const cached = getExpiryCache()[lower];
+      if (cached !== undefined) return expiryFromDays(cached);
+      // Check built-in table
       for (const entry of EXPIRY_DEFAULTS) {
         if (entry.keys.some(k => lower.includes(k))) {
-          const d = new Date();
-          d.setDate(d.getDate() + entry.days);
-          const dateStr = d.toISOString().slice(0, 10);
-          const label = entry.days <= 7
-            ? `~${entry.days} days`
-            : entry.days <= 30
-              ? `~${Math.round(entry.days / 7)} week${entry.days >= 14 ? "s" : ""}`
-              : `~${Math.round(entry.days / 30)} month${entry.days >= 60 ? "s" : ""}`;
-          return { date: dateStr, label };
+          return expiryFromDays(entry.days);
         }
       }
       return null;
+    }
+
+    // Tier 2: ask Claude for anything not in the local table
+    async function lookupExpiryAI(itemName) {
+      if (!itemName || itemName.length < 2) return null;
+      const key = (state.settings.claudeKey || "").trim();
+      if (!key) return null;
+      const lower = itemName.toLowerCase().trim();
+      // Return cached result immediately if available
+      const cache = getExpiryCache();
+      if (lower in cache) return expiryFromDays(cache[lower]);
+      // Skip if already covered by local table
+      if (suggestExpiry(itemName)) return suggestExpiry(itemName);
+
+      try {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-api-key": key,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true",
+          },
+          body: JSON.stringify({
+            model: "claude-haiku-4-5",
+            max_tokens: 60,
+            messages: [{
+              role: "user",
+              content: `Food safety expert. How many days does "${itemName}" typically last when stored properly (fridge for perishables, pantry for shelf-stable)?
+
+Return ONLY valid JSON — no prose:
+{"days": NUMBER}   ← perishable (e.g. milk=9, eggs=28, apple=42, chicken=2)
+{"days": 0}        ← shelf-stable/no expiry needed (canned goods, pasta, spices, oil)`,
+            }],
+          }),
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const text = (data.content || []).map(c => c.text || "").join("");
+        const match = text.match(/\{[^}]*"days"\s*:\s*(\d+)[^}]*\}/);
+        if (!match) return null;
+        const days = parseInt(match[1], 10);
+        setExpiryCache(lower, days);
+        return expiryFromDays(days);
+      } catch {
+        return null;
+      }
     }
     function isTrivialUnit(u) {
       return TRIVIAL_UNITS.has(String(u || "").toLowerCase().trim());
@@ -3967,26 +4042,43 @@
       showModal("itemModal");
       if (!item) setTimeout(() => document.getElementById("imName").focus(), 50);
 
-      // Wire expiry suggestion to name field
-      function refreshExpirySuggest() {
+      // Wire expiry suggestion to name field — instant from table, AI fallback
+      let _expiryDebounce = null;
+      function showExpirySuggestion(suggestion) {
+        const suggestEl = document.getElementById("imExpirySuggest");
+        if (!suggestion) { suggestEl.style.display = "none"; return; }
+        suggestEl.style.display = "flex";
+        suggestEl.innerHTML = `💡 Typical: ${suggestion.label}
+          <button type="button" style="background:none;border:none;color:var(--green);font-size:12px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;" id="applyExpirySuggest">Apply</button>`;
+        document.getElementById("applyExpirySuggest").addEventListener("click", () => {
+          document.getElementById("imExpiry").value = suggestion.date;
+          suggestEl.style.display = "none";
+        });
+      }
+
+      async function refreshExpirySuggest() {
         const nameVal = document.getElementById("imName").value.trim();
         const expiryVal = document.getElementById("imExpiry").value;
         const suggestEl = document.getElementById("imExpirySuggest");
-        // Only suggest if expiry is empty
-        if (expiryVal) { suggestEl.style.display = "none"; return; }
-        const suggestion = suggestExpiry(nameVal);
-        if (suggestion) {
-          suggestEl.style.display = "flex";
-          suggestEl.innerHTML = `💡 Typical: ${suggestion.label}
-            <button type="button" style="background:none; border:none; color:var(--green); font-size:12px; font-weight:600; cursor:pointer; padding:0; text-decoration:underline;" id="applyExpirySuggest">Apply</button>`;
-          document.getElementById("applyExpirySuggest").addEventListener("click", () => {
-            document.getElementById("imExpiry").value = suggestion.date;
-            suggestEl.style.display = "none";
-          });
-        } else {
-          suggestEl.style.display = "none";
-        }
+        if (expiryVal || !nameVal) { suggestEl.style.display = "none"; return; }
+
+        // Instant: check local table + cache
+        const instant = suggestExpiry(nameVal);
+        if (instant) { showExpirySuggestion(instant); return; }
+
+        // Debounced AI lookup for anything not in the table
+        clearTimeout(_expiryDebounce);
+        if (nameVal.length < 3) { suggestEl.style.display = "none"; return; }
+        suggestEl.style.display = "flex";
+        suggestEl.innerHTML = `<span style="color:var(--muted);">Looking up shelf life…</span>`;
+        _expiryDebounce = setTimeout(async () => {
+          if (document.getElementById("imExpiry").value) { suggestEl.style.display = "none"; return; }
+          const ai = await lookupExpiryAI(document.getElementById("imName").value.trim());
+          if (document.getElementById("imExpiry").value) { suggestEl.style.display = "none"; return; }
+          showExpirySuggestion(ai);
+        }, 900);
       }
+
       document.getElementById("imName").addEventListener("input", refreshExpirySuggest);
       document.getElementById("imExpiry").addEventListener("change", refreshExpirySuggest);
       refreshExpirySuggest();
@@ -4489,8 +4581,16 @@
           item.brand  = info?.brand || "";
           item.unit   = info?.unit  || "";
           item.image  = info?.image || null;
-          item.expiry = suggestExpiry(item.name)?.date || null;
           item.status = info ? "found" : "notfound";
+          // Expiry: instant from table, then AI fallback in background
+          const quickExpiry = suggestExpiry(item.name);
+          if (quickExpiry) {
+            item.expiry = quickExpiry.date;
+          } else {
+            lookupExpiryAI(item.name).then(result => {
+              if (result) { item.expiry = result.date; renderBulkList(); }
+            });
+          }
           bbSetStatus(info ? `✓ ${info.name || upc}` : `UPC ${upc} — fill in name`, !!info);
           renderBulkList();
         }
@@ -4589,7 +4689,7 @@
           zone: scanTarget?.zoneName || "",
           storageLocId: scanTarget?.locId || "",
           storageZoneId: scanTarget?.zoneId || "",
-          expiry: item.expiry || suggestExpiry(name)?.date || null,
+          expiry: item.expiry || suggestExpiry(name)?.date || null, // AI already ran during scan
         };
         state.inventory[inventoryKey(inv)] = inv;
       });
