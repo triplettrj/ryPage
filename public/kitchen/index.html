@@ -1755,6 +1755,7 @@
       <div class="field">
         <label>Expires (optional)</label>
         <input id="imExpiry" type="date" />
+        <div id="imExpirySuggest" style="display:none; margin-top:5px; font-size:12px; color:var(--green); display:flex; align-items:center; gap:6px;"></div>
       </div>
       <div class="btn-row">
         <button class="btn btn-secondary" id="imCancel">Cancel</button>
@@ -2553,6 +2554,99 @@
 
     // Units where a recipe calling for "1 X" would meaningfully deplete stock.
     const TRIVIAL_UNITS = new Set(["tsp","teaspoon","teaspoons","tbsp","tablespoon","tablespoons","pinch","dash","splash","drop","drizzle","sprinkle"]);
+
+    // ── Typical expiry windows (days from today) for common grocery items ──
+    // Matched by keyword against item name (case-insensitive, substring).
+    const EXPIRY_DEFAULTS = [
+      // Dairy
+      { days:  9, keys: ["milk","whole milk","skim milk","2% milk","oat milk","almond milk","soy milk","coconut milk drink","lactaid"] },
+      { days: 28, keys: ["eggs","egg"] },
+      { days: 14, keys: ["heavy cream","whipping cream","half and half","half & half","coffee creamer","creamer"] },
+      { days: 21, keys: ["yogurt","kefir"] },
+      { days: 21, keys: ["sour cream","crème fraîche"] },
+      { days: 21, keys: ["cream cheese","neufchatel"] },
+      { days: 14, keys: ["cottage cheese","ricotta"] },
+      { days: 60, keys: ["butter","ghee"] },
+      { days:  7, keys: ["fresh mozzarella","burrata","brie","camembert","feta crumbles","goat cheese","chèvre"] },
+      { days: 21, keys: ["shredded cheese","sliced cheese","string cheese","babybel","provolone","swiss cheese","colby","monterey jack","pepper jack","muenster"] },
+      { days: 45, keys: ["cheddar","parmesan","romano","pecorino","aged cheese","gruyere","gouda"] },
+
+      // Meat & seafood (raw, refrigerated)
+      { days:  2, keys: ["ground beef","ground turkey","ground chicken","ground pork","ground lamb","ground meat","burger patties","beef patties"] },
+      { days:  2, keys: ["chicken breast","chicken thigh","chicken wing","chicken drum","raw chicken","whole chicken"] },
+      { days:  4, keys: ["steak","ribeye","sirloin","tenderloin","pork chop","pork loin","pork tenderloin","lamb chop","rack of lamb","veal"] },
+      { days:  2, keys: ["fish","salmon","tilapia","cod","halibut","tuna steak","mahi","shrimp","scallops","crab","lobster","raw seafood"] },
+      { days:  5, keys: ["bacon","pancetta"] },
+      { days:  5, keys: ["deli meat","lunch meat","turkey slices","ham slices","roast beef slices","salami","pepperoni slices","bologna"] },
+      { days:  7, keys: ["hot dog","sausage link","bratwurst","kielbasa","chorizo","andouille"] },
+
+      // Produce — short (under 1 week)
+      { days:  4, keys: ["avocado"] },
+      { days:  3, keys: ["guacamole","fresh guac"] },
+      { days:  5, keys: ["banana","bananas"] },
+      { days:  5, keys: ["strawberr","raspberry","raspberries","blackberr","cherry","cherries"] },
+      { days:  7, keys: ["blueberr","grape","grapes"] },
+      { days:  5, keys: ["spinach","arugula","mixed greens","spring mix","salad greens","salad kit","power greens"] },
+      { days:  7, keys: ["kale","chard","collard greens","beet greens"] },
+      { days:  5, keys: ["fresh basil","fresh cilantro","fresh parsley","fresh dill","fresh mint","fresh thyme","fresh rosemary","fresh chives","herb bunch","fresh herbs"] },
+      { days:  7, keys: ["mushroom"] },
+      { days:  7, keys: ["tomato","roma tomato","cherry tomato","grape tomato","heirloom tomato"] },
+      { days:  7, keys: ["broccoli","broccolini","cauliflower","brussels sprouts","bok choy"] },
+      { days:  7, keys: ["asparagus","artichoke","corn on the cob","sweet corn"] },
+      { days:  7, keys: ["green bean","snap pea","snow pea","edamame"] },
+
+      // Produce — medium (1–2 weeks)
+      { days: 10, keys: ["lettuce","romaine","iceberg","butter lettuce","head of lettuce"] },
+      { days: 10, keys: ["cucumber","zucchini","summer squash","yellow squash"] },
+      { days: 14, keys: ["bell pepper","sweet pepper","jalapeño","poblano","serrano"] },
+      { days: 14, keys: ["celery","fennel","leek","green onion","scallion"] },
+      { days: 14, keys: ["mango","papaya","pineapple","kiwi","passion fruit","peach","plum","nectarine","apricot"] },
+
+      // Produce — long (3+ weeks)
+      { days: 42, keys: ["apple","gala","fuji","honeycrisp","granny smith","pink lady"] },
+      { days: 21, keys: ["orange","clementine","tangerine","mandarin","grapefruit","blood orange"] },
+      { days: 21, keys: ["lemon","lime","limes"] },
+      { days: 28, keys: ["carrot","baby carrot"] },
+      { days: 30, keys: ["potato","russet","yukon gold","red potato","sweet potato","yam"] },
+      { days: 30, keys: ["onion","yellow onion","red onion","white onion","shallot"] },
+      { days: 60, keys: ["garlic","garlic bulb","garlic head"] },
+      { days: 60, keys: ["ginger root","fresh ginger"] },
+      { days: 14, keys: ["cabbage","red cabbage","napa cabbage","savoy"] },
+      { days: 14, keys: ["beet","turnip","parsnip","radish"] },
+
+      // Bread & bakery
+      { days:  5, keys: ["bread","sourdough","baguette","ciabatta","focaccia","bun","roll","slider","croissant","muffin","loaf"] },
+      { days:  7, keys: ["bagel","english muffin","pita","naan","lavash"] },
+      { days: 14, keys: ["tortilla","flour tortilla","corn tortilla","wrap"] },
+
+      // Refrigerated prepared / packaged
+      { days: 10, keys: ["orange juice","apple juice","grapefruit juice","fresh squeezed","cold pressed juice","pressed juice"] },
+      { days: 10, keys: ["hummus","baba ganoush","tzatziki"] },
+      { days:  7, keys: ["salsa","pico de gallo"] },
+      { days:  7, keys: ["opened pasta sauce","fresh pasta sauce","refrigerated pasta","refrigerated pizza dough"] },
+      { days:  4, keys: ["leftovers","cooked chicken","meal prep","prepared meal"] },
+      { days:  5, keys: ["tofu","tempeh"] },
+    ];
+
+    // Return { date: "YYYY-MM-DD", label: "~9 days (typical for milk)" } or null
+    function suggestExpiry(itemName) {
+      if (!itemName) return null;
+      const lower = itemName.toLowerCase();
+      for (const entry of EXPIRY_DEFAULTS) {
+        if (entry.keys.some(k => lower.includes(k))) {
+          const d = new Date();
+          d.setDate(d.getDate() + entry.days);
+          const dateStr = d.toISOString().slice(0, 10);
+          const label = entry.days <= 7
+            ? `~${entry.days} days`
+            : entry.days <= 30
+              ? `~${Math.round(entry.days / 7)} week${entry.days >= 14 ? "s" : ""}`
+              : `~${Math.round(entry.days / 30)} month${entry.days >= 60 ? "s" : ""}`;
+          return { date: dateStr, label };
+        }
+      }
+      return null;
+    }
     function isTrivialUnit(u) {
       return TRIVIAL_UNITS.has(String(u || "").toLowerCase().trim());
     }
@@ -3872,6 +3966,30 @@
       }
       showModal("itemModal");
       if (!item) setTimeout(() => document.getElementById("imName").focus(), 50);
+
+      // Wire expiry suggestion to name field
+      function refreshExpirySuggest() {
+        const nameVal = document.getElementById("imName").value.trim();
+        const expiryVal = document.getElementById("imExpiry").value;
+        const suggestEl = document.getElementById("imExpirySuggest");
+        // Only suggest if expiry is empty
+        if (expiryVal) { suggestEl.style.display = "none"; return; }
+        const suggestion = suggestExpiry(nameVal);
+        if (suggestion) {
+          suggestEl.style.display = "flex";
+          suggestEl.innerHTML = `💡 Typical: ${suggestion.label}
+            <button type="button" style="background:none; border:none; color:var(--green); font-size:12px; font-weight:600; cursor:pointer; padding:0; text-decoration:underline;" id="applyExpirySuggest">Apply</button>`;
+          document.getElementById("applyExpirySuggest").addEventListener("click", () => {
+            document.getElementById("imExpiry").value = suggestion.date;
+            suggestEl.style.display = "none";
+          });
+        } else {
+          suggestEl.style.display = "none";
+        }
+      }
+      document.getElementById("imName").addEventListener("input", refreshExpirySuggest);
+      document.getElementById("imExpiry").addEventListener("change", refreshExpirySuggest);
+      refreshExpirySuggest();
     }
 
     function saveItem() {
@@ -4371,6 +4489,7 @@
           item.brand  = info?.brand || "";
           item.unit   = info?.unit  || "";
           item.image  = info?.image || null;
+          item.expiry = suggestExpiry(item.name)?.date || null;
           item.status = info ? "found" : "notfound";
           bbSetStatus(info ? `✓ ${info.name || upc}` : `UPC ${upc} — fill in name`, !!info);
           renderBulkList();
@@ -4470,7 +4589,7 @@
           zone: scanTarget?.zoneName || "",
           storageLocId: scanTarget?.locId || "",
           storageZoneId: scanTarget?.zoneId || "",
-          expiry: null,
+          expiry: item.expiry || suggestExpiry(name)?.date || null,
         };
         state.inventory[inventoryKey(inv)] = inv;
       });
