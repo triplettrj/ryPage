@@ -1763,7 +1763,13 @@
           </select>
         </div>
       </div>
-      <div class="field">
+      <div class="field" id="imZoneField">
+        <label>Storage zone</label>
+        <select id="imZone">
+          <option value="">— Unassigned —</option>
+        </select>
+      </div>
+      <div class="field" id="imLocField" style="display:none;">
         <label>Where is it?</label>
         <select id="imLoc">
           <option value="pantry">Pantry</option>
@@ -3566,10 +3572,11 @@ Return ONLY valid JSON — no prose:
             <div class="name">${escapeHtml(item.name)}${item.brand ? `<span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:4px;">· ${escapeHtml(item.brand)}</span>` : ""}</div>
             <div class="badges">${badges.join("")}</div>
             <div class="qty">${qtyText}</div>
+            <button class="btn-mini" data-action="assign" aria-label="Assign to zone" style="background:var(--green-light);color:var(--green);border:none;border-radius:6px;padding:3px 7px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">Assign</button>
             <button class="delete" data-action="delete" aria-label="Delete">×</button>
           </div>`;
         }).join("");
-        extraHtml += `<div class="inv-group-title" style="margin-top:8px;">📦 Unassigned <span style="color:var(--muted2);font-weight:500;text-transform:none;letter-spacing:0;">(${unassigned.length})</span></div>${rows}`;
+        extraHtml += `<div class="inv-group-title" style="margin-top:8px;">📦 Unassigned <span style="color:var(--muted2);font-weight:500;text-transform:none;letter-spacing:0;">(${unassigned.length})</span> <span style="font-size:11px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;">— tap Assign to place in a zone</span></div>${rows}`;
       }
 
       if (restock.length) {
@@ -3654,6 +3661,14 @@ Return ONLY valid JSON — no prose:
               saveState(); renderStorageSection();
             });
             haptic(10);
+          } else if (action === "assign") {
+            // Open item modal focused on zone picker
+            openItem(k);
+            // Scroll zone field into view after modal opens
+            setTimeout(() => {
+              document.getElementById("imZoneField")?.scrollIntoView({ behavior: "smooth", block: "center" });
+              document.getElementById("imZone")?.focus();
+            }, 120);
           } else {
             openItem(k);
           }
@@ -4118,8 +4133,35 @@ Return ONLY valid JSON — no prose:
       document.getElementById("imBrand").value = item && item.brand ? item.brand : "";
       document.getElementById("imQty").value = item && item.qty != null ? item.qty : "";
       document.getElementById("imUnit").value = item && item.unit ? item.unit : "";
-      document.getElementById("imLoc").value = item ? item.loc : "pantry";
+      document.getElementById("imLoc").value = item ? (item.loc || "pantry") : "pantry";
       document.getElementById("imExpiry").value = item && item.expiry ? item.expiry : "";
+
+      // ── Zone picker ────────────────────────────────────────────
+      const layout = getStorageLayout();
+      const zoneSelect = document.getElementById("imZone");
+      const zoneField  = document.getElementById("imZoneField");
+      const locField   = document.getElementById("imLocField");
+      if (layout.length) {
+        // Rebuild options: "— Unassigned —" + one optgroup per location
+        zoneSelect.innerHTML = `<option value="">— Unassigned —</option>` +
+          layout.map(loc =>
+            `<optgroup label="${escapeHtml(loc.icon + " " + loc.name)}">${
+              (loc.zones || []).map(zone =>
+                `<option value="${escapeHtml(loc.id)}|${escapeHtml(zone.id)}">${escapeHtml(zone.name)}</option>`
+              ).join("")
+            }</optgroup>`
+          ).join("");
+        // Pre-select current zone
+        const current = item && item.storageLocId && item.storageZoneId
+          ? `${item.storageLocId}|${item.storageZoneId}` : "";
+        zoneSelect.value = current;
+        zoneField.style.display = "";
+        locField.style.display = "none";
+      } else {
+        // No layout yet — fall back to legacy loc picker
+        zoneField.style.display = "none";
+        locField.style.display = "";
+      }
       document.getElementById("imDelete").style.display = item ? "inline-flex" : "none";
       // Show product image + UPC if we have them.
       const wrap = document.getElementById("imImageWrap");
@@ -4194,6 +4236,9 @@ Return ONLY valid JSON — no prose:
       const expiry = document.getElementById("imExpiry").value || null;
       const newQty = qtyStr === "" ? null : Number(qtyStr);
       const prev = editingItemKey ? state.inventory[editingItemKey] : null;
+      // Parse zone selection (format: "locId|zoneId" or "")
+      const zoneVal = document.getElementById("imZone").value;
+      const [selectedLocId = "", selectedZoneId = ""] = zoneVal ? zoneVal.split("|") : [];
       const item = {
         name,
         brand: document.getElementById("imBrand").value.trim(),
@@ -4201,6 +4246,8 @@ Return ONLY valid JSON — no prose:
         qty: newQty,
         unit: document.getElementById("imUnit").value,
         loc: document.getElementById("imLoc").value,
+        storageLocId: selectedLocId,
+        storageZoneId: selectedZoneId,
         expiry,
         upc: (prev && prev.upc) ? prev.upc : "",
         size: (prev && prev.size) ? prev.size : "",
