@@ -1383,4 +1383,25 @@
     .auth-panel .auth-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
     .auth-panel .auth-name { font-weight: 700; font-size: 14px; line-height: 1.2; }
     .auth-panel .auth-email { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    /* ── Offline banner ─────────────────────────────────────────── */
+    #offlineBanner {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      background: #424242;
+      color: white;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 16px;
+      text-align: center;
+      letter-spacing: 0.01em;
+      animation: slideDown 0.2s var(--ease-out);
+    }
+    #offlineBanner.show { display: block; }
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
     .auth-panel .auth-divider { height: 1px; background: var(--border); margin: 0 -16px 12px; }
