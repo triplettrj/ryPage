@@ -2102,7 +2102,7 @@ Return ONLY valid JSON — no prose:
 
     function saveItem() {
       const name = document.getElementById("imName").value.trim();
-      if (!name) { alert("Item needs a name"); return; }
+      if (!name) { showToast("Enter an item name first"); document.getElementById("imName").focus(); return; }
       const qtyStr = document.getElementById("imQty").value;
       const expiry = document.getElementById("imExpiry").value || null;
       const newQty = qtyStr === "" ? null : Number(qtyStr);
@@ -2712,7 +2712,7 @@ Return ONLY valid JSON — no prose:
 
     function saveBulkBarcodeItems() {
       const toSave = bbItems.filter(i => i.status !== "loading");
-      if (!toSave.length) { alert("Wait for lookups to finish, or remove loading items."); return; }
+      if (!toSave.length) { showToast("Wait for lookups to finish, or remove loading items"); return; }
       toSave.forEach(item => {
         const name = (item.name || "").trim() || item.upc;
         const inv = {
@@ -2760,7 +2760,7 @@ Return ONLY valid JSON — no prose:
       const unitEl = document.getElementById("cuUnit");
       const upcEl = document.getElementById("cuUpc");
       const name = (nameEl.value || "").trim();
-      if (!name) { nameEl.focus(); alert("Name is required."); return; }
+      if (!name) { nameEl.focus(); showToast("Enter a name first"); return; }
       const upc = (upcEl.value || "").replace(/\D/g, "");
       const canonical = (canonicalEl.value || "").trim().toLowerCase() || normalize(name);
 
@@ -3085,7 +3085,7 @@ Return ONLY valid JSON — no prose:
 
     function saveScannedItems() {
       const selected = scanDraftItems.filter(i => i.included && (i.name || "").trim());
-      if (!selected.length) { alert("Nothing selected. Check the items you want to keep."); return; }
+      if (!selected.length) { showToast("Check at least one item to keep"); return; }
       selected.forEach(i => {
         const name = i.name.trim();
         const brand = (i.brand || "").trim();
@@ -3123,7 +3123,7 @@ Return ONLY valid JSON — no prose:
     // ============================================================
     function startCookMode() {
       const r = getRecipe(openRecipeId);
-      if (!r || !r.steps || !r.steps.length) { alert("No steps to walk through"); return; }
+      if (!r || !r.steps || !r.steps.length) { showToast("This recipe has no steps to walk through"); return; }
       cookStep = 0;
       document.getElementById("cmTitle").textContent = r.name;
       document.getElementById("cmSubtitle").textContent = `${r.time} · for ${familySize}`;
@@ -3372,7 +3372,7 @@ Return ONLY valid JSON — no prose:
         });
       });
       const items = Object.values(missing);
-      if (!items.length) { alert("Your meal plan is fully stocked already!"); return; }
+      if (!items.length) { showToast("Your meal plan is fully stocked — nothing missing!"); return; }
       startCart(items, "plan", "Shopping list from plan");
     }
 
@@ -3505,7 +3505,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
 
     async function autoPlanWeek() {
       const key = (state.settings.claudeKey || "").trim();
-      if (!key) { alert("Add your Claude API key in Settings first."); return; }
+      if (!key) { showToast("Add your Claude API key in Settings first"); setView("settings"); return; }
       const btn = document.getElementById("autoPlanWeek");
       const original = btn.textContent;
       btn.disabled = true;
@@ -3554,7 +3554,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     }
     function saveCustom() {
       const name = document.getElementById("crName").value.trim();
-      if (!name) { alert("Recipe needs a name"); return; }
+      if (!name) { document.getElementById("crName").focus(); showToast("Enter a recipe name first"); return; }
       const emoji = document.getElementById("crEmoji").value.trim() || "🍽️";
       const servesStr = document.getElementById("crServes").value;
       const time = document.getElementById("crTime").value.trim() || "—";
@@ -4116,7 +4116,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     document.getElementById("rmShopMissing").addEventListener("click", () => {
       const r = getRecipe(openRecipeId);
       const items = scaledFor(r).filter(i => !i.have);
-      if (items.length === 0) { alert("You already have everything!"); return; }
+      if (items.length === 0) { showToast("You already have everything for this recipe!"); return; }
       hideModal("recipeModal");
       startCart(items, "recipe", `Shopping for ${r.name}`);
     });
@@ -4212,7 +4212,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         setTimeout(() => {
           const w = window.open(u, "_blank", "noopener");
           if (!w && !openedFirst) {
-            alert("Amazon tabs were blocked. Please allow pop-ups for this site, then tap the button again.");
+            showToast("Pop-ups blocked — allow pop-ups for this site and try again");
           }
           openedFirst = true;
         }, idx * 350);
