@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Chai's Auto Care — Trusted Thai-owned auto repair shop in Orange County, CA. Honest service, certified mechanics, family-owned since 2001." />
+  <title>Chai's Auto Care | Trusted Auto Repair in Orange County</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #1A3A5C;
+      --blue-mid: #2A5A8C;
+      --blue-light: #3A7AB8;
+      --orange: #E07B1A;
+      --orange-light: #F09030;
+      --gray: #4A5568;
+      --gray-light: #718096;
+      --silver: #F0F4F8;
+      --silver-dark: #E2E8F0;
+      --dark: #0F1923;
+      --text: #2D3748;
+      --text-light: #718096;
+      --white: #FFFFFF;
+      --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); background: var(--white); line-height: 1.6; }
+
+    .topbar { background: var(--orange); color: var(--white); text-align: center; padding: 10px 20px; font-size: 0.88rem; font-weight: 600; }
+    .topbar a { color: var(--white); text-decoration: none; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.5); }
+
+    nav { position: sticky; top: 0; z-index: 100; background: var(--blue); display: flex; align-items: center; justify-content: space-between; padding: 14px 5%; }
+    .nav-logo { font-size: 1.3rem; font-weight: 900; color: var(--white); letter-spacing: -0.01em; }
+    .nav-logo span { color: var(--orange-light); }
+    .nav-links { display: flex; gap: 24px; list-style: none; }
+    .nav-links a { text-decoration: none; color: rgba(255,255,255,0.8); font-weight: 500; font-size: 0.92rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--orange-light); }
+    .nav-cta { background: var(--orange) !important; color: var(--white) !important; padding: 8px 20px; border-radius: 4px; font-weight: 700 !important; }
+    .nav-cta:hover { background: var(--orange-light) !important; }
+    @media (max-width: 640px) { .nav-links { display: none; } }
+
+    .hero { min-height: 88vh; background: linear-gradient(to right, rgba(15,25,35,0.88) 50%, rgba(15,25,35,0.5)), url('https://images.unsplash.com/photo-1530046339160-ce3e530c7d2f?w=1400&q=80') center/cover no-repeat; display: flex; align-items: center; padding: 80px 5%; }
+    .hero-inner { max-width: 600px; }
+    .hero-badge { display: inline-block; background: var(--orange); color: var(--white); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 16px; border-radius: 4px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 900; color: var(--white); line-height: 1.1; margin-bottom: 18px; }
+    .hero h1 em { color: var(--orange-light); font-style: normal; }
+    .hero p { font-size: 1.05rem; color: rgba(255,255,255,0.82); max-width: 480px; margin-bottom: 36px; line-height: 1.75; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn { display: inline-block; padding: 14px 30px; border-radius: 4px; font-size: 1rem; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: transform 0.18s, box-shadow 0.18s, background 0.2s; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+    .btn-primary { background: var(--orange); color: var(--white); }
+    .btn-primary:hover { background: var(--orange-light); }
+    .btn-outline { background: transparent; color: var(--white); border: 2px solid rgba(255,255,255,0.6); }
+    .btn-outline:hover { background: var(--white); color: var(--blue); }
+    .hero-phone { margin-top: 28px; color: rgba(255,255,255,0.65); font-size: 0.9rem; }
+    .hero-phone a { color: var(--orange-light); font-weight: 800; text-decoration: none; font-size: 1.15rem; }
+
+    .trust-bar { background: var(--blue); border-top: 3px solid var(--orange); padding: 20px 5%; display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
+    .trust-item { display: flex; align-items: center; gap: 10px; font-size: 0.86rem; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .trust-item span { color: var(--orange-light); font-size: 1.2rem; }
+
+    section { padding: 80px 5%; }
+    .section-label { display: inline-block; font-size: 0.76rem; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--orange); margin-bottom: 10px; }
+    h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); font-weight: 800; color: var(--blue); line-height: 1.15; margin-bottom: 14px; }
+    .section-subtitle { font-size: 1rem; color: var(--text-light); max-width: 560px; margin-bottom: 48px; }
+    .text-center { text-align: center; }
+    .text-center .section-subtitle { margin-left: auto; margin-right: auto; }
+
+    .about { background: var(--silver); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 768px) { .about-grid { grid-template-columns: 1fr; } }
+    .about-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px; box-shadow: var(--shadow); }
+    .about-text p { margin-bottom: 16px; line-height: 1.8; }
+    .cert-badges { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 24px; }
+    .cert-badge { background: var(--blue); color: var(--white); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.06em; padding: 8px 14px; border-radius: 4px; }
+    .cert-badge span { color: var(--orange-light); }
+    .about-stats { display: flex; gap: 28px; margin-top: 28px; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 900; color: var(--orange); display: block; }
+    .stat-label { font-size: 0.78rem; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+    .service-card { background: var(--white); border: 1px solid var(--silver-dark); border-radius: 8px; padding: 28px; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
+    .service-card:hover { border-color: var(--orange); box-shadow: var(--shadow); transform: translateY(-4px); }
+    .service-icon { font-size: 2.2rem; margin-bottom: 12px; }
+    .service-card h3 { font-size: 1rem; font-weight: 700; color: var(--blue); margin-bottom: 6px; }
+    .service-card p { font-size: 0.86rem; color: var(--text-light); line-height: 1.65; }
+    .service-price { display: inline-block; margin-top: 10px; font-size: 0.82rem; font-weight: 700; color: var(--orange); background: #FFF5E8; padding: 3px 10px; border-radius: 50px; }
+
+    .pricing { background: var(--silver); }
+    .pricing-table { width: 100%; max-width: 800px; margin: 0 auto; border-collapse: collapse; box-shadow: var(--shadow); border-radius: 8px; overflow: hidden; }
+    .pricing-table th { background: var(--blue); color: var(--white); padding: 14px 20px; text-align: left; font-size: 0.88rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .pricing-table th:last-child { text-align: right; }
+    .pricing-table td { padding: 14px 20px; font-size: 0.92rem; border-bottom: 1px solid var(--silver-dark); background: var(--white); }
+    .pricing-table tr:last-child td { border-bottom: none; }
+    .pricing-table td:last-child { text-align: right; font-weight: 700; color: var(--orange); }
+    .pricing-table tr:hover td { background: var(--silver); }
+
+    .testimonials { background: var(--blue); }
+    .testimonials h2, .testimonials .section-label { color: var(--white); }
+    .testimonials .section-subtitle { color: rgba(255,255,255,0.65); }
+    .reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+    .review-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 24px; }
+    .stars { color: var(--orange-light); font-size: 1rem; margin-bottom: 10px; }
+    .review-text { color: rgba(255,255,255,0.86); font-size: 0.9rem; line-height: 1.7; margin-bottom: 16px; }
+    .reviewer { display: flex; align-items: center; gap: 12px; }
+    .reviewer-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--orange); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--white); font-size: 0.9rem; flex-shrink: 0; }
+    .reviewer-name { font-weight: 700; color: var(--white); font-size: 0.9rem; }
+    .reviewer-location { font-size: 0.76rem; color: rgba(255,255,255,0.45); }
+
+    .warranty { background: var(--orange); padding: 60px 5%; text-align: center; }
+    .warranty h2 { color: var(--white); margin-bottom: 12px; }
+    .warranty-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; }
+    .warranty-item { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 24px; }
+    .warranty-icon { font-size: 2rem; margin-bottom: 10px; }
+    .warranty-item h3 { font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+    .warranty-item p { font-size: 0.85rem; color: rgba(255,255,255,0.82); }
+
+    .location-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 768px) { .location-grid { grid-template-columns: 1fr; } }
+    .info-block { margin-bottom: 24px; }
+    .info-block h3 { font-size: 0.85rem; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .info-block p, .info-block a { color: var(--text); font-size: 0.95rem; line-height: 1.7; text-decoration: none; }
+    .info-block a:hover { color: var(--orange); }
+    .hours-table { width: 100%; border-collapse: collapse; }
+    .hours-table tr td { padding: 5px 0; font-size: 0.9rem; }
+    .hours-table tr td:last-child { text-align: right; color: var(--blue); font-weight: 600; }
+    .map-placeholder { background: linear-gradient(135deg, var(--blue), var(--dark)); border-radius: 8px; height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--white); text-align: center; padding: 30px; box-shadow: var(--shadow); }
+    .map-placeholder p { font-size: 0.9rem; opacity: 0.78; margin: 8px 0 18px; }
+    .map-placeholder a { background: var(--orange); color: var(--white); padding: 10px 22px; border-radius: 4px; text-decoration: none; font-weight: 700; font-size: 0.88rem; }
+    .map-placeholder a:hover { background: var(--orange-light); }
+
+    .cta-section { background: var(--blue); text-align: center; padding: 80px 5%; }
+    .cta-section h2 { color: var(--white); margin-bottom: 12px; }
+    .cta-section p { color: rgba(255,255,255,0.78); max-width: 500px; margin: 0 auto 36px; }
+    .btn-orange { background: var(--orange); color: var(--white); }
+    .btn-orange:hover { background: var(--orange-light); }
+    .btn-white { background: var(--white); color: var(--blue); }
+    .btn-white:hover { background: var(--silver); }
+    .cta-phone { margin-top: 28px; color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+    .cta-phone a { color: var(--orange-light); font-weight: 800; font-size: 1.3rem; text-decoration: none; }
+
+    footer { background: var(--dark); color: rgba(255,255,255,0.5); padding: 44px 5% 24px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 36px; max-width: 1100px; margin: 0 auto 30px; }
+    @media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { font-size: 1.15rem; font-weight: 900; color: var(--white); margin-bottom: 10px; }
+    .footer-brand span { color: var(--orange-light); }
+    footer p { font-size: 0.85rem; line-height: 1.7; }
+    footer h4 { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.7); margin-bottom: 12px; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 7px; font-size: 0.85rem; }
+    footer ul a { color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; }
+    footer ul a:hover { color: var(--orange-light); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; text-align: center; font-size: 0.8rem; max-width: 1100px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  🔧 Same-day service available · Free multi-point inspection with any repair &nbsp;·&nbsp; <a href="tel:7147723300">(714) 772-3300</a>
+</div>
+
+<nav>
+  <div class="nav-logo">Chai's <span>Auto Care</span></div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#location">Location</a></li>
+    <li><a href="tel:7147723300" class="nav-cta">📞 Book Service</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Family-Owned Since 2001 · Fullerton, CA</div>
+    <h1>Auto Repair You Can<br /><em>Actually Trust</em></h1>
+    <p>ASE-certified mechanics, honest pricing, and 20+ years serving Orange County families. No surprises, no upsells — just great work.</p>
+    <div class="hero-btns">
+      <a href="tel:7147723300" class="btn btn-primary">📞 Schedule Service</a>
+      <a href="#services" class="btn btn-outline">View Services</a>
+    </div>
+    <p class="hero-phone">Call us now: <a href="tel:7147723300">(714) 772-3300</a></p>
+  </div>
+</section>
+
+<div class="trust-bar">
+  <div class="trust-item"><span>🔧</span> ASE-Certified Mechanics</div>
+  <div class="trust-item"><span>⭐</span> 4.9 Stars · 400+ Reviews</div>
+  <div class="trust-item"><span>📋</span> Free Multi-Point Inspection</div>
+  <div class="trust-item"><span>🛡️</span> 2-Year / 24,000-Mile Warranty</div>
+</div>
+
+<section class="about" id="about">
+  <div class="about-grid">
+    <img class="about-img" src="https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=800&q=80" alt="Chai's Auto Care shop" />
+    <div class="about-text">
+      <span class="section-label">Our Story</span>
+      <h2>Honest Work, Fair Prices, Family Values</h2>
+      <p>Chai Wongprasert opened Chai's Auto Care in 2001 with one simple goal: fix cars honestly. After working for years at dealerships where upselling was the norm, he decided to do things differently.</p>
+      <p>For over 20 years, we've served Fullerton, Anaheim, and Brea with transparent diagnostics, fair prices, and repairs that actually last. We only recommend what you need. We explain everything before we touch your car. And we back every job with our warranty.</p>
+      <p>From oil changes to engine rebuilds, Chai's team handles it all. Bring us your car — we'll take care of the rest.</p>
+      <div class="cert-badges">
+        <div class="cert-badge"><span>✓</span> ASE Certified</div>
+        <div class="cert-badge"><span>✓</span> AAA Approved</div>
+        <div class="cert-badge"><span>✓</span> NAPA AutoCare</div>
+      </div>
+      <div class="about-stats">
+        <div class="stat"><span class="stat-num">20+</span><span class="stat-label">Years Open</span></div>
+        <div class="stat"><span class="stat-num">6</span><span class="stat-label">Certified Techs</span></div>
+        <div class="stat"><span class="stat-num">⭐ 4.9</span><span class="stat-label">Google Rating</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="services">
+  <div class="text-center">
+    <span class="section-label">Our Services</span>
+    <h2>Full-Service Auto Repair & Maintenance</h2>
+    <p class="section-subtitle">From routine maintenance to major repairs — all makes, all models, all done right.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-card"><div class="service-icon">🛢️</div><h3>Oil Change & Lube</h3><p>Conventional, synthetic, or high-mileage oil. Free tire rotation included with every change.</p><span class="service-price">From $49.95</span></div>
+    <div class="service-card"><div class="service-icon">🛑</div><h3>Brake Service</h3><p>Inspection, pad replacement, rotor resurfacing or replacement. Stop safely, every time.</p><span class="service-price">From $149</span></div>
+    <div class="service-card"><div class="service-icon">🔩</div><h3>Engine Repair</h3><p>Diagnostics, tune-ups, head gaskets, timing belts, and full rebuilds. All work warrantied.</p><span class="service-price">Call for Quote</span></div>
+    <div class="service-card"><div class="service-icon">⚙️</div><h3>Transmission Service</h3><p>Fluid flush, filter change, rebuild, and replacement. Automatic and manual transmissions.</p><span class="service-price">From $199</span></div>
+    <div class="service-card"><div class="service-icon">🌡️</div><h3>AC & Heating</h3><p>Recharge, leak repair, compressor replacement. Stay comfortable year-round.</p><span class="service-price">From $89</span></div>
+    <div class="service-card"><div class="service-icon">🔋</div><h3>Battery & Electrical</h3><p>Testing, replacement, alternator and starter service. Fast same-day service available.</p><span class="service-price">From $129</span></div>
+    <div class="service-card"><div class="service-icon">🚗</div><h3>Tire Service</h3><p>New tires, rotation, balancing, alignment. We carry all major brands at competitive prices.</p><span class="service-price">From $15/tire</span></div>
+    <div class="service-card"><div class="service-icon">🔍</div><h3>Multi-Point Inspection</h3><p>Full vehicle inspection covering 30+ checkpoints. Free with any repair. Written report provided.</p><span class="service-price">FREE</span></div>
+    <div class="service-card"><div class="service-icon">💡</div><h3>Check Engine Light</h3><p>Full diagnostic scan, code reading, and honest explanation of what it actually means for your car.</p><span class="service-price">From $49</span></div>
+    <div class="service-card"><div class="service-icon">🛞</div><h3>Suspension & Steering</h3><p>Shocks, struts, control arms, tie rods, and alignments. Restore your ride and handling.</p><span class="service-price">Call for Quote</span></div>
+    <div class="service-card"><div class="service-icon">💧</div><h3>Cooling System</h3><p>Radiator flush, thermostat, hoses, water pump. Keep your engine from overheating.</p><span class="service-price">From $99</span></div>
+    <div class="service-card"><div class="service-icon">📋</div><h3>Smog Check</h3><p>STAR-certified smog testing. Fast, reliable, and we'll help with repairs if you don't pass.</p><span class="service-price">$49.95</span></div>
+  </div>
+</section>
+
+<section class="pricing" id="pricing">
+  <div class="text-center">
+    <span class="section-label">Transparent Pricing</span>
+    <h2>Know What to Expect</h2>
+    <p class="section-subtitle">No hidden fees. No surprise charges. Prices shown are starting rates — we'll quote your exact job before any work begins.</p>
+  </div>
+  <table class="pricing-table">
+    <thead><tr><th>Service</th><th>Estimated Price</th></tr></thead>
+    <tbody>
+      <tr><td>Oil Change (Conventional)</td><td>From $49.95</td></tr>
+      <tr><td>Oil Change (Full Synthetic)</td><td>From $79.95</td></tr>
+      <tr><td>Brake Pads (per axle)</td><td>From $149</td></tr>
+      <tr><td>Brake Rotors (per axle)</td><td>From $199</td></tr>
+      <tr><td>Tire Rotation</td><td>FREE with oil change</td></tr>
+      <tr><td>Wheel Alignment (4-wheel)</td><td>From $89</td></tr>
+      <tr><td>Battery Replacement</td><td>From $129</td></tr>
+      <tr><td>AC Recharge</td><td>From $89</td></tr>
+      <tr><td>Transmission Flush</td><td>From $199</td></tr>
+      <tr><td>Smog Check (STAR)</td><td>$49.95</td></tr>
+      <tr><td>Diagnostic Scan</td><td>From $49</td></tr>
+      <tr><td>Multi-Point Inspection</td><td>FREE</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="testimonials" id="reviews">
+  <div class="text-center">
+    <span class="section-label">Reviews</span>
+    <h2>Why Orange County Trusts Us</h2>
+    <p class="section-subtitle">Over 400 five-star reviews from real customers in Fullerton, Anaheim, and Brea.</p>
+  </div>
+  <div class="reviews-grid">
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"Chai's is the only shop I trust. They diagnosed my check engine light in 20 minutes, showed me exactly what was wrong, and fixed it for half the dealer quote. Been coming here for 8 years."</p><div class="reviewer"><div class="reviewer-avatar">R</div><div><div class="reviewer-name">Robert H.</div><div class="reviewer-location">Fullerton, CA · Google</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"As a woman, I've been taken advantage of at other shops. Chai's team is honest, thorough, and they explain everything without being condescending. Never going anywhere else."</p><div class="reviewer"><div class="reviewer-avatar">J</div><div><div class="reviewer-name">Jennifer T.</div><div class="reviewer-location">Anaheim, CA · Yelp</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"Brought in my Honda with a bad transmission. Chai gave me an honest assessment, a fair price, and had it done in two days as promised. Drives like new. Highly recommend."</p><div class="reviewer"><div class="reviewer-avatar">M</div><div><div class="reviewer-name">Marcus D.</div><div class="reviewer-location">Brea, CA · Google</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"I've recommended Chai's to my entire family. My parents, my sister, my neighbors. Every single one of them came back saying it was the best auto shop they'd ever been to. That says it all."</p><div class="reviewer"><div class="reviewer-avatar">K</div><div><div class="reviewer-name">Karen N.</div><div class="reviewer-location">Placentia, CA · Yelp</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"Dealer wanted $1,800 for my brake job. Chai did it for $580 with OEM parts and a warranty. The quality was excellent. I genuinely don't understand why anyone uses a dealership."</p><div class="reviewer"><div class="reviewer-avatar">D</div><div><div class="reviewer-name">David P.</div><div class="reviewer-location">Yorba Linda, CA · Google</div></div></div></div>
+  </div>
+</section>
+
+<section class="warranty">
+  <span class="section-label" style="color:rgba(255,255,255,0.8)">Our Guarantee</span>
+  <h2 style="color:white;margin-bottom:36px;">We Stand Behind Every Repair</h2>
+  <div class="warranty-grid">
+    <div class="warranty-item"><div class="warranty-icon">🛡️</div><h3>2-Year Warranty</h3><p>All repairs covered for 24 months or 24,000 miles — whichever comes first</p></div>
+    <div class="warranty-item"><div class="warranty-icon">📋</div><h3>Written Estimates</h3><p>Every job gets a written quote before work begins. No surprise charges ever.</p></div>
+    <div class="warranty-item"><div class="warranty-icon">🔍</div><h3>OEM & Quality Parts</h3><p>We use original equipment or verified equivalent parts on every repair</p></div>
+    <div class="warranty-item"><div class="warranty-icon">📞</div><h3>Free Follow-Up</h3><p>Any concern after your repair? Call us. We'll make it right, no questions asked.</p></div>
+  </div>
+</section>
+
+<section id="location">
+  <div class="location-grid">
+    <div>
+      <span class="section-label">Find Us</span>
+      <h2>Bring Your Car In Today</h2>
+      <div class="info-block"><h3>📍 Address</h3><p>1440 W Commonwealth Ave<br />Fullerton, CA 92833</p></div>
+      <div class="info-block"><h3>📞 Phone</h3><p><a href="tel:7147723300">(714) 772-3300</a></p></div>
+      <div class="info-block"><h3>✉️ Email</h3><p><a href="mailto:service@chaisautocare.com">service@chaisautocare.com</a></p></div>
+      <div class="info-block">
+        <h3>🕐 Hours</h3>
+        <table class="hours-table">
+          <tr><td>Monday – Friday</td><td>7:30am – 6pm</td></tr>
+          <tr><td>Saturday</td><td>8am – 4pm</td></tr>
+          <tr><td>Sunday</td><td>Closed</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="map-placeholder">
+        <div style="font-size:2.8rem;margin-bottom:10px;">📍</div>
+        <h3 style="color:white;margin-bottom:6px;">1440 W Commonwealth Ave, Fullerton</h3>
+        <p>Free parking · Near the 91 Freeway · Drop-off service available</p>
+        <a href="https://maps.google.com/?q=1440+W+Commonwealth+Ave+Fullerton+CA" target="_blank" rel="noopener">Get Directions →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <span class="section-label" style="color:rgba(255,255,255,0.65)">Schedule Today</span>
+  <h2>Your Car Deserves Honest Care</h2>
+  <p>Call to schedule or drop by during business hours. Free multi-point inspection with every visit. Same-day service often available.</p>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
+    <a href="tel:7147723300" class="btn btn-orange">📞 Call to Schedule</a>
+    <a href="#services" class="btn btn-white">View All Services</a>
+  </div>
+  <p class="cta-phone"><a href="tel:7147723300">(714) 772-3300</a></p>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Chai's <span>Auto Care</span></div>
+      <p>ASE-certified auto repair in Fullerton, Orange County. Honest diagnostics, fair prices, 2-year warranty on all repairs. Family-owned since 2001.</p>
+    </div>
+    <div>
+      <h4>Services</h4>
+      <ul>
+        <li><a href="#services">Oil Change</a></li>
+        <li><a href="#services">Brake Service</a></li>
+        <li><a href="#services">Engine Repair</a></li>
+        <li><a href="#services">Smog Check</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="tel:7147723300">(714) 772-3300</a></li>
+        <li><a href="mailto:service@chaisautocare.com">service@chaisautocare.com</a></li>
+        <li>1440 W Commonwealth Ave<br />Fullerton, CA 92833</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom"><p>© 2025 Chai's Auto Care. All rights reserved. · ASE Certified · AAA Approved · NAPA AutoCare Center</p></div>
+</footer>
+
+</body>
+</html>

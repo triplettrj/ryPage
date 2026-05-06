@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sara Thai Spa — Luxury Thai wellness and spa treatments in Irvine, Orange County. Book your premium escape today." />
+  <title>Sara Thai Spa | Luxury Thai Wellness in Irvine, Orange County</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --teal: #1A5F6A;
+      --teal-mid: #2A8090;
+      --teal-light: #4AACBD;
+      --gold: #BFA05A;
+      --gold-light: #D4B878;
+      --charcoal: #1E2328;
+      --ivory: #F8F5EE;
+      --ivory-dark: #EDE8DC;
+      --text: #2A2E33;
+      --text-light: #6B7280;
+      --white: #FFFFFF;
+      --shadow: 0 4px 32px rgba(0,0,0,0.12);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: Georgia, 'Times New Roman', serif; color: var(--text); background: var(--white); line-height: 1.7; }
+
+    .topbar { background: var(--charcoal); color: rgba(255,255,255,0.75); text-align: center; padding: 10px 20px; font-size: 0.82rem; letter-spacing: 0.08em; }
+    .topbar a { color: var(--gold-light); text-decoration: none; font-weight: 600; }
+
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.98); backdrop-filter: blur(12px); border-bottom: 1px solid var(--ivory-dark); display: flex; align-items: center; justify-content: space-between; padding: 18px 6%; }
+    .nav-logo { font-size: 1.4rem; font-weight: 400; letter-spacing: 0.12em; color: var(--teal); text-transform: uppercase; font-style: italic; }
+    .nav-logo span { color: var(--gold); font-style: normal; }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.82rem; letter-spacing: 0.1em; text-transform: uppercase; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--teal); }
+    .nav-cta { background: var(--teal) !important; color: var(--white) !important; padding: 10px 22px; border-radius: 2px; letter-spacing: 0.12em !important; }
+    .nav-cta:hover { background: var(--charcoal) !important; }
+    @media (max-width: 640px) { .nav-links { display: none; } }
+
+    .hero { min-height: 95vh; background: linear-gradient(to bottom, rgba(26,30,35,0.55), rgba(26,95,106,0.4)), url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1600&q=85') center/cover no-repeat; display: flex; align-items: center; justify-content: center; text-align: center; padding: 100px 20px 80px; }
+    .hero-inner { max-width: 680px; }
+    .hero-eyebrow { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.75rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-light); margin-bottom: 24px; }
+    .hero h1 { font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 300; color: var(--white); line-height: 1.2; margin-bottom: 24px; letter-spacing: 0.04em; }
+    .hero h1 em { color: var(--gold-light); font-style: italic; }
+    .hero-divider { width: 60px; height: 1px; background: var(--gold); margin: 0 auto 28px; }
+    .hero p { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 1.05rem; color: rgba(255,255,255,0.82); max-width: 500px; margin: 0 auto 44px; line-height: 1.8; }
+    .hero-btns { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .btn { display: inline-block; padding: 15px 36px; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none; border: none; cursor: pointer; transition: transform 0.18s, background 0.2s, color 0.2s; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--gold); color: var(--charcoal); }
+    .btn-primary:hover { background: var(--gold-light); }
+    .btn-outline { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.6); }
+    .btn-outline:hover { background: var(--white); color: var(--teal); }
+    .hero-phone { margin-top: 36px; font-family: 'Segoe UI', system-ui, sans-serif; color: rgba(255,255,255,0.6); font-size: 0.82rem; letter-spacing: 0.08em; }
+    .hero-phone a { color: var(--gold-light); text-decoration: none; font-weight: 600; }
+
+    .trust-bar { background: var(--charcoal); padding: 22px 5%; display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; border-top: 1px solid rgba(191,160,90,0.3); }
+    .trust-item { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 10px; }
+    .trust-item span { color: var(--gold); }
+
+    section { padding: 100px 6%; }
+    .section-eyebrow { font-family: 'Segoe UI', system-ui, sans-serif; display: block; font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
+    h2 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 300; color: var(--teal); line-height: 1.3; margin-bottom: 16px; letter-spacing: 0.03em; }
+    .section-subtitle { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 1rem; color: var(--text-light); max-width: 540px; margin-bottom: 56px; }
+    .text-center { text-align: center; }
+    .text-center .section-subtitle { margin-left: auto; margin-right: auto; }
+    .gold-divider { width: 50px; height: 1px; background: var(--gold); margin: 20px 0 40px; }
+    .text-center .gold-divider { margin: 20px auto 40px; }
+
+    .philosophy { background: var(--ivory); }
+    .philosophy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 768px) { .philosophy-grid { grid-template-columns: 1fr; } }
+    .philosophy-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; }
+    .philosophy-text p { margin-bottom: 20px; font-size: 1rem; line-height: 1.9; color: var(--text); }
+
+    .treatments { background: var(--white); }
+    .treatments-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2px; max-width: 1100px; margin: 0 auto; background: var(--ivory-dark); }
+    .treatment-card { background: var(--white); padding: 40px 36px; transition: background 0.2s; }
+    .treatment-card:hover { background: var(--ivory); }
+    .treatment-num { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.72rem; letter-spacing: 0.18em; color: var(--gold); margin-bottom: 14px; }
+    .treatment-card h3 { font-size: 1.2rem; font-weight: 400; color: var(--teal); margin-bottom: 12px; }
+    .treatment-card p { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.9rem; color: var(--text-light); line-height: 1.8; margin-bottom: 16px; }
+    .treatment-price { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 1rem; font-weight: 600; color: var(--gold); }
+    .treatment-duration { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.78rem; color: var(--text-light); margin-top: 4px; }
+
+    .therapists { background: var(--ivory); }
+    .therapist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 40px; max-width: 1100px; margin: 0 auto; }
+    .therapist-card { text-align: center; }
+    .therapist-img { width: 100%; aspect-ratio: 1; object-fit: cover; object-position: top; margin-bottom: 20px; }
+    .therapist-name { font-size: 1.1rem; font-weight: 400; color: var(--teal); letter-spacing: 0.04em; }
+    .therapist-title { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.76rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin: 6px 0 10px; }
+    .therapist-bio { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.87rem; color: var(--text-light); }
+
+    .packages { background: var(--charcoal); }
+    .packages h2, .packages .section-eyebrow { color: var(--white); }
+    .packages .section-subtitle { color: rgba(255,255,255,0.6); }
+    .packages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
+    .package-card { border: 1px solid rgba(191,160,90,0.25); padding: 36px; transition: border-color 0.2s, background 0.2s; }
+    .package-card:hover { border-color: var(--gold); background: rgba(191,160,90,0.05); }
+    .package-card.featured { border-color: var(--gold); background: rgba(191,160,90,0.08); }
+    .package-name { font-size: 0.72rem; font-family: 'Segoe UI', system-ui, sans-serif; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+    .package-card h3 { font-size: 1.4rem; font-weight: 300; color: var(--white); margin-bottom: 8px; }
+    .package-price { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 1.8rem; font-weight: 300; color: var(--gold-light); margin: 12px 0; }
+    .package-card p { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.87rem; color: rgba(255,255,255,0.6); margin-bottom: 20px; line-height: 1.8; }
+    .package-card ul { list-style: none; }
+    .package-card ul li { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.87rem; color: rgba(255,255,255,0.75); padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .package-card ul li::before { content: "— "; color: var(--gold); }
+
+    .testimonials { background: var(--ivory); }
+    .reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 32px; max-width: 1100px; margin: 0 auto; }
+    .review-card { border-left: 2px solid var(--gold); padding-left: 24px; }
+    .stars { color: var(--gold); font-size: 0.9rem; margin-bottom: 12px; letter-spacing: 3px; }
+    .review-text { font-size: 0.97rem; line-height: 1.85; color: var(--text); margin-bottom: 16px; font-style: italic; }
+    .reviewer-name { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.82rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); font-weight: 600; }
+    .reviewer-location { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.76rem; color: var(--text-light); margin-top: 3px; }
+
+    .amenities { background: var(--teal); padding: 80px 6%; }
+    .amenities h2 { color: var(--white); }
+    .amenities .section-eyebrow { color: var(--gold-light); }
+    .amenities .gold-divider { background: var(--gold-light); }
+    .amenities-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 32px; max-width: 1000px; margin: 0 auto; }
+    .amenity { text-align: center; }
+    .amenity-icon { font-size: 2rem; margin-bottom: 12px; }
+    .amenity h3 { font-size: 0.95rem; font-weight: 400; color: var(--white); margin-bottom: 6px; }
+    .amenity p { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.82rem; color: rgba(255,255,255,0.65); }
+
+    .location { background: var(--white); }
+    .location-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 768px) { .location-grid { grid-template-columns: 1fr; } }
+    .info-block { margin-bottom: 28px; }
+    .info-block h3 { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+    .info-block p, .info-block a { font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); font-size: 0.95rem; line-height: 1.8; text-decoration: none; }
+    .info-block a:hover { color: var(--teal); }
+    .hours-table { width: 100%; border-collapse: collapse; }
+    .hours-table tr td { font-family: 'Segoe UI', system-ui, sans-serif; padding: 6px 0; font-size: 0.9rem; }
+    .hours-table tr td:last-child { text-align: right; color: var(--teal); font-weight: 600; }
+    .map-placeholder { background: linear-gradient(160deg, var(--teal), var(--charcoal)); height: 340px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--white); text-align: center; padding: 36px; }
+    .map-placeholder p { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.9rem; opacity: 0.78; margin-bottom: 20px; margin-top: 8px; }
+    .map-placeholder a { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gold); color: var(--charcoal); padding: 10px 26px; text-decoration: none; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    .cta-section { background: var(--ivory); text-align: center; padding: 100px 6%; }
+    .cta-section h2 { color: var(--teal); }
+    .cta-section p { font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text-light); max-width: 500px; margin: 0 auto 40px; font-size: 1rem; line-height: 1.8; }
+    .btn-teal { background: var(--teal); color: var(--white); }
+    .btn-teal:hover { background: var(--charcoal); }
+    .btn-gold-solid { background: var(--gold); color: var(--charcoal); }
+    .btn-gold-solid:hover { background: var(--gold-light); }
+    .cta-phone { margin-top: 30px; font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text-light); font-size: 0.85rem; }
+    .cta-phone a { color: var(--teal); font-weight: 700; font-size: 1.2rem; text-decoration: none; }
+
+    footer { background: var(--charcoal); color: rgba(255,255,255,0.5); padding: 56px 6% 28px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; max-width: 1100px; margin: 0 auto 40px; }
+    @media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { font-size: 1.2rem; font-style: italic; letter-spacing: 0.1em; color: var(--white); margin-bottom: 12px; }
+    .footer-brand span { color: var(--gold); font-style: normal; }
+    footer p { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.85rem; line-height: 1.8; }
+    footer h4 { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--gold); margin-bottom: 14px; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 9px; font-size: 0.85rem; font-family: 'Segoe UI', system-ui, sans-serif; }
+    footer ul a { color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; }
+    footer ul a:hover { color: var(--gold); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 22px; text-align: center; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.78rem; max-width: 1100px; margin: 0 auto; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  Complimentary herbal tea with every treatment &nbsp;·&nbsp; <a href="tel:9496671200">(949) 667-1200</a> &nbsp;·&nbsp; By appointment · Walk-ins welcome when available
+</div>
+
+<nav>
+  <div class="nav-logo"><em>Sara</em> <span>Thai Spa</span></div>
+  <ul class="nav-links">
+    <li><a href="#philosophy">Philosophy</a></li>
+    <li><a href="#treatments">Treatments</a></li>
+    <li><a href="#packages">Packages</a></li>
+    <li><a href="#location">Location</a></li>
+    <li><a href="tel:9496671200" class="nav-cta">Book Now</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Est. 2008 · Irvine, California</div>
+    <h1>Your <em>Sanctuary</em><br />Awaits</h1>
+    <div class="hero-divider"></div>
+    <p>Premium Thai wellness rituals. Master therapists. A space designed for complete transformation.</p>
+    <div class="hero-btns">
+      <a href="tel:9496671200" class="btn btn-primary">Book a Treatment</a>
+      <a href="#treatments" class="btn btn-outline">Explore Services</a>
+    </div>
+    <p class="hero-phone">Reservations: <a href="tel:9496671200">(949) 667-1200</a></p>
+  </div>
+</section>
+
+<div class="trust-bar">
+  <div class="trust-item"><span>✦</span> 17 Years of Excellence</div>
+  <div class="trust-item"><span>✦</span> Master-Certified Therapists</div>
+  <div class="trust-item"><span>✦</span> Private Treatment Suites</div>
+  <div class="trust-item"><span>✦</span> 4.9 Stars · 200+ Reviews</div>
+</div>
+
+<section class="philosophy" id="philosophy">
+  <div class="philosophy-grid">
+    <img class="philosophy-img" src="https://images.unsplash.com/photo-1552693673-1bf958298935?w=800&q=85" alt="Sara Thai Spa interior" />
+    <div>
+      <span class="section-eyebrow">Our Philosophy</span>
+      <h2>Healing Is an<br />Ancient Art</h2>
+      <div class="gold-divider"></div>
+      <p>Thai massage is not merely relaxation — it is a 2,500-year-old healing system rooted in Buddhist spiritual practice. At Sara Thai Spa, we honor that tradition in every treatment we offer.</p>
+      <p>Our founder, Sara Wongsawat, trained under master practitioners in Bangkok and Chiang Rai before bringing this refined practice to Irvine in 2008. Every therapist we employ completes the same rigorous training and shares the same philosophy: that true wellness is the harmony of body, mind, and spirit.</p>
+      <p>This is not a day spa. This is a destination for those who take their wellbeing seriously.</p>
+    </div>
+  </div>
+</section>
+
+<section class="treatments" id="treatments">
+  <div class="text-center">
+    <span class="section-eyebrow">Signature Treatments</span>
+    <h2>Crafted for the Discerning Guest</h2>
+    <div class="gold-divider"></div>
+    <p class="section-subtitle" style="margin-top:-20px;">Each treatment is customized to your body and performed by our master-certified therapists.</p>
+  </div>
+  <div class="treatments-grid">
+    <div class="treatment-card"><div class="treatment-num">01</div><h3>Royal Thai Massage</h3><p>Our signature treatment — a full-body experience using traditional Sen line work, compression, and assisted stretching to restore complete energetic balance.</p><div class="treatment-price">From $130</div><div class="treatment-duration">90 or 120 minutes</div></div>
+    <div class="treatment-card"><div class="treatment-num">02</div><h3>Warm Herb Compress</h3><p>Hand-wrapped bundles of jasmine, lemongrass, and turmeric steamed and applied to the body — deeply therapeutic and profoundly relaxing.</p><div class="treatment-price">From $150</div><div class="treatment-duration">90 minutes</div></div>
+    <div class="treatment-card"><div class="treatment-num">03</div><h3>Gold Leaf Facial</h3><p>An opulent facial ritual using 24k gold-infused serums, Thai herbal extracts, and specialized massage technique for luminous, rejuvenated skin.</p><div class="treatment-price">From $175</div><div class="treatment-duration">75 minutes</div></div>
+    <div class="treatment-card"><div class="treatment-num">04</div><h3>Deep Restoration Massage</h3><p>Firm, deliberate work targeting the deep muscle layers and connective tissue — ideal for athletes, chronic pain, and post-travel recovery.</p><div class="treatment-price">From $140</div><div class="treatment-duration">90 minutes</div></div>
+    <div class="treatment-card"><div class="treatment-num">05</div><h3>Couples' Ritual</h3><p>Side-by-side in our private couples suite: a curated 2-hour journey through Thai massage, aromatherapy, and champagne. Perfect for celebrations.</p><div class="treatment-price">From $320</div><div class="treatment-duration">120 minutes</div></div>
+  </div>
+</section>
+
+<section class="therapists" id="therapists">
+  <div class="text-center">
+    <span class="section-eyebrow">Our Practitioners</span>
+    <h2>Masters of Their Craft</h2>
+    <div class="gold-divider"></div>
+  </div>
+  <div class="therapist-grid">
+    <div class="therapist-card">
+      <img class="therapist-img" src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&q=80" alt="Sara" />
+      <div class="therapist-name">Sara W.</div>
+      <div class="therapist-title">Founder · Master Practitioner</div>
+      <div class="therapist-bio">17 years · Trained in Bangkok & Chiang Rai · Royal Thai & Herb Compress specialist</div>
+    </div>
+    <div class="therapist-card">
+      <img class="therapist-img" src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&q=80" alt="Lawan" />
+      <div class="therapist-name">Lawan P.</div>
+      <div class="therapist-title">Senior Therapist</div>
+      <div class="therapist-bio">14 years · Deep tissue & sports recovery specialist · Thai Massage Institute certified</div>
+    </div>
+    <div class="therapist-card">
+      <img class="therapist-img" src="https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=400&q=80" alt="Pim" />
+      <div class="therapist-name">Pim N.</div>
+      <div class="therapist-title">Facial & Skin Specialist</div>
+      <div class="therapist-bio">10 years · Gold Leaf Facial · Certified esthetician · Holistic skincare</div>
+    </div>
+    <div class="therapist-card">
+      <img class="therapist-img" src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&q=80" alt="Wan" />
+      <div class="therapist-name">Wan K.</div>
+      <div class="therapist-title">Wellness Therapist</div>
+      <div class="therapist-bio">8 years · Couples rituals · Aromatherapy · Hot stone specialist</div>
+    </div>
+  </div>
+</section>
+
+<section class="packages" id="packages">
+  <div class="text-center">
+    <span class="section-eyebrow">Packages</span>
+    <h2>Complete Wellness Journeys</h2>
+    <div class="gold-divider" style="margin:20px auto 40px;"></div>
+    <p class="section-subtitle" style="margin-top:-20px;">For those who believe wellness is not an event but a practice.</p>
+  </div>
+  <div class="packages-grid">
+    <div class="package-card">
+      <div class="package-name">Half-Day</div>
+      <h3>The Revive</h3>
+      <div class="package-price">$280</div>
+      <p>A curated 3-hour morning or afternoon escape.</p>
+      <ul>
+        <li>90-min Royal Thai Massage</li>
+        <li>45-min Thai Facial</li>
+        <li>Herbal tea & light refreshments</li>
+        <li>Access to relaxation lounge</li>
+      </ul>
+    </div>
+    <div class="package-card featured">
+      <div class="package-name">Full Day · Most Popular</div>
+      <h3>The Sanctuary Day</h3>
+      <div class="package-price">$495</div>
+      <p>Our most beloved package — a full day of luxury wellness.</p>
+      <ul>
+        <li>120-min Royal Thai Massage</li>
+        <li>Warm Herb Compress Treatment</li>
+        <li>Gold Leaf Facial (75 min)</li>
+        <li>Gourmet Thai lunch included</li>
+        <li>Full lounge access all day</li>
+      </ul>
+    </div>
+    <div class="package-card">
+      <div class="package-name">Monthly</div>
+      <h3>The Membership</h3>
+      <div class="package-price">$199/mo</div>
+      <p>Ongoing wellness for those committed to feeling their best.</p>
+      <ul>
+        <li>1 × 90-min treatment/month</li>
+        <li>15% off all additional services</li>
+        <li>Priority booking guaranteed</li>
+        <li>Complimentary birthday treatment</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="testimonials" id="reviews">
+  <div class="text-center">
+    <span class="section-eyebrow">Guest Experiences</span>
+    <h2>Words from Our Guests</h2>
+    <div class="gold-divider"></div>
+  </div>
+  <div class="reviews-grid">
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"Sara Thai Spa is unlike any spa I've been to in California. The Royal Thai Massage with Lawan left me in a state of peace I haven't felt in years. The entire experience is thoughtfully curated."</p><div class="reviewer-name">Dr. Catherine L.</div><div class="reviewer-location">Newport Beach, CA · Google</div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"We did the Sanctuary Day package for my wife's 40th birthday. She cried — in the best possible way. The herb compress massage is extraordinary. Worth every penny and then some."</p><div class="reviewer-name">James & Michelle R.</div><div class="reviewer-location">Irvine, CA · Yelp</div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"I've held a membership for three years. The deep restoration massage with Wan after my marathon training has genuinely changed my recovery. I won't go anywhere else."</p><div class="reviewer-name">Eric M.</div><div class="reviewer-location">Laguna Hills, CA · Google</div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"The Gold Leaf Facial with Pim is transformative. My skin glowed for two weeks. This is the most sophisticated skincare experience in Orange County — I'm certain of it."</p><div class="reviewer-name">Victoria H.</div><div class="reviewer-location">Lake Forest, CA · Yelp</div></div>
+  </div>
+</section>
+
+<section class="amenities" id="amenities">
+  <div class="text-center">
+    <span class="section-eyebrow">The Space</span>
+    <h2>Designed for Total Immersion</h2>
+    <div class="gold-divider"></div>
+  </div>
+  <div class="amenities-grid">
+    <div class="amenity"><div class="amenity-icon">🚿</div><h3>Rainfall Showers</h3><p>Private en-suite showers in every treatment room</p></div>
+    <div class="amenity"><div class="amenity-icon">🍵</div><h3>Herbal Tea Bar</h3><p>Complimentary Thai herbal teas before & after</p></div>
+    <div class="amenity"><div class="amenity-icon">🅿️</div><h3>Valet Parking</h3><p>Complimentary valet for all guests</p></div>
+    <div class="amenity"><div class="amenity-icon">🔇</div><h3>Quiet Lounge</h3><p>Dedicated relaxation suite with heated recliners</p></div>
+    <div class="amenity"><div class="amenity-icon">🌸</div><h3>Aromatherapy Rooms</h3><p>Each suite infused with custom Thai botanical scents</p></div>
+  </div>
+</section>
+
+<section class="location" id="location">
+  <div class="location-grid">
+    <div>
+      <span class="section-eyebrow">Visit Us</span>
+      <h2>Find Your Stillness</h2>
+      <div class="gold-divider"></div>
+      <div class="info-block"><h3>Address</h3><p>18200 Von Karman Ave, Suite 200<br />Irvine, CA 92612</p></div>
+      <div class="info-block"><h3>Reservations</h3><p><a href="tel:9496671200">(949) 667-1200</a></p></div>
+      <div class="info-block"><h3>Email</h3><p><a href="mailto:reserve@sarathaispa.com">reserve@sarathaispa.com</a></p></div>
+      <div class="info-block">
+        <h3>Hours</h3>
+        <table class="hours-table">
+          <tr><td>Tuesday – Friday</td><td>10am – 8pm</td></tr>
+          <tr><td>Saturday</td><td>9am – 9pm</td></tr>
+          <tr><td>Sunday</td><td>10am – 7pm</td></tr>
+          <tr><td>Monday</td><td>Closed</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="map-placeholder">
+        <div style="font-size:2.6rem;margin-bottom:10px;">📍</div>
+        <h3 style="color:white;font-weight:300;margin-bottom:8px;">18200 Von Karman Ave, Irvine</h3>
+        <p>Complimentary valet · Suite 200 · 5 min from the 405</p>
+        <a href="https://maps.google.com/?q=18200+Von+Karman+Ave+Irvine+CA" target="_blank" rel="noopener">Get Directions</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <span class="section-eyebrow">Reserve</span>
+  <h2>Begin Your Journey</h2>
+  <div class="gold-divider"></div>
+  <p>Appointments available Tuesday through Sunday. New guests receive a complimentary consultation with their first treatment.</p>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+    <a href="tel:9496671200" class="btn btn-teal">Call to Reserve</a>
+    <a href="#packages" class="btn btn-gold-solid">View Packages</a>
+  </div>
+  <p class="cta-phone"><a href="tel:9496671200">(949) 667-1200</a></p>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand"><em>Sara</em> <span>Thai Spa</span></div>
+      <p>Luxury Thai wellness and spa treatments in Irvine, Orange County. Master-certified therapists. Private suites. Transformative experiences since 2008.</p>
+    </div>
+    <div>
+      <h4>Treatments</h4>
+      <ul>
+        <li><a href="#treatments">Royal Thai Massage</a></li>
+        <li><a href="#treatments">Herb Compress</a></li>
+        <li><a href="#treatments">Gold Leaf Facial</a></li>
+        <li><a href="#packages">Packages</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="tel:9496671200">(949) 667-1200</a></li>
+        <li><a href="mailto:reserve@sarathaispa.com">reserve@sarathaispa.com</a></li>
+        <li>18200 Von Karman Ave<br />Suite 200, Irvine, CA 92612</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom"><p>© 2025 Sara Thai Spa. All rights reserved. · Irvine, Orange County, California</p></div>
+</footer>
+
+</body>
+</html>
