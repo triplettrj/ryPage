@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Hungry Boy Thai Cafe — Casual, delicious Thai food in Orange County. Order online or dine in today." />
+  <title>Hungry Boy Thai Cafe | Casual Thai Dining in Orange County</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --orange: #E07B30;
+      --orange-dark: #B85E1A;
+      --red: #C0392B;
+      --gold: #D4A017;
+      --cream: #FDF9F3;
+      --cream-dark: #F5EDDC;
+      --dark: #1C1410;
+      --text: #3A2E24;
+      --text-light: #7A6A5A;
+      --white: #FFFFFF;
+      --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); background: var(--white); line-height: 1.6; }
+
+    .topbar { background: var(--red); color: var(--white); text-align: center; padding: 10px 20px; font-size: 0.88rem; }
+    .topbar a { color: var(--gold); text-decoration: none; font-weight: 700; }
+
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.97); backdrop-filter: blur(8px); border-bottom: 3px solid var(--orange); display: flex; align-items: center; justify-content: space-between; padding: 14px 5%; }
+    .nav-logo { font-size: 1.3rem; font-weight: 900; color: var(--orange-dark); }
+    .nav-logo span { color: var(--red); }
+    .nav-links { display: flex; gap: 24px; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--text); font-weight: 500; font-size: 0.92rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--orange); }
+    .nav-cta { background: var(--orange) !important; color: var(--white) !important; padding: 8px 20px; border-radius: 50px; font-weight: 700 !important; }
+    .nav-cta:hover { background: var(--orange-dark) !important; }
+    @media (max-width: 640px) { .nav-links { display: none; } }
+
+    .hero { min-height: 90vh; background: linear-gradient(to bottom right, rgba(28,20,16,0.7), rgba(224,123,48,0.35)), url('https://images.unsplash.com/photo-1585032226651-759b368d7246?w=1400&q=80') center/cover no-repeat; display: flex; align-items: center; justify-content: center; text-align: center; padding: 80px 20px; }
+    .hero-inner { max-width: 740px; }
+    .hero-badge { display: inline-block; background: var(--gold); color: var(--dark); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 18px; border-radius: 50px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(2.3rem, 5.5vw, 4rem); font-weight: 900; color: var(--white); line-height: 1.1; margin-bottom: 18px; text-shadow: 0 2px 16px rgba(0,0,0,0.4); }
+    .hero h1 em { color: var(--gold); font-style: normal; }
+    .hero p { font-size: clamp(1rem, 2.5vw, 1.2rem); color: rgba(255,255,255,0.88); max-width: 520px; margin: 0 auto 36px; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .btn { display: inline-block; padding: 14px 32px; border-radius: 50px; font-size: 1rem; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: transform 0.18s, box-shadow 0.18s, background 0.2s; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .btn-primary { background: var(--orange); color: var(--white); }
+    .btn-primary:hover { background: var(--orange-dark); }
+    .btn-outline { background: transparent; color: var(--white); border: 2px solid var(--white); }
+    .btn-outline:hover { background: var(--white); color: var(--orange); }
+    .hero-phone { margin-top: 28px; color: rgba(255,255,255,0.72); font-size: 0.92rem; }
+    .hero-phone a { color: var(--gold); font-weight: 700; text-decoration: none; font-size: 1.1rem; }
+
+    .trust-bar { background: var(--cream-dark); border-top: 3px solid var(--gold); padding: 20px 5%; display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
+    .trust-item { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; color: var(--orange-dark); }
+
+    section { padding: 80px 5%; }
+    .section-label { display: inline-block; font-size: 0.76rem; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--orange); margin-bottom: 10px; }
+    h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); font-weight: 800; color: var(--orange-dark); line-height: 1.15; margin-bottom: 14px; }
+    .section-subtitle { font-size: 1rem; color: var(--text-light); max-width: 560px; margin-bottom: 48px; }
+    .text-center { text-align: center; }
+    .text-center .section-subtitle { margin-left: auto; margin-right: auto; }
+
+    .about { background: var(--cream); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 768px) { .about-grid { grid-template-columns: 1fr; } }
+    .about-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 16px; box-shadow: var(--shadow); }
+    .about-text p { margin-bottom: 16px; line-height: 1.75; }
+    .about-stats { display: flex; gap: 28px; margin-top: 28px; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 900; color: var(--orange); display: block; }
+    .stat-label { font-size: 0.8rem; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
+    .menu-card { background: var(--white); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s; }
+    .menu-card:hover { transform: translateY(-5px); box-shadow: 0 12px 36px rgba(0,0,0,0.13); }
+    .menu-card img { width: 100%; height: 180px; object-fit: cover; }
+    .menu-card-body { padding: 18px; }
+    .menu-card-body h3 { font-size: 1.05rem; font-weight: 700; color: var(--orange-dark); margin-bottom: 5px; }
+    .menu-card-body p { font-size: 0.87rem; color: var(--text-light); }
+    .menu-price { font-weight: 800; color: var(--red); font-size: 1rem; margin-top: 10px; display: block; }
+    .spice { color: var(--red); font-size: 0.82rem; margin-top: 4px; display: block; }
+
+    .gallery { background: var(--cream); }
+    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 640px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+    .gallery-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; transition: transform 0.2s; }
+    .gallery-grid img:hover { transform: scale(1.03); }
+
+    .specials { background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%); padding: 60px 5%; text-align: center; }
+    .specials h2 { color: var(--white); margin-bottom: 12px; }
+    .specials .section-label { color: rgba(255,255,255,0.8); }
+    .specials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto; }
+    .special-card { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 14px; padding: 24px; }
+    .special-card h3 { font-size: 1.05rem; font-weight: 800; color: var(--white); margin-bottom: 6px; }
+    .special-card p { font-size: 0.87rem; color: rgba(255,255,255,0.85); }
+    .special-badge { display: inline-block; background: var(--gold); color: var(--dark); font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 50px; margin-bottom: 10px; }
+
+    .testimonials { background: var(--dark); }
+    .testimonials h2, .testimonials .section-label { color: var(--white); }
+    .testimonials .section-subtitle { color: rgba(255,255,255,0.65); }
+    .reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+    .review-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 24px; }
+    .stars { color: var(--gold); font-size: 1rem; margin-bottom: 10px; }
+    .review-text { color: rgba(255,255,255,0.85); font-size: 0.9rem; line-height: 1.7; margin-bottom: 16px; }
+    .reviewer { display: flex; align-items: center; gap: 12px; }
+    .reviewer-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--orange); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--white); font-size: 0.9rem; flex-shrink: 0; }
+    .reviewer-name { font-weight: 700; color: var(--white); font-size: 0.9rem; }
+    .reviewer-location { font-size: 0.76rem; color: rgba(255,255,255,0.45); }
+
+    .ordering { background: var(--cream); padding: 60px 5%; text-align: center; }
+    .ordering h2 { color: var(--orange-dark); margin-bottom: 12px; }
+    .ordering p { color: var(--text-light); max-width: 500px; margin: 0 auto 36px; }
+    .order-btns { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .btn-doordash { background: #FF3008; color: var(--white); }
+    .btn-doordash:hover { background: #cc2606; }
+    .btn-ubereats { background: #06C167; color: var(--white); }
+    .btn-ubereats:hover { background: #059e52; }
+    .btn-phone { background: var(--orange-dark); color: var(--white); }
+    .btn-phone:hover { background: var(--dark); }
+
+    .location-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 768px) { .location-grid { grid-template-columns: 1fr; } }
+    .info-block { margin-bottom: 24px; }
+    .info-block h3 { font-size: 0.88rem; font-weight: 700; color: var(--orange-dark); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .info-block p, .info-block a { color: var(--text); font-size: 0.95rem; line-height: 1.7; text-decoration: none; }
+    .info-block a:hover { color: var(--orange); }
+    .hours-table { width: 100%; border-collapse: collapse; }
+    .hours-table tr td { padding: 5px 0; font-size: 0.9rem; }
+    .hours-table tr td:last-child { text-align: right; color: var(--orange-dark); font-weight: 600; }
+    .map-placeholder { background: linear-gradient(135deg, var(--orange), var(--orange-dark)); border-radius: 16px; height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--white); text-align: center; padding: 30px; box-shadow: var(--shadow); }
+    .map-placeholder .map-icon { font-size: 2.8rem; margin-bottom: 12px; }
+    .map-placeholder p { font-size: 0.9rem; opacity: 0.85; margin-bottom: 16px; }
+    .map-placeholder a { background: var(--white); color: var(--orange-dark); padding: 10px 22px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 0.88rem; }
+
+    .cta-section { background: var(--red); text-align: center; padding: 70px 5%; }
+    .cta-section h2 { color: var(--white); margin-bottom: 12px; }
+    .cta-section p { color: rgba(255,255,255,0.88); max-width: 500px; margin: 0 auto 32px; }
+    .btn-white { background: var(--white); color: var(--red); }
+    .btn-white:hover { background: var(--cream); }
+    .btn-gold { background: var(--gold); color: var(--dark); }
+    .btn-gold:hover { background: #c49010; }
+    .cta-phone { margin-top: 24px; color: rgba(255,255,255,0.8); font-size: 0.92rem; }
+    .cta-phone a { color: var(--white); font-weight: 800; font-size: 1.25rem; text-decoration: none; }
+
+    footer { background: var(--dark); color: rgba(255,255,255,0.55); padding: 44px 5% 24px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 36px; max-width: 1100px; margin: 0 auto 30px; }
+    @media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { font-size: 1.15rem; font-weight: 900; color: var(--white); margin-bottom: 10px; }
+    .footer-brand span { color: var(--gold); }
+    footer p { font-size: 0.85rem; line-height: 1.7; }
+    footer h4 { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--white); margin-bottom: 12px; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 7px; font-size: 0.85rem; }
+    footer ul a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+    footer ul a:hover { color: var(--gold); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; text-align: center; font-size: 0.8rem; max-width: 1100px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  🍜 Now on DoorDash & Uber Eats! &nbsp;·&nbsp; Call ahead for large orders: <a href="tel:7145551234">(714) 555-1234</a>
+</div>
+
+<nav>
+  <div class="nav-logo">Hungry Boy <span>Thai Cafe</span></div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#specials">Specials</a></li>
+    <li><a href="#location">Location</a></li>
+    <li><a href="tel:7145551234" class="nav-cta">🍜 Order Now</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Since 2012 · Westminster, CA</div>
+    <h1>Big Flavors,<br /><em>Every Single Day</em></h1>
+    <p>Casual, fast, and seriously delicious Thai food. Real recipes, fresh ingredients, zero pretense.</p>
+    <div class="hero-btns">
+      <a href="tel:7145551234" class="btn btn-primary">📞 Order by Phone</a>
+      <a href="#menu" class="btn btn-outline">See the Menu</a>
+    </div>
+    <p class="hero-phone">Call us: <a href="tel:7145551234">(714) 555-1234</a></p>
+  </div>
+</section>
+
+<div class="trust-bar">
+  <div class="trust-item"><span>⭐</span> 4.8 Stars · 500+ Reviews</div>
+  <div class="trust-item"><span>🚀</span> 20-Min Takeout Ready</div>
+  <div class="trust-item"><span>🌶️</span> Customize Your Spice Level</div>
+  <div class="trust-item"><span>🥦</span> Vegan & Gluten-Free Options</div>
+</div>
+
+<section class="about" id="about">
+  <div class="about-grid">
+    <img class="about-img" src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80" alt="Hungry Boy Thai Cafe kitchen" />
+    <div class="about-text">
+      <span class="section-label">Our Story</span>
+      <h2>Grown Up in a Thai Kitchen</h2>
+      <p>Hungry Boy Thai Cafe was born from a simple idea: serve the food we grew up eating, at prices everyone can afford. Owner Pon Chaisuk started cooking at age 8 alongside his grandmother in Bangkok, and brought those recipes to Westminster in 2012.</p>
+      <p>No fancy plating, no pretense — just blazing woks, fresh produce, and the same bold flavors you'd find on a Bangkok side street. Every dish is made to order. Every order is made with care.</p>
+      <p>We've been feeding Westminster, Garden Grove, and Fountain Valley for over 12 years. Come see why the regulars keep coming back three times a week.</p>
+      <div class="about-stats">
+        <div class="stat"><span class="stat-num">12+</span><span class="stat-label">Years Open</span></div>
+        <div class="stat"><span class="stat-num">40+</span><span class="stat-label">Menu Items</span></div>
+        <div class="stat"><span class="stat-num">⭐ 4.8</span><span class="stat-label">Yelp Rating</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="menu">
+  <div class="text-center">
+    <span class="section-label">Our Menu</span>
+    <h2>The Dishes You'll Dream About</h2>
+    <p class="section-subtitle">Fresh, fast, and made to order. Customize spice from mild to Thai-hot.</p>
+  </div>
+  <div class="menu-grid">
+    <div class="menu-card"><img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&q=75" alt="Pad Thai" /><div class="menu-card-body"><h3>Pad Thai</h3><p>Rice noodles, egg, bean sprouts, scallions, crushed peanuts. The classic done right.</p><span class="menu-price">$13.95</span><span class="spice">🌶 Mild · Medium · Hot · Thai Hot</span></div></div>
+    <div class="menu-card"><img src="https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&q=75" alt="Green Curry" /><div class="menu-card-body"><h3>Green Curry</h3><p>Coconut milk, green curry paste, bamboo shoots, Thai basil. Our #1 seller.</p><span class="menu-price">$14.95</span><span class="spice">🌶 Mild · Medium · Hot</span></div></div>
+    <div class="menu-card"><img src="https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=75" alt="Tom Yum Soup" /><div class="menu-card-body"><h3>Tom Yum Soup</h3><p>Spicy-sour broth with lemongrass, galangal, lime, mushrooms, and your choice of protein.</p><span class="menu-price">$10.95</span><span class="spice">🌶 Always bold</span></div></div>
+    <div class="menu-card"><img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&q=75" alt="Pad See Ew" /><div class="menu-card-body"><h3>Pad See Ew</h3><p>Wide rice noodles, egg, Chinese broccoli, savory soy sauce — a weeknight staple.</p><span class="menu-price">$13.95</span></div></div>
+    <div class="menu-card"><img src="https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=600&q=75" alt="Pad Kra Pao" /><div class="menu-card-body"><h3>Pad Kra Pao</h3><p>Holy basil stir-fry with chilies, garlic, and your protein over jasmine rice + fried egg.</p><span class="menu-price">$13.95</span><span class="spice">🌶🌶 Boldly spiced</span></div></div>
+    <div class="menu-card"><img src="https://images.unsplash.com/photo-1606756790138-261d2b21cd75?w=600&q=75" alt="Mango Sticky Rice" /><div class="menu-card-body"><h3>Mango Sticky Rice</h3><p>Fresh ripe mango, sweet glutinous rice, drizzled with coconut cream. The perfect finish.</p><span class="menu-price">$7.95</span></div></div>
+    <div class="menu-card"><img src="https://images.unsplash.com/photo-1562802378-063ec186a863?w=600&q=75" alt="Thai Iced Tea" /><div class="menu-card-body"><h3>Thai Iced Tea</h3><p>Creamy, sweet, brilliant orange. Made fresh every morning with our house blend.</p><span class="menu-price">$4.50</span></div></div>
+    <div class="menu-card"><img src="https://images.unsplash.com/photo-1541014741259-de529411b96a?w=600&q=75" alt="Spring Rolls" /><div class="menu-card-body"><h3>Fresh Spring Rolls</h3><p>Rice paper rolls with shrimp, vermicelli, herbs, and peanut dipping sauce. Great starter.</p><span class="menu-price">$8.95</span></div></div>
+  </div>
+</section>
+
+<section class="gallery" id="gallery">
+  <div class="text-center">
+    <span class="section-label">Food Gallery</span>
+    <h2>Eat With Your Eyes First</h2>
+    <p class="section-subtitle">Fresh ingredients, vibrant flavors — made to order every time.</p>
+  </div>
+  <div class="gallery-grid">
+    <img src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=500&q=75" alt="Thai food spread" />
+    <img src="https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500&q=75" alt="Wok cooking" />
+    <img src="https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=500&q=75" alt="Fresh curry" />
+    <img src="https://images.unsplash.com/photo-1559847844-5315695dadae?w=500&q=75" alt="Dessert" />
+    <img src="https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=500&q=75" alt="Noodle dish" />
+    <img src="https://images.unsplash.com/photo-1517244683847-7456b63c5969?w=500&q=75" alt="Restaurant interior" />
+  </div>
+</section>
+
+<section class="specials" id="specials">
+  <span class="section-label">This Week</span>
+  <h2 style="color:white;margin-bottom:32px;">Weekly Specials</h2>
+  <div class="specials-grid">
+    <div class="special-card"><span class="special-badge">Mon–Wed</span><h3>Lunch Combo</h3><p>Any entrée + spring rolls + Thai iced tea for $16.95. Available 11am–3pm.</p></div>
+    <div class="special-card"><span class="special-badge">Thursday</span><h3>Family Night</h3><p>Order 3 entrees, get a free mango sticky rice. Dine-in only.</p></div>
+    <div class="special-card"><span class="special-badge">Weekend</span><h3>Brunch Noodles</h3><p>Saturday & Sunday 10am–1pm: Boat noodle soup + coffee for $12.</p></div>
+    <div class="special-card"><span class="special-badge">Always</span><h3>Student Discount</h3><p>Show your student ID and get 10% off your total order anytime.</p></div>
+  </div>
+</section>
+
+<section class="testimonials" id="reviews">
+  <div class="text-center">
+    <span class="section-label">Reviews</span>
+    <h2>The People Have Spoken</h2>
+    <p class="section-subtitle">500+ five-star reviews and counting.</p>
+  </div>
+  <div class="reviews-grid">
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"Hands down the best pad kra pao in OC. I get the Thai hot and it absolutely destroys me in the best way. Worth every tear."</p><div class="reviewer"><div class="reviewer-avatar">K</div><div><div class="reviewer-name">Kevin T.</div><div class="reviewer-location">Westminster, CA · Yelp</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"We order from here on DoorDash at least twice a week. The green curry arrives hot and perfect every single time. Absolutely consistent."</p><div class="reviewer"><div class="reviewer-avatar">L</div><div><div class="reviewer-name">Linda P.</div><div class="reviewer-location">Fountain Valley, CA · Google</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"Best lunch combo deal in the area. The spring rolls are fresh, the portion sizes are huge, and the staff is always friendly. 10/10."</p><div class="reviewer"><div class="reviewer-avatar">M</div><div><div class="reviewer-name">Marcus W.</div><div class="reviewer-location">Garden Grove, CA · Google</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"I grew up eating Thai food and this is the real deal. Pon clearly learned from someone who actually knew what they were doing. Authentic."</p><div class="reviewer"><div class="reviewer-avatar">N</div><div><div class="reviewer-name">Nadia S.</div><div class="reviewer-location">Huntington Beach, CA · Yelp</div></div></div></div>
+  </div>
+</section>
+
+<section class="ordering" id="order">
+  <span class="section-label">Order Online</span>
+  <h2>Ready When You Are</h2>
+  <p>Order through your favorite app or call us directly. Takeout ready in 20 minutes.</p>
+  <div class="order-btns">
+    <a href="#" class="btn btn-doordash">🚗 Order on DoorDash</a>
+    <a href="#" class="btn btn-ubereats">🛵 Order on Uber Eats</a>
+    <a href="tel:7145551234" class="btn btn-phone">📞 Call to Order</a>
+  </div>
+</section>
+
+<section id="location">
+  <div class="location-grid">
+    <div>
+      <span class="section-label">Find Us</span>
+      <h2>Come Hungry, Leave Happy</h2>
+      <div class="info-block"><h3>📍 Address</h3><p>8845 Bolsa Ave<br />Westminster, CA 92683</p></div>
+      <div class="info-block"><h3>📞 Phone</h3><p><a href="tel:7145551234">(714) 555-1234</a></p></div>
+      <div class="info-block"><h3>✉️ Email</h3><p><a href="mailto:order@hungryboythai.com">order@hungryboythai.com</a></p></div>
+      <div class="info-block">
+        <h3>🕐 Hours</h3>
+        <table class="hours-table">
+          <tr><td>Monday – Thursday</td><td>11am – 9pm</td></tr>
+          <tr><td>Friday – Saturday</td><td>11am – 10pm</td></tr>
+          <tr><td>Sunday</td><td>12pm – 8:30pm</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="map-placeholder">
+        <div class="map-icon">📍</div>
+        <h3 style="color:white;margin-bottom:8px;">8845 Bolsa Ave, Westminster CA</h3>
+        <p>Easy parking · Next to 99 Ranch · Dine-in, takeout & delivery</p>
+        <a href="https://maps.google.com/?q=8845+Bolsa+Ave+Westminster+CA" target="_blank" rel="noopener">Get Directions →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <span class="section-label" style="color:rgba(255,255,255,0.7)">Order Now</span>
+  <h2>What Are You Waiting For?</h2>
+  <p>Takeout ready in 20 minutes. Delivery in 30–40 min. Dine-in anytime. We're always cooking.</p>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
+    <a href="tel:7145551234" class="btn btn-white">📞 Call to Order</a>
+    <a href="#menu" class="btn btn-gold">See Full Menu</a>
+  </div>
+  <p class="cta-phone"><a href="tel:7145551234">(714) 555-1234</a></p>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Hungry Boy <span>Thai Cafe</span></div>
+      <p>Casual, fast, and seriously good Thai food in Westminster, Orange County. Family-owned since 2012. Dine-in, takeout, and delivery.</p>
+    </div>
+    <div>
+      <h4>Menu</h4>
+      <ul>
+        <li><a href="#menu">Noodles & Rice</a></li>
+        <li><a href="#menu">Curries & Soups</a></li>
+        <li><a href="#menu">Starters</a></li>
+        <li><a href="#menu">Desserts & Drinks</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="tel:7145551234">(714) 555-1234</a></li>
+        <li><a href="mailto:order@hungryboythai.com">order@hungryboythai.com</a></li>
+        <li>8845 Bolsa Ave<br />Westminster, CA 92683</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom"><p>© 2025 Hungry Boy Thai Cafe. All rights reserved.</p></div>
+</footer>
+
+</body>
+</html>

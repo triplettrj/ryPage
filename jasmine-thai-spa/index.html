@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Jasmine Thai Spa — Traditional Thai massage and wellness treatments in Orange County, CA. Book your escape today." />
+  <title>Jasmine Thai Spa | Traditional Thai Massage in Orange County</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --purple: #7B5EA7;
+      --purple-light: #A88FCC;
+      --teal: #3D8B8B;
+      --teal-dark: #2A6464;
+      --gold: #C9973A;
+      --gold-light: #E8C46A;
+      --cream: #FAF7F2;
+      --cream-dark: #F0EAE0;
+      --dark: #1E1E2E;
+      --text: #3A3A4A;
+      --text-light: #6B6B7B;
+      --white: #FFFFFF;
+      --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); background: var(--white); line-height: 1.6; }
+
+    .topbar { background: var(--teal-dark); color: var(--white); text-align: center; padding: 10px 20px; font-size: 0.88rem; letter-spacing: 0.03em; }
+    .topbar a { color: var(--gold-light); text-decoration: none; font-weight: 600; }
+
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.97); backdrop-filter: blur(8px); border-bottom: 2px solid var(--cream-dark); display: flex; align-items: center; justify-content: space-between; padding: 14px 5%; }
+    .nav-logo { font-size: 1.3rem; font-weight: 800; color: var(--purple); }
+    .nav-logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 24px; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--text); font-weight: 500; font-size: 0.92rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--purple); }
+    .nav-cta { background: var(--purple) !important; color: var(--white) !important; padding: 8px 20px; border-radius: 50px; font-weight: 700 !important; transition: background 0.2s !important; }
+    .nav-cta:hover { background: var(--teal) !important; }
+    @media (max-width: 640px) { .nav-links { display: none; } }
+
+    .hero { min-height: 92vh; background: linear-gradient(to bottom right, rgba(30,30,46,0.65), rgba(61,139,139,0.4)), url('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1400&q=80') center/cover no-repeat; display: flex; align-items: center; justify-content: center; text-align: center; padding: 80px 20px 60px; }
+    .hero-inner { max-width: 720px; }
+    .hero-badge { display: inline-block; background: var(--gold); color: var(--white); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 6px 18px; border-radius: 50px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(2.2rem, 5.5vw, 3.8rem); font-weight: 900; color: var(--white); line-height: 1.1; margin-bottom: 18px; text-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+    .hero h1 em { color: var(--gold-light); font-style: normal; }
+    .hero p { font-size: clamp(1rem, 2.5vw, 1.2rem); color: rgba(255,255,255,0.88); max-width: 520px; margin: 0 auto 36px; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .btn { display: inline-block; padding: 14px 32px; border-radius: 50px; font-size: 1rem; font-weight: 700; text-decoration: none; cursor: pointer; border: none; transition: transform 0.18s, box-shadow 0.18s, background 0.2s; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+    .btn-primary { background: var(--purple); color: var(--white); }
+    .btn-primary:hover { background: #6a4e96; }
+    .btn-outline { background: transparent; color: var(--white); border: 2px solid var(--white); }
+    .btn-outline:hover { background: var(--white); color: var(--purple); }
+    .hero-phone { margin-top: 28px; color: rgba(255,255,255,0.72); font-size: 0.92rem; }
+    .hero-phone a { color: var(--gold-light); font-weight: 700; text-decoration: none; font-size: 1.1rem; }
+
+    .trust-bar { background: var(--cream-dark); border-top: 3px solid var(--purple-light); padding: 20px 5%; display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
+    .trust-item { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; color: var(--teal-dark); }
+
+    section { padding: 80px 5%; }
+    .section-label { display: inline-block; font-size: 0.76rem; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+    h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); font-weight: 800; color: var(--purple); line-height: 1.15; margin-bottom: 14px; }
+    .section-subtitle { font-size: 1rem; color: var(--text-light); max-width: 560px; margin-bottom: 48px; }
+    .text-center { text-align: center; }
+    .text-center .section-subtitle { margin-left: auto; margin-right: auto; }
+
+    .about { background: var(--cream); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 768px) { .about-grid { grid-template-columns: 1fr; } }
+    .about-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 16px; box-shadow: var(--shadow); }
+    .about-text p { margin-bottom: 16px; color: var(--text); line-height: 1.75; }
+    .about-stats { display: flex; gap: 28px; margin-top: 28px; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 900; color: var(--purple); display: block; }
+    .stat-label { font-size: 0.8rem; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
+    .service-card { background: var(--white); border-radius: 16px; padding: 28px; box-shadow: var(--shadow); transition: transform 0.22s, box-shadow 0.22s; text-align: center; }
+    .service-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.13); }
+    .service-icon { font-size: 2.4rem; margin-bottom: 14px; }
+    .service-card h3 { font-size: 1.05rem; font-weight: 700; color: var(--purple); margin-bottom: 8px; }
+    .service-card p { font-size: 0.88rem; color: var(--text-light); line-height: 1.6; }
+    .service-price { font-weight: 800; color: var(--gold); font-size: 1rem; margin-top: 12px; display: block; }
+
+    .therapists { background: var(--cream); }
+    .therapist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 28px; max-width: 1000px; margin: 0 auto; }
+    .therapist-card { background: var(--white); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); text-align: center; }
+    .therapist-img { width: 100%; height: 220px; object-fit: cover; object-position: top; }
+    .therapist-body { padding: 20px; }
+    .therapist-body h3 { font-size: 1.05rem; font-weight: 700; color: var(--purple); }
+    .therapist-body .title { font-size: 0.82rem; color: var(--gold); font-weight: 600; margin: 4px 0 8px; }
+    .therapist-body p { font-size: 0.85rem; color: var(--text-light); }
+
+    .testimonials { background: var(--purple); }
+    .testimonials h2, .testimonials .section-label { color: var(--white); }
+    .testimonials .section-subtitle { color: rgba(255,255,255,0.7); }
+    .reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 22px; max-width: 1100px; margin: 0 auto; }
+    .review-card { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); border-radius: 16px; padding: 26px; transition: background 0.2s; }
+    .review-card:hover { background: rgba(255,255,255,0.16); }
+    .stars { color: var(--gold-light); font-size: 1rem; margin-bottom: 12px; }
+    .review-text { color: rgba(255,255,255,0.88); font-size: 0.92rem; line-height: 1.7; margin-bottom: 18px; }
+    .reviewer { display: flex; align-items: center; gap: 12px; }
+    .reviewer-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--white); font-size: 0.95rem; flex-shrink: 0; }
+    .reviewer-name { font-weight: 700; color: var(--white); font-size: 0.92rem; }
+    .reviewer-location { font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+
+    .pricing { background: var(--cream); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; max-width: 1000px; margin: 0 auto; }
+    .pricing-card { background: var(--white); border-radius: 16px; padding: 30px; box-shadow: var(--shadow); }
+    .pricing-card.featured { background: linear-gradient(135deg, var(--purple), #6a4e96); color: var(--white); }
+    .pricing-card h3 { font-size: 1.15rem; font-weight: 800; color: var(--purple); margin-bottom: 6px; }
+    .pricing-card.featured h3 { color: var(--gold-light); }
+    .pricing-card .price { font-size: 2rem; font-weight: 900; color: var(--gold); margin: 10px 0; }
+    .pricing-card.featured .price { color: var(--gold-light); }
+    .pricing-card p { font-size: 0.88rem; color: var(--text-light); margin-bottom: 16px; }
+    .pricing-card.featured p { color: rgba(255,255,255,0.8); }
+    .pricing-card ul { list-style: none; }
+    .pricing-card ul li { font-size: 0.88rem; padding: 5px 0; border-bottom: 1px solid var(--cream-dark); color: var(--text); }
+    .pricing-card.featured ul li { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.9); }
+    .pricing-card ul li::before { content: "✓ "; color: var(--teal); font-weight: 700; }
+    .pricing-card.featured ul li::before { color: var(--gold-light); }
+
+    .location { background: var(--white); }
+    .location-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 768px) { .location-grid { grid-template-columns: 1fr; } }
+    .info-block { margin-bottom: 26px; }
+    .info-block h3 { font-size: 0.9rem; font-weight: 700; color: var(--teal-dark); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .info-block p, .info-block a { color: var(--text); font-size: 0.95rem; line-height: 1.7; text-decoration: none; }
+    .info-block a:hover { color: var(--purple); }
+    .hours-table { width: 100%; border-collapse: collapse; }
+    .hours-table tr td { padding: 5px 0; font-size: 0.9rem; }
+    .hours-table tr td:last-child { text-align: right; color: var(--purple); font-weight: 600; }
+    .map-placeholder { background: linear-gradient(135deg, var(--purple), var(--teal-dark)); border-radius: 16px; height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--white); text-align: center; padding: 30px; box-shadow: var(--shadow); }
+    .map-placeholder .map-icon { font-size: 2.8rem; margin-bottom: 12px; }
+    .map-placeholder p { font-size: 0.92rem; opacity: 0.85; margin-bottom: 16px; }
+    .map-placeholder a { background: var(--gold); color: var(--white); padding: 10px 22px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 0.88rem; transition: background 0.2s; }
+    .map-placeholder a:hover { background: var(--gold-light); color: var(--dark); }
+
+    .cta-section { background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%); text-align: center; padding: 80px 5%; }
+    .cta-section h2 { color: var(--white); margin-bottom: 12px; }
+    .cta-section p { color: rgba(255,255,255,0.88); max-width: 500px; margin: 0 auto 32px; font-size: 1rem; }
+    .cta-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .btn-white { background: var(--white); color: var(--teal-dark); }
+    .btn-white:hover { background: var(--cream-dark); }
+    .btn-gold { background: var(--gold); color: var(--white); }
+    .btn-gold:hover { background: #b5832e; }
+    .cta-phone { margin-top: 26px; color: rgba(255,255,255,0.8); font-size: 0.92rem; }
+    .cta-phone a { color: var(--white); font-weight: 800; font-size: 1.25rem; text-decoration: none; }
+
+    footer { background: var(--dark); color: rgba(255,255,255,0.6); padding: 44px 5% 24px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 36px; max-width: 1100px; margin: 0 auto 32px; }
+    @media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { font-size: 1.15rem; font-weight: 800; color: var(--white); margin-bottom: 10px; }
+    .footer-brand span { color: var(--gold); }
+    footer p { font-size: 0.86rem; line-height: 1.7; }
+    footer h4 { font-size: 0.83rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--white); margin-bottom: 12px; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 7px; font-size: 0.86rem; }
+    footer ul a { color: rgba(255,255,255,0.55); text-decoration: none; transition: color 0.2s; }
+    footer ul a:hover { color: var(--gold); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px; text-align: center; font-size: 0.81rem; max-width: 1100px; margin: 0 auto; }
+    .social-links { display: flex; gap: 12px; margin-top: 14px; }
+    .social-link { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.65); text-decoration: none; font-size: 0.88rem; transition: background 0.2s, color 0.2s; }
+    .social-link:hover { background: var(--gold); color: var(--white); }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  🌸 New clients: 20% off your first visit &nbsp;·&nbsp; <a href="tel:7142889900">(714) 288-9900</a> &nbsp;·&nbsp; Walk-ins welcome!
+</div>
+
+<nav>
+  <div class="nav-logo">Jasmine <span>Thai Spa</span></div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#location">Location</a></li>
+    <li><a href="tel:7142889900" class="nav-cta">📞 Book Now</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Est. 2010 · Garden Grove, CA</div>
+    <h1>Restore Your Body.<br /><em>Renew Your Spirit.</em></h1>
+    <p>Traditional Thai massage techniques passed down through generations — your sanctuary of calm in Orange County.</p>
+    <div class="hero-btns">
+      <a href="tel:7142889900" class="btn btn-primary">🌸 Book Your Massage</a>
+      <a href="#services" class="btn btn-outline">View Services</a>
+    </div>
+    <p class="hero-phone">Call us: <a href="tel:7142889900">(714) 288-9900</a></p>
+  </div>
+</section>
+
+<div class="trust-bar">
+  <div class="trust-item"><span>⭐</span> 4.9 Stars · 300+ Reviews</div>
+  <div class="trust-item"><span>🌿</span> 15+ Years Experience</div>
+  <div class="trust-item"><span>🎓</span> Certified Therapists</div>
+  <div class="trust-item"><span>💆</span> Walk-Ins Welcome</div>
+</div>
+
+<section class="about" id="about">
+  <div class="about-grid">
+    <img class="about-img" src="https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=800&q=80" alt="Jasmine Thai Spa treatment room" />
+    <div class="about-text">
+      <span class="section-label">Our Story</span>
+      <h2>Ancient Traditions, Modern Comfort</h2>
+      <p>Jasmine Thai Spa was founded in 2010 by Malee Srisuk, a certified Thai massage therapist trained in Chiang Mai's renowned massage schools. She brought the healing art of nuad boran — traditional Thai massage — to the heart of Orange County.</p>
+      <p>Our therapists average over 10 years of hands-on experience. Every treatment is personalized to your body's needs, whether you're unwinding after a long week or recovering from an active lifestyle.</p>
+      <p>From the moment you walk through our doors, the stress of the outside world fades away. That's our promise to every guest.</p>
+      <div class="about-stats">
+        <div class="stat"><span class="stat-num">15+</span><span class="stat-label">Years Open</span></div>
+        <div class="stat"><span class="stat-num">8</span><span class="stat-label">Therapists</span></div>
+        <div class="stat"><span class="stat-num">5,000+</span><span class="stat-label">Happy Guests</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="services">
+  <div class="text-center">
+    <span class="section-label">Our Services</span>
+    <h2>Treatments Tailored to You</h2>
+    <p class="section-subtitle">Every service uses authentic techniques and premium products for a truly restorative experience.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-card"><div class="service-icon">🙏</div><h3>Traditional Thai Massage</h3><p>Deep compression, acupressure, and assisted stretching to release tension and restore energy flow.</p><span class="service-price">From $65 / 60 min</span></div>
+    <div class="service-card"><div class="service-icon">🌊</div><h3>Swedish Massage</h3><p>Gentle, flowing strokes to relax muscles, improve circulation, and ease everyday stress.</p><span class="service-price">From $70 / 60 min</span></div>
+    <div class="service-card"><div class="service-icon">💪</div><h3>Deep Tissue Massage</h3><p>Firm pressure targeting deep muscle layers and connective tissue for chronic pain and tension relief.</p><span class="service-price">From $80 / 60 min</span></div>
+    <div class="service-card"><div class="service-icon">🌸</div><h3>Aromatherapy Massage</h3><p>Swedish technique combined with therapeutic essential oils to calm the mind and soothe the senses.</p><span class="service-price">From $85 / 60 min</span></div>
+    <div class="service-card"><div class="service-icon">✨</div><h3>Facial Treatment</h3><p>Cleanse, exfoliate, and hydrate with our relaxing Thai herbal facial using natural ingredients.</p><span class="service-price">From $65 / 45 min</span></div>
+    <div class="service-card"><div class="service-icon">👣</div><h3>Thai Foot Reflexology</h3><p>Targeted pressure on reflex points of the feet to relieve tension throughout the whole body.</p><span class="service-price">From $45 / 45 min</span></div>
+    <div class="service-card"><div class="service-icon">🧘</div><h3>Hot Stone Massage</h3><p>Smooth heated basalt stones melt away muscle tightness while warming and relaxing the body.</p><span class="service-price">From $90 / 60 min</span></div>
+    <div class="service-card"><div class="service-icon">💑</div><h3>Couples Massage</h3><p>Share the relaxation experience in our private couples suite — perfect for date night or a special occasion.</p><span class="service-price">From $150 / 60 min</span></div>
+  </div>
+</section>
+
+<section class="therapists" id="therapists">
+  <div class="text-center">
+    <span class="section-label">Meet Our Team</span>
+    <h2>Expert Therapists Who Care</h2>
+    <p class="section-subtitle">Every therapist at Jasmine Thai Spa is certified, experienced, and passionate about your wellness.</p>
+  </div>
+  <div class="therapist-grid">
+    <div class="therapist-card">
+      <img class="therapist-img" src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&q=75" alt="Malee" />
+      <div class="therapist-body"><h3>Malee S.</h3><div class="title">Founder & Lead Therapist</div><p>15 years · Certified in Chiang Mai · Specializes in traditional Thai & deep tissue</p></div>
+    </div>
+    <div class="therapist-card">
+      <img class="therapist-img" src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&q=75" alt="Nong" />
+      <div class="therapist-body"><h3>Nong P.</h3><div class="title">Senior Therapist</div><p>12 years · Specializes in aromatherapy and Swedish massage</p></div>
+    </div>
+    <div class="therapist-card">
+      <img class="therapist-img" src="https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=400&q=75" alt="Joy" />
+      <div class="therapist-body"><h3>Joy W.</h3><div class="title">Wellness Therapist</div><p>8 years · Hot stone & couples massage specialist</p></div>
+    </div>
+    <div class="therapist-card">
+      <img class="therapist-img" src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&q=75" alt="Dao" />
+      <div class="therapist-body"><h3>Dao T.</h3><div class="title">Foot Reflexology Specialist</div><p>10 years · Certified reflexologist & facial treatment expert</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="testimonials" id="reviews">
+  <div class="text-center">
+    <span class="section-label">Reviews</span>
+    <h2>What Our Guests Say</h2>
+    <p class="section-subtitle">Thousands of relaxed, happy guests since 2010.</p>
+  </div>
+  <div class="reviews-grid">
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"Malee is incredible — she found knots in my back I didn't even know existed. Left feeling like a new person. Best traditional Thai massage in all of OC, no question."</p><div class="reviewer"><div class="reviewer-avatar">A</div><div><div class="reviewer-name">Amanda K.</div><div class="reviewer-location">Anaheim, CA · Yelp</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"My husband and I did the couples massage for our anniversary. The room was beautiful, the therapists were professional and skilled. We'll absolutely be back every month."</p><div class="reviewer"><div class="reviewer-avatar">S</div><div><div class="reviewer-name">Sandra & Mike R.</div><div class="reviewer-location">Irvine, CA · Google</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"I've been to a dozen spas in Orange County. Jasmine is by far the best value and the most relaxing. The hot stone massage is life-changing. I'm a regular now."</p><div class="reviewer"><div class="reviewer-avatar">T</div><div><div class="reviewer-name">Tom L.</div><div class="reviewer-location">Fullerton, CA · Yelp</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"Nong is absolutely amazing. I came in with terrible neck pain and walked out pain-free. The whole experience is so calming. Highly recommend the deep tissue."</p><div class="reviewer"><div class="reviewer-avatar">R</div><div><div class="reviewer-name">Rachel M.</div><div class="reviewer-location">Orange, CA · Google</div></div></div></div>
+  </div>
+</section>
+
+<section class="pricing" id="pricing">
+  <div class="text-center">
+    <span class="section-label">Pricing</span>
+    <h2>Transparent, Affordable Wellness</h2>
+    <p class="section-subtitle">No hidden fees. Just great massage at honest prices. Packages save you even more.</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <h3>Single Session</h3>
+      <div class="price">$65+</div>
+      <p>Perfect for a one-time treat or first visit.</p>
+      <ul>
+        <li>60 or 90 min options</li>
+        <li>All massage types</li>
+        <li>Complimentary tea</li>
+        <li>Book same-day</li>
+      </ul>
+    </div>
+    <div class="pricing-card featured">
+      <h3>Monthly Membership</h3>
+      <div class="price">$55/mo</div>
+      <p>One 60-min massage per month. Best value for regulars.</p>
+      <ul>
+        <li>1 massage/month</li>
+        <li>Roll over unused visits</li>
+        <li>10% off add-ons</li>
+        <li>Priority booking</li>
+      </ul>
+    </div>
+    <div class="pricing-card">
+      <h3>Package of 5</h3>
+      <div class="price">$295</div>
+      <p>Save $30 vs. single sessions. Great for regular self-care.</p>
+      <ul>
+        <li>5 × 60-min sessions</li>
+        <li>Never expires</li>
+        <li>Mix & match services</li>
+        <li>Gift-able</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="location" id="location">
+  <div class="location-grid">
+    <div>
+      <span class="section-label">Find Us</span>
+      <h2>Come Unwind Today</h2>
+      <div class="info-block"><h3>📍 Address</h3><p>9812 Garden Grove Blvd<br />Garden Grove, CA 92844</p></div>
+      <div class="info-block"><h3>📞 Phone</h3><p><a href="tel:7142889900">(714) 288-9900</a></p></div>
+      <div class="info-block"><h3>✉️ Email</h3><p><a href="mailto:hello@jasminethaispa.com">hello@jasminethaispa.com</a></p></div>
+      <div class="info-block">
+        <h3>🕐 Hours</h3>
+        <table class="hours-table">
+          <tr><td>Monday – Friday</td><td>10am – 8pm</td></tr>
+          <tr><td>Saturday</td><td>9am – 9pm</td></tr>
+          <tr><td>Sunday</td><td>10am – 7pm</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="map-placeholder">
+        <div class="map-icon">📍</div>
+        <h3 style="color:white;margin-bottom:8px;">9812 Garden Grove Blvd</h3>
+        <p>Free parking · Accessible entrance · Private treatment rooms</p>
+        <a href="https://maps.google.com/?q=9812+Garden+Grove+Blvd+Garden+Grove+CA" target="_blank" rel="noopener">Get Directions →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <span class="section-label" style="color:rgba(255,255,255,0.7)">Ready to Relax?</span>
+  <h2>Your Escape Is Waiting</h2>
+  <p>Book your appointment today — walk-ins always welcome. New clients get 20% off their first visit.</p>
+  <div class="cta-btns">
+    <a href="tel:7142889900" class="btn btn-white">📞 Call to Book</a>
+    <a href="#services" class="btn btn-gold">View Services</a>
+  </div>
+  <p class="cta-phone"><a href="tel:7142889900">(714) 288-9900</a></p>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Jasmine <span>Thai Spa</span></div>
+      <p>Traditional Thai massage and wellness treatments in Garden Grove, Orange County. Certified therapists. Walk-ins welcome since 2010.</p>
+      <div class="social-links">
+        <a class="social-link" href="#" aria-label="Facebook">f</a>
+        <a class="social-link" href="#" aria-label="Instagram">📸</a>
+        <a class="social-link" href="#" aria-label="Yelp">★</a>
+      </div>
+    </div>
+    <div>
+      <h4>Services</h4>
+      <ul>
+        <li><a href="#services">Thai Massage</a></li>
+        <li><a href="#services">Deep Tissue</a></li>
+        <li><a href="#services">Aromatherapy</a></li>
+        <li><a href="#services">Couples Massage</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="tel:7142889900">(714) 288-9900</a></li>
+        <li><a href="mailto:hello@jasminethaispa.com">hello@jasminethaispa.com</a></li>
+        <li>9812 Garden Grove Blvd<br />Garden Grove, CA 92844</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Jasmine Thai Spa. All rights reserved.</p>
+  </div>
+</footer>
+
+</body>
+</html>

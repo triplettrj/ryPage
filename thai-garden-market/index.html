@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Thai Garden Market — Authentic Thai groceries, imported spices, and fresh produce in Orange County, CA. Family-owned since 1998." />
+  <title>Thai Garden Market | Authentic Thai Grocery in Orange County</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #2D7A4F;
+      --green-dark: #1E5435;
+      --green-light: #4CAF78;
+      --gold: #D4960A;
+      --gold-light: #F0B429;
+      --orange: #E07B30;
+      --cream: #F8F4EC;
+      --cream-dark: #EDE6D6;
+      --dark: #1A1F16;
+      --text: #2A3020;
+      --text-light: #6B7A60;
+      --white: #FFFFFF;
+      --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); background: var(--white); line-height: 1.6; }
+
+    .topbar { background: var(--green-dark); color: var(--white); text-align: center; padding: 10px 20px; font-size: 0.88rem; }
+    .topbar a { color: var(--gold-light); text-decoration: none; font-weight: 700; }
+
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.97); backdrop-filter: blur(8px); border-bottom: 3px solid var(--green); display: flex; align-items: center; justify-content: space-between; padding: 14px 5%; }
+    .nav-logo { font-size: 1.3rem; font-weight: 800; color: var(--green-dark); }
+    .nav-logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 24px; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--text); font-weight: 500; font-size: 0.92rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--green); }
+    .nav-cta { background: var(--green) !important; color: var(--white) !important; padding: 8px 20px; border-radius: 50px; font-weight: 700 !important; }
+    .nav-cta:hover { background: var(--green-dark) !important; }
+    @media (max-width: 640px) { .nav-links { display: none; } }
+
+    .hero { min-height: 88vh; background: linear-gradient(to bottom right, rgba(26,31,22,0.68), rgba(45,122,79,0.38)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1400&q=80') center/cover no-repeat; display: flex; align-items: center; justify-content: center; text-align: center; padding: 80px 20px; }
+    .hero-inner { max-width: 740px; }
+    .hero-badge { display: inline-block; background: var(--gold); color: var(--dark); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 18px; border-radius: 50px; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(2.2rem, 5.5vw, 3.8rem); font-weight: 900; color: var(--white); line-height: 1.1; margin-bottom: 18px; text-shadow: 0 2px 14px rgba(0,0,0,0.4); }
+    .hero h1 em { color: var(--gold-light); font-style: normal; }
+    .hero p { font-size: clamp(1rem, 2.5vw, 1.2rem); color: rgba(255,255,255,0.88); max-width: 520px; margin: 0 auto 36px; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .btn { display: inline-block; padding: 14px 32px; border-radius: 50px; font-size: 1rem; font-weight: 700; text-decoration: none; border: none; cursor: pointer; transition: transform 0.18s, box-shadow 0.18s, background 0.2s; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+    .btn-primary { background: var(--green); color: var(--white); }
+    .btn-primary:hover { background: var(--green-dark); }
+    .btn-outline { background: transparent; color: var(--white); border: 2px solid var(--white); }
+    .btn-outline:hover { background: var(--white); color: var(--green-dark); }
+    .hero-phone { margin-top: 28px; color: rgba(255,255,255,0.72); font-size: 0.92rem; }
+    .hero-phone a { color: var(--gold-light); font-weight: 700; text-decoration: none; font-size: 1.1rem; }
+
+    .trust-bar { background: var(--cream-dark); border-top: 3px solid var(--gold); padding: 20px 5%; display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
+    .trust-item { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; color: var(--green-dark); }
+
+    section { padding: 80px 5%; }
+    .section-label { display: inline-block; font-size: 0.76rem; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+    h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); font-weight: 800; color: var(--green-dark); line-height: 1.15; margin-bottom: 14px; }
+    .section-subtitle { font-size: 1rem; color: var(--text-light); max-width: 560px; margin-bottom: 48px; }
+    .text-center { text-align: center; }
+    .text-center .section-subtitle { margin-left: auto; margin-right: auto; }
+
+    .about { background: var(--cream); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 768px) { .about-grid { grid-template-columns: 1fr; } }
+    .about-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 16px; box-shadow: var(--shadow); }
+    .about-text p { margin-bottom: 16px; line-height: 1.8; }
+    .about-stats { display: flex; gap: 28px; margin-top: 28px; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 900; color: var(--green); display: block; }
+    .stat-label { font-size: 0.8rem; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+    .category-card { background: var(--white); border: 2px solid var(--cream-dark); border-radius: 14px; padding: 28px 20px; text-align: center; transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; cursor: default; }
+    .category-card:hover { border-color: var(--green); transform: translateY(-4px); box-shadow: var(--shadow); }
+    .category-icon { font-size: 2.4rem; margin-bottom: 12px; }
+    .category-card h3 { font-size: 0.97rem; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; }
+    .category-card p { font-size: 0.8rem; color: var(--text-light); }
+
+    .products { background: var(--cream); }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
+    .product-card { background: var(--white); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; }
+    .product-card:hover { transform: translateY(-5px); }
+    .product-card img { width: 100%; height: 170px; object-fit: cover; }
+    .product-body { padding: 16px; }
+    .product-body h3 { font-size: 0.97rem; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; }
+    .product-origin { font-size: 0.76rem; color: var(--gold); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: block; }
+    .product-body p { font-size: 0.83rem; color: var(--text-light); }
+    .product-price { font-weight: 800; color: var(--green); font-size: 1rem; margin-top: 8px; display: block; }
+
+    .testimonials { background: var(--green-dark); }
+    .testimonials h2, .testimonials .section-label { color: var(--white); }
+    .testimonials .section-subtitle { color: rgba(255,255,255,0.65); }
+    .reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
+    .review-card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.13); border-radius: 14px; padding: 24px; }
+    .stars { color: var(--gold-light); font-size: 1rem; margin-bottom: 10px; }
+    .review-text { color: rgba(255,255,255,0.86); font-size: 0.9rem; line-height: 1.7; margin-bottom: 16px; }
+    .reviewer { display: flex; align-items: center; gap: 12px; }
+    .reviewer-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--dark); font-size: 0.9rem; flex-shrink: 0; }
+    .reviewer-name { font-weight: 700; color: var(--white); font-size: 0.9rem; }
+    .reviewer-location { font-size: 0.76rem; color: rgba(255,255,255,0.45); }
+
+    .services-section { background: var(--white); }
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; max-width: 1000px; margin: 0 auto; }
+    .service-card { background: var(--cream); border-radius: 14px; padding: 28px; border-left: 4px solid var(--green); }
+    .service-card h3 { font-size: 1.05rem; font-weight: 700; color: var(--green-dark); margin-bottom: 8px; }
+    .service-card p { font-size: 0.88rem; color: var(--text-light); line-height: 1.7; }
+
+    .newsletter { background: linear-gradient(135deg, var(--green), var(--green-dark)); padding: 70px 5%; text-align: center; }
+    .newsletter h2 { color: var(--white); margin-bottom: 12px; }
+    .newsletter .section-label { color: var(--gold-light); }
+    .newsletter p { color: rgba(255,255,255,0.82); max-width: 480px; margin: 0 auto 28px; }
+    .newsletter-form { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; max-width: 480px; margin: 0 auto; }
+    .newsletter-form input { flex: 1; min-width: 220px; padding: 13px 20px; border-radius: 50px; border: none; font-size: 0.95rem; outline: none; }
+    .newsletter-form button { background: var(--gold); color: var(--dark); padding: 13px 28px; border-radius: 50px; border: none; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .newsletter-form button:hover { background: var(--gold-light); }
+
+    .location-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; max-width: 1100px; margin: 0 auto; }
+    @media (max-width: 768px) { .location-grid { grid-template-columns: 1fr; } }
+    .info-block { margin-bottom: 24px; }
+    .info-block h3 { font-size: 0.88rem; font-weight: 700; color: var(--green-dark); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .info-block p, .info-block a { color: var(--text); font-size: 0.95rem; line-height: 1.7; text-decoration: none; }
+    .info-block a:hover { color: var(--green); }
+    .hours-table { width: 100%; border-collapse: collapse; }
+    .hours-table tr td { padding: 5px 0; font-size: 0.9rem; }
+    .hours-table tr td:last-child { text-align: right; color: var(--green-dark); font-weight: 600; }
+    .map-placeholder { background: linear-gradient(135deg, var(--green), var(--green-dark)); border-radius: 16px; height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--white); text-align: center; padding: 30px; box-shadow: var(--shadow); }
+    .map-placeholder p { font-size: 0.9rem; opacity: 0.82; margin: 8px 0 18px; }
+    .map-placeholder a { background: var(--gold); color: var(--dark); padding: 10px 22px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 0.88rem; }
+
+    .cta-section { background: var(--gold); text-align: center; padding: 70px 5%; }
+    .cta-section h2 { color: var(--dark); margin-bottom: 12px; }
+    .cta-section p { color: rgba(26,31,22,0.78); max-width: 500px; margin: 0 auto 32px; }
+    .btn-dark { background: var(--green-dark); color: var(--white); }
+    .btn-dark:hover { background: var(--dark); }
+    .btn-white { background: var(--white); color: var(--green-dark); }
+    .btn-white:hover { background: var(--cream); }
+    .cta-phone { margin-top: 24px; color: rgba(26,31,22,0.75); font-size: 0.92rem; }
+    .cta-phone a { color: var(--green-dark); font-weight: 800; font-size: 1.25rem; text-decoration: none; }
+
+    footer { background: var(--dark); color: rgba(255,255,255,0.5); padding: 44px 5% 24px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 36px; max-width: 1100px; margin: 0 auto 30px; }
+    @media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { font-size: 1.15rem; font-weight: 800; color: var(--white); margin-bottom: 10px; }
+    .footer-brand span { color: var(--gold-light); }
+    footer p { font-size: 0.85rem; line-height: 1.7; }
+    footer h4 { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--green-light); margin-bottom: 12px; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 7px; font-size: 0.85rem; }
+    footer ul a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+    footer ul a:hover { color: var(--gold-light); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; text-align: center; font-size: 0.8rem; max-width: 1100px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  🌿 New shipment of imported Thai spices just arrived! &nbsp;·&nbsp; <a href="tel:7143510088">(714) 351-0088</a> &nbsp;·&nbsp; Wholesale inquiries welcome
+</div>
+
+<nav>
+  <div class="nav-logo">Thai Garden <span>Market</span></div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#categories">Products</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#location">Location</a></li>
+    <li><a href="tel:7143510088" class="nav-cta">📞 Call Us</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Family-Owned Since 1998 · Anaheim, CA</div>
+    <h1>Authentic Thai Ingredients<br /><em>Right Here in OC</em></h1>
+    <p>Everything you need to cook like you never left Thailand — imported spices, fresh herbs, specialty sauces, and more.</p>
+    <div class="hero-btns">
+      <a href="#categories" class="btn btn-primary">🛒 Shop Our Products</a>
+      <a href="tel:7143510088" class="btn btn-outline">📞 Call Us</a>
+    </div>
+    <p class="hero-phone">Questions? <a href="tel:7143510088">(714) 351-0088</a></p>
+  </div>
+</section>
+
+<div class="trust-bar">
+  <div class="trust-item"><span>🌿</span> 25+ Years Family-Owned</div>
+  <div class="trust-item"><span>✈️</span> Direct Imports from Thailand</div>
+  <div class="trust-item"><span>🥬</span> Fresh Produce Delivered Weekly</div>
+  <div class="trust-item"><span>📦</span> Wholesale & Special Orders</div>
+</div>
+
+<section class="about" id="about">
+  <div class="about-grid">
+    <img class="about-img" src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&q=80" alt="Thai Garden Market fresh produce" />
+    <div class="about-text">
+      <span class="section-label">Our Story</span>
+      <h2>The Taste of Thailand, In Your Kitchen</h2>
+      <p>Thai Garden Market was founded in 1998 by the Rattana family, who moved to Anaheim from Bangkok and immediately noticed something missing: you couldn't find real Thai ingredients anywhere in Orange County.</p>
+      <p>So they fixed that. Starting with a small storefront and a handful of imported products, they built the most trusted Thai grocery in OC over the next 25 years. Today, we carry over 2,000 products — fresh, frozen, dried, and prepared — sourced directly from Thailand and the broader Southeast Asian region.</p>
+      <p>Whether you're a home cook, a restaurant owner, or just someone craving the real thing, Thai Garden Market is your destination.</p>
+      <div class="about-stats">
+        <div class="stat"><span class="stat-num">25+</span><span class="stat-label">Years Open</span></div>
+        <div class="stat"><span class="stat-num">2,000+</span><span class="stat-label">Products</span></div>
+        <div class="stat"><span class="stat-num">50+</span><span class="stat-label">Restaurant Clients</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="categories">
+  <div class="text-center">
+    <span class="section-label">Product Categories</span>
+    <h2>Everything You Need</h2>
+    <p class="section-subtitle">2,000+ products across every category of Thai and Southeast Asian cooking.</p>
+  </div>
+  <div class="categories-grid">
+    <div class="category-card"><div class="category-icon">🌶️</div><h3>Spices & Herbs</h3><p>Fresh lemongrass, kaffir lime, galangal, Thai basil</p></div>
+    <div class="category-card"><div class="category-icon">🍶</div><h3>Sauces & Pastes</h3><p>Fish sauce, oyster sauce, curry pastes, shrimp paste</p></div>
+    <div class="category-card"><div class="category-icon">🍚</div><h3>Rice & Noodles</h3><p>Jasmine rice, sticky rice, rice noodles, glass noodles</p></div>
+    <div class="category-card"><div class="category-icon">🥬</div><h3>Fresh Produce</h3><p>Thai eggplant, morning glory, bok choy, banana flower</p></div>
+    <div class="category-card"><div class="category-icon">🍪</div><h3>Snacks</h3><p>Thai crackers, dried mango, tamarind candy, chips</p></div>
+    <div class="category-card"><div class="category-icon">🧊</div><h3>Frozen Foods</h3><p>Dumplings, curry portions, roti, pandan products</p></div>
+    <div class="category-card"><div class="category-icon">🍵</div><h3>Drinks & Teas</h3><p>Thai tea mix, coconut water, pandan drinks, herbal teas</p></div>
+    <div class="category-card"><div class="category-icon">🥘</div><h3>Cooking Tools</h3><p>Woks, mortar & pestles, steamer baskets, banana leaves</p></div>
+  </div>
+</section>
+
+<section class="products" id="products">
+  <div class="text-center">
+    <span class="section-label">Best Sellers</span>
+    <h2>Customer Favorites</h2>
+    <p class="section-subtitle">Our most popular imports, restocked weekly direct from Thailand.</p>
+  </div>
+  <div class="products-grid">
+    <div class="product-card"><img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=75" alt="Fish sauce" /><div class="product-body"><span class="product-origin">Imported · Thailand</span><h3>Premium Fish Sauce</h3><p>Tiparos & Megachef brands. The foundation of every Thai dish.</p><span class="product-price">From $4.99</span></div></div>
+    <div class="product-card"><img src="https://images.unsplash.com/photo-1603569283847-aa295f0d016a?w=400&q=75" alt="Thai curry paste" /><div class="product-body"><span class="product-origin">Imported · Maesri Brand</span><h3>Thai Curry Pastes</h3><p>Red, green, yellow, Massaman, Panang — full Maesri lineup.</p><span class="product-price">From $2.49</span></div></div>
+    <div class="product-card"><img src="https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?w=400&q=75" alt="Jasmine rice" /><div class="product-body"><span class="product-origin">Imported · Jasmine Grade A</span><h3>Thai Jasmine Rice</h3><p>Hom Mali fragrant jasmine rice. 5lb, 10lb, and 25lb bags.</p><span class="product-price">From $9.99</span></div></div>
+    <div class="product-card"><img src="https://images.unsplash.com/photo-1562802378-063ec186a863?w=400&q=75" alt="Thai tea" /><div class="product-body"><span class="product-origin">Imported · Cha Tra Mue</span><h3>Thai Tea Mix</h3><p>The original Thai tea blend. Makes that perfect orange color every time.</p><span class="product-price">$6.99</span></div></div>
+    <div class="product-card"><img src="https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400&q=75" alt="Lemongrass" /><div class="product-body"><span class="product-origin">Fresh · Local Farm</span><h3>Fresh Lemongrass</h3><p>Locally grown, aromatic, perfect for soups, curries, and marinades.</p><span class="product-price">$2.99 / bunch</span></div></div>
+    <div class="product-card"><img src="https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&q=75" alt="Coconut milk" /><div class="product-body"><span class="product-origin">Imported · Aroy-D</span><h3>Coconut Milk</h3><p>Full-fat Aroy-D coconut milk. Best brand for curries and desserts.</p><span class="product-price">From $2.29</span></div></div>
+    <div class="product-card"><img src="https://images.unsplash.com/photo-1597262975002-c5c3b14bbd62?w=400&q=75" alt="Dried chilies" /><div class="product-body"><span class="product-origin">Imported · Dried</span><h3>Thai Dried Chilies</h3><p>Bird's eye, dried red, and smoked varieties. Heat for every dish.</p><span class="product-price">From $3.49</span></div></div>
+    <div class="product-card"><img src="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&q=75" alt="Snacks" /><div class="product-body"><span class="product-origin">Imported · Various</span><h3>Thai Snack Variety</h3><p>Tamarind candy, dried mango, shrimp crackers, and seasonal imports.</p><span class="product-price">From $1.99</span></div></div>
+  </div>
+</section>
+
+<section class="testimonials" id="reviews">
+  <div class="text-center">
+    <span class="section-label">Reviews</span>
+    <h2>Trusted by the Community</h2>
+    <p class="section-subtitle">Home cooks and restaurant chefs alike — they all shop here.</p>
+  </div>
+  <div class="reviews-grid">
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"I've been cooking Thai food for 30 years and Thai Garden Market is the only place in OC where I can find every single ingredient I need. The kaffir lime leaves are always fresh."</p><div class="reviewer"><div class="reviewer-avatar">S</div><div><div class="reviewer-name">Somying T.</div><div class="reviewer-location">Anaheim, CA · Google</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"We source our curry pastes and fish sauce from here for our restaurant. The wholesale prices are fair, delivery is reliable, and the quality is consistent. Best supplier in the area."</p><div class="reviewer"><div class="reviewer-avatar">C</div><div><div class="reviewer-name">Chef Carlos M.</div><div class="reviewer-location">Santa Ana, CA · Yelp</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"I moved from Bangkok 5 years ago and was heartbroken thinking I couldn't find real ingredients here. Thai Garden Market changed everything. It smells like home when I walk in."</p><div class="reviewer"><div class="reviewer-avatar">P</div><div><div class="reviewer-name">Pattara N.</div><div class="reviewer-location">Garden Grove, CA · Yelp</div></div></div></div>
+    <div class="review-card"><div class="stars">★★★★★</div><p class="review-text">"Found banana flowers and fresh galangal here that I couldn't find anywhere else in Southern California. The staff know their products deeply and helped me find exactly what I needed."</p><div class="reviewer"><div class="reviewer-avatar">A</div><div><div class="reviewer-name">Amanda K.</div><div class="reviewer-location">Fullerton, CA · Google</div></div></div></div>
+  </div>
+</section>
+
+<section class="services-section" id="services">
+  <div class="text-center">
+    <span class="section-label">Our Services</span>
+    <h2>More Than a Grocery Store</h2>
+    <p class="section-subtitle">We go beyond the shelves to serve our community and business partners.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-card"><h3>🍽️ Catering Supplies</h3><p>Full catering packages for Thai events — bulk ingredients, serving equipment, and consultation for parties from 20 to 500 guests.</p></div>
+    <div class="service-card"><h3>📦 Special Orders</h3><p>Can't find a specific Thai product? We can import it for you. Just tell us what you need and we'll source it directly from Thailand.</p></div>
+    <div class="service-card"><h3>🏪 Wholesale Accounts</h3><p>Restaurant, café, or food business? We offer wholesale pricing and weekly delivery to commercial accounts throughout Orange County and LA.</p></div>
+    <div class="service-card"><h3>🎁 Gift Boxes</h3><p>Thai cooking starter kits and gift boxes — perfect for foodies, housewarming gifts, or anyone wanting to explore Thai cuisine.</p></div>
+  </div>
+</section>
+
+<section class="newsletter">
+  <span class="section-label">Stay Updated</span>
+  <h2>New Arrivals & Weekly Deals</h2>
+  <p>Get notified when new imports arrive, seasonal specials go live, and exclusive discounts drop.</p>
+  <form class="newsletter-form" onsubmit="return false;">
+    <input type="email" placeholder="Your email address" />
+    <button type="submit">Subscribe</button>
+  </form>
+</section>
+
+<section id="location">
+  <div class="location-grid">
+    <div>
+      <span class="section-label">Find Us</span>
+      <h2>Visit the Market</h2>
+      <div class="info-block"><h3>📍 Address</h3><p>420 S Brookhurst St<br />Anaheim, CA 92804</p></div>
+      <div class="info-block"><h3>📞 Phone</h3><p><a href="tel:7143510088">(714) 351-0088</a></p></div>
+      <div class="info-block"><h3>✉️ Email</h3><p><a href="mailto:info@thaigardenmarket.com">info@thaigardenmarket.com</a></p></div>
+      <div class="info-block">
+        <h3>🕐 Hours</h3>
+        <table class="hours-table">
+          <tr><td>Monday – Saturday</td><td>8am – 8pm</td></tr>
+          <tr><td>Sunday</td><td>9am – 6pm</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="map-placeholder">
+        <div style="font-size:2.8rem;margin-bottom:10px;">📍</div>
+        <h3 style="color:white;margin-bottom:6px;">420 S Brookhurst St, Anaheim</h3>
+        <p>Free parking lot · Wheelchair accessible · 10 min from Disneyland</p>
+        <a href="https://maps.google.com/?q=420+S+Brookhurst+St+Anaheim+CA" target="_blank" rel="noopener">Get Directions →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <span class="section-label" style="color:rgba(26,31,22,0.65)">Visit Us Today</span>
+  <h2>Your Pantry Is Missing Something</h2>
+  <p>Come in, browse 2,000+ products, and let our team help you find exactly what you need. Wholesale accounts always welcome.</p>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;">
+    <a href="tel:7143510088" class="btn btn-dark">📞 Call Us</a>
+    <a href="#categories" class="btn btn-white">Browse Categories</a>
+  </div>
+  <p class="cta-phone"><a href="tel:7143510088">(714) 351-0088</a></p>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Thai Garden <span>Market</span></div>
+      <p>Authentic Thai groceries, imported ingredients, and fresh produce in Anaheim, Orange County. Family-owned since 1998. Wholesale accounts welcome.</p>
+    </div>
+    <div>
+      <h4>Shop</h4>
+      <ul>
+        <li><a href="#categories">All Categories</a></li>
+        <li><a href="#products">Best Sellers</a></li>
+        <li><a href="#services">Wholesale</a></li>
+        <li><a href="#services">Special Orders</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="tel:7143510088">(714) 351-0088</a></li>
+        <li><a href="mailto:info@thaigardenmarket.com">info@thaigardenmarket.com</a></li>
+        <li>420 S Brookhurst St<br />Anaheim, CA 92804</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom"><p>© 2025 Thai Garden Market. All rights reserved. · Family-Owned Since 1998</p></div>
+</footer>
+
+</body>
+</html>
