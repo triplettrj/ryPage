@@ -395,13 +395,87 @@
       transition: background 0.2s, color 0.2s;
     }
     .social-link:hover { background: var(--gold); color: var(--white); }
+
+    /* ── PITCH TOOLS ── */
+    #claim-banner { position:fixed; top:0; left:0; right:0; z-index:10000; background:#0f1923; color:#fff; padding:10px 16px; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; font-family:'Segoe UI',system-ui,sans-serif; font-size:0.82rem; box-shadow:0 2px 12px rgba(0,0,0,0.55); }
+    .cb-text { flex:1; min-width:160px; } .cb-text strong { color:#F0C96B; }
+    .cb-btn { display:inline-block; padding:6px 14px; border-radius:50px; font-weight:700; text-decoration:none; font-size:0.78rem; white-space:nowrap; cursor:pointer; border:none; font-family:'Segoe UI',system-ui,sans-serif; transition:opacity 0.2s; } .cb-btn:hover { opacity:0.82; }
+    .cb-call { background:#C9973A; color:#fff !important; } .cb-wa { background:#25D366; color:#fff !important; } .cb-dismiss { background:transparent; border:1px solid rgba(255,255,255,0.3); color:rgba(255,255,255,0.6); }
+    body { padding-top:44px; } nav { top:44px !important; }
+    #wa-fab { position:fixed; right:20px; bottom:24px; z-index:999; background:#25D366; color:#fff; width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; box-shadow:0 4px 16px rgba(37,211,102,0.45); font-size:1.4rem; transition:transform 0.2s; } #wa-fab:hover { transform:scale(1.1); }
+    #mob-bar { display:none; position:fixed; bottom:0; left:0; right:0; z-index:998; }
+    #mob-bar a { display:flex; align-items:center; justify-content:center; gap:8px; padding:15px 10px; font-family:'Segoe UI',system-ui,sans-serif; font-weight:700; font-size:0.9rem; text-decoration:none; }
+    .mb-call { background:#1E5F5F; color:#fff !important; flex:3; } .mb-wa { background:#25D366; color:#fff !important; flex:2; }
+    @media (max-width:768px) { #mob-bar { display:flex; } #wa-fab { bottom:68px; } body { padding-bottom:54px; } }
   </style>
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Lucky's Thai Pantry | Orange County, CA" />
+  <meta property="og:description" content="Authentic Thai cuisine and fresh ingredients in Orange County, CA. Dine in, takeout, and catering available." />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1562802378-063ec186a863?w=1200&q=80" />
+  <meta property="og:url" content="https://triplettrj.github.io/ryPage/luckys-thai-pantry/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌟</text></svg>" />
+  <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "Lucky's Thai Pantry",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "1234 E Chapman Ave",
+    "addressLocality": "Orange",
+    "addressRegion": "CA",
+    "postalCode": "92869",
+    "addressCountry": "US"
+  },
+  "telephone": "+17145380021",
+  "url": "https://triplettrj.github.io/ryPage/luckys-thai-pantry/",
+  "image": "https://images.unsplash.com/photo-1562802378-063ec186a863?w=1200&q=80",
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday"
+      ],
+      "opens": "11:00",
+      "closes": "21:00"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Friday",
+        "Saturday"
+      ],
+      "opens": "11:00",
+      "closes": "22:00"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Sunday"
+      ],
+      "opens": "12:00",
+      "closes": "20:00"
+    }
+  ]
+}</script>
 </head>
 <body>
 
+<!-- PITCH BANNER: replace RYAN_NUMBER with your phone digits -->
+<div id="claim-banner">
+  <span class="cb-text">🎨 <strong>Free Mockup</strong> — This site was built for <strong>Lucky's Thai Pantry</strong>. Want to launch it?</span>
+  <a class="cb-btn cb-call" href="tel:RYAN_NUMBER">📞 Call Ryan</a>
+  <a class="cb-btn cb-wa" href="https://wa.me/1RYAN_NUMBER?text=Hi+Ryan%2C+I+saw+the+luckys+thai+pantry+mockup+and+I%27m+interested!" target="_blank" rel="noopener">💬 WhatsApp</a>
+  <button class="cb-btn cb-dismiss" onclick="document.getElementById('claim-banner').remove();document.body.style.paddingTop='0';var n=document.querySelector('nav');if(n)n.style.top='0'">✕</button>
+</div>
+
+
 <!-- TOP BAR -->
 <div class="topbar">
-  📞 Call ahead for large groups &nbsp;·&nbsp; <a href="tel:7145380021">(714) 538-0021</a> &nbsp;·&nbsp; Now accepting catering orders for 2025!
+  📞 Call ahead for large groups &nbsp;·&nbsp; <a href="tel:7145380021">(714) 538-0021</a> &nbsp;·&nbsp; Catering for events, parties &amp; corporate orders!
 </div>
 
 <!-- NAV -->
@@ -489,7 +563,7 @@
     </div>
 
     <div class="menu-card">
-      <img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&q=75" alt="Pad See Ew" />
+      <img src="https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=600&q=75" alt="Pad See Ew" />
       <div class="menu-card-body">
         <h3>Pad See Ew</h3>
         <p>Wide rice noodles wok-tossed with egg, Chinese broccoli, and sweet soy sauce.</p>
@@ -516,7 +590,7 @@
     </div>
 
     <div class="menu-card">
-      <img src="https://images.unsplash.com/photo-1559847844-d9d2bc805e19?w=600&q=75" alt="Mango Sticky Rice" />
+      <img src="https://images.unsplash.com/photo-1606756790138-261d2b21cd75?w=600&q=75" alt="Mango Sticky Rice" />
       <div class="menu-card-body">
         <h3>Mango Sticky Rice</h3>
         <p>Sweet glutinous rice topped with fresh ripe mango and rich coconut cream.</p>
@@ -691,9 +765,19 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2025 Lucky's Thai Pantry. All rights reserved. &nbsp;·&nbsp; Website ready to deploy to GitHub Pages.</p>
+    <p>© 2025 Lucky's Thai Pantry. All rights reserved.</p>
   </div>
 </footer>
+
+
+<!-- WHATSAPP FAB -->
+<a id="wa-fab" href="https://wa.me/17145380021?text=Hi%2C+I%27d+like+to+place+an+order!" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">💬</a>
+
+<!-- MOBILE STICKY BAR -->
+<div id="mob-bar">
+  <a class="mb-call" href="tel:7145380021">📞 (714) 538-0021</a>
+  <a class="mb-wa" href="https://wa.me/17145380021?text=Hi%2C+I%27d+like+to+place+an+order!" target="_blank" rel="noopener">💬 WhatsApp</a>
+</div>
 
 </body>
 </html>
