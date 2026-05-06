@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Lucky's Thai Pantry — Authentic Thai cuisine and fresh ingredients in Orange County, CA. Dine in, takeout, and catering available." />
+  <title>Lucky's Thai Pantry | Authentic Thai Cuisine & Grocery in Orange County</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #C9973A;
+      --gold-light: #F0C96B;
+      --teal: #2A7F7F;
+      --teal-dark: #1E5F5F;
+      --red: #B94040;
+      --cream: #FDF8F0;
+      --cream-dark: #F5EDD9;
+      --dark: #1A1A1A;
+      --text: #3A3A3A;
+      --text-light: #666;
+      --white: #FFFFFF;
+      --radius: 8px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      background: var(--white);
+      line-height: 1.6;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--teal-dark);
+      color: var(--white);
+      text-align: center;
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      letter-spacing: 0.03em;
+    }
+    .topbar a { color: var(--gold-light); text-decoration: none; font-weight: 600; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid var(--cream-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 5%;
+    }
+    .nav-logo {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--teal-dark);
+      letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--teal); }
+    .nav-cta {
+      background: var(--gold);
+      color: var(--white) !important;
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-weight: 700 !important;
+      transition: background 0.2s !important;
+    }
+    .nav-cta:hover { background: var(--teal) !important; color: var(--white) !important; }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 92vh;
+      background:
+        linear-gradient(to bottom right, rgba(26,26,26,0.62), rgba(42,127,127,0.45)),
+        url('https://images.unsplash.com/photo-1562802378-063ec186a863?w=1400&q=80') center/cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 20px 60px;
+    }
+    .hero-inner { max-width: 760px; }
+    .hero-badge {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--white);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 18px;
+      border-radius: 50px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1.1;
+      margin-bottom: 18px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .hero h1 em { color: var(--gold-light); font-style: normal; }
+    .hero p {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: rgba(255,255,255,0.88);
+      max-width: 540px;
+      margin: 0 auto 36px;
+    }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .btn {
+      display: inline-block;
+      padding: 15px 34px;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.18s, box-shadow 0.18s, background 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+    .btn-primary { background: var(--gold); color: var(--white); }
+    .btn-primary:hover { background: #b5832e; }
+    .btn-outline { background: transparent; color: var(--white); border: 2px solid var(--white); }
+    .btn-outline:hover { background: var(--white); color: var(--teal-dark); }
+    .hero-phone {
+      margin-top: 32px;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.95rem;
+    }
+    .hero-phone a { color: var(--gold-light); font-weight: 700; text-decoration: none; font-size: 1.1rem; }
+
+    /* ── TRUST BAR ── */
+    .trust-bar {
+      background: var(--cream-dark);
+      border-top: 3px solid var(--gold);
+      padding: 22px 5%;
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--teal-dark);
+    }
+    .trust-icon { font-size: 1.4rem; }
+
+    /* ── SECTIONS ── */
+    section { padding: 80px 5%; }
+    .section-label {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800;
+      color: var(--teal-dark);
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-light);
+      max-width: 580px;
+      margin-bottom: 48px;
+    }
+    .text-center { text-align: center; }
+    .text-center .section-subtitle { margin-left: auto; margin-right: auto; }
+
+    /* ── ABOUT ── */
+    .about { background: var(--cream); }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 768px) { .about-grid { grid-template-columns: 1fr; } }
+    .about-img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    .about-text p { margin-bottom: 16px; color: var(--text); line-height: 1.75; }
+    .about-stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 900; color: var(--gold); display: block; }
+    .stat-label { font-size: 0.82rem; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* ── MENU ── */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 28px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .menu-card {
+      background: var(--white);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: transform 0.22s, box-shadow 0.22s;
+      cursor: default;
+    }
+    .menu-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.13); }
+    .menu-card img {
+      width: 100%;
+      height: 190px;
+      object-fit: cover;
+      display: block;
+    }
+    .menu-card-body { padding: 20px; }
+    .menu-card-body h3 { font-size: 1.1rem; font-weight: 700; color: var(--teal-dark); margin-bottom: 6px; }
+    .menu-card-body p { font-size: 0.9rem; color: var(--text-light); }
+    .menu-price { font-weight: 800; color: var(--gold); font-size: 1.05rem; margin-top: 10px; display: block; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials { background: var(--teal-dark); }
+    .testimonials h2, .testimonials .section-label { color: var(--white); }
+    .testimonials .section-subtitle { color: rgba(255,255,255,0.7); }
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .review-card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 28px;
+      transition: background 0.2s;
+    }
+    .review-card:hover { background: rgba(255,255,255,0.13); }
+    .stars { color: var(--gold-light); font-size: 1.1rem; margin-bottom: 14px; letter-spacing: 2px; }
+    .review-text { color: rgba(255,255,255,0.88); font-size: 0.95rem; line-height: 1.7; margin-bottom: 20px; }
+    .reviewer { display: flex; align-items: center; gap: 14px; }
+    .reviewer-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: var(--white); font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .reviewer-name { font-weight: 700; color: var(--white); font-size: 0.95rem; }
+    .reviewer-location { font-size: 0.8rem; color: rgba(255,255,255,0.55); }
+
+    /* ── LOCATION ── */
+    .location { background: var(--cream); }
+    .location-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 768px) { .location-grid { grid-template-columns: 1fr; } }
+    .info-block { margin-bottom: 28px; }
+    .info-block h3 { font-size: 1rem; font-weight: 700; color: var(--teal-dark); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .info-block p, .info-block a { color: var(--text); font-size: 0.97rem; line-height: 1.7; text-decoration: none; }
+    .info-block a:hover { color: var(--teal); }
+    .hours-table { width: 100%; border-collapse: collapse; }
+    .hours-table tr td { padding: 6px 0; font-size: 0.93rem; }
+    .hours-table tr td:last-child { text-align: right; color: var(--teal-dark); font-weight: 600; }
+    .map-placeholder {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-dark) 100%);
+      border-radius: 16px;
+      height: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      text-align: center;
+      padding: 30px;
+      box-shadow: var(--shadow);
+    }
+    .map-placeholder .map-icon { font-size: 3rem; margin-bottom: 14px; }
+    .map-placeholder p { font-size: 0.95rem; opacity: 0.85; margin-bottom: 18px; }
+    .map-placeholder a {
+      background: var(--gold);
+      color: var(--white);
+      padding: 10px 24px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .map-placeholder a:hover { background: var(--gold-light); color: var(--dark); }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--gold) 0%, #b5832e 100%);
+      text-align: center;
+      padding: 80px 5%;
+    }
+    .cta-section h2 { color: var(--white); margin-bottom: 14px; }
+    .cta-section p { color: rgba(255,255,255,0.88); max-width: 520px; margin: 0 auto 36px; font-size: 1.05rem; }
+    .cta-btns { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .btn-white { background: var(--white); color: var(--gold); }
+    .btn-white:hover { background: var(--cream-dark); }
+    .btn-dark { background: var(--teal-dark); color: var(--white); }
+    .btn-dark:hover { background: var(--dark); }
+    .cta-phone {
+      margin-top: 28px;
+      color: rgba(255,255,255,0.85);
+      font-size: 0.95rem;
+    }
+    .cta-phone a { color: var(--white); font-weight: 800; font-size: 1.3rem; text-decoration: none; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark);
+      color: rgba(255,255,255,0.65);
+      padding: 48px 5% 28px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 40px;
+      max-width: 1100px;
+      margin: 0 auto 36px;
+    }
+    @media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { font-size: 1.2rem; font-weight: 800; color: var(--white); margin-bottom: 10px; }
+    .footer-brand span { color: var(--gold); }
+    footer p { font-size: 0.88rem; line-height: 1.7; }
+    footer h4 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--white); margin-bottom: 14px; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 8px; font-size: 0.88rem; }
+    footer ul a { color: rgba(255,255,255,0.6); text-decoration: none; transition: color 0.2s; }
+    footer ul a:hover { color: var(--gold); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 20px;
+      text-align: center;
+      font-size: 0.83rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .social-links { display: flex; gap: 14px; margin-top: 16px; }
+    .social-link {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    .social-link:hover { background: var(--gold); color: var(--white); }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  📞 Call ahead for large groups &nbsp;·&nbsp; <a href="tel:7145380021">(714) 538-0021</a> &nbsp;·&nbsp; Now accepting catering orders for 2025!
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Lucky's <span>Thai</span> Pantry</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#location">Location</a></li>
+    <li><a href="tel:7145380021" class="nav-cta">📞 Call Now</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Est. 2005 · Orange County, CA</div>
+    <h1>Authentic Thai Flavors &amp;<br /><em>Fresh Ingredients</em></h1>
+    <p>Family recipes, fresh-sourced produce, and a warm welcome — every visit feels like home.</p>
+    <div class="hero-btns">
+      <a href="tel:7145380021" class="btn btn-primary">📞 Order by Phone</a>
+      <a href="#menu" class="btn btn-outline">View Our Menu</a>
+    </div>
+    <p class="hero-phone">Questions? Call us: <a href="tel:7145380021">(714) 538-0021</a></p>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<div class="trust-bar">
+  <div class="trust-item"><span class="trust-icon">⭐</span> 4.9 Stars on Yelp</div>
+  <div class="trust-item"><span class="trust-icon">🍜</span> 20+ Years Serving OC</div>
+  <div class="trust-item"><span class="trust-icon">🌿</span> Fresh Ingredients Daily</div>
+  <div class="trust-item"><span class="trust-icon">🎉</span> Catering Available</div>
+</div>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="about-grid">
+    <img
+      class="about-img"
+      src="https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&q=80"
+      alt="Thai kitchen with fresh ingredients"
+    />
+    <div class="about-text">
+      <span class="section-label">Our Story</span>
+      <h2>A Taste of Thailand, Right Here in Orange County</h2>
+      <p>Lucky's Thai Pantry has been feeding Orange County families since 2005. Founded by the Siriporn family, we brought authentic recipes straight from Chiang Mai and Bangkok — and we haven't changed a thing.</p>
+      <p>Every dish is prepared fresh to order using herbs and spices imported directly from Thailand, alongside locally sourced vegetables. We're more than a restaurant — we're also your neighborhood Thai grocery, so you can recreate those flavors at home.</p>
+      <p>Whether it's a quick weekday lunch, a family dinner, or a catered event, we put the same love into every plate we serve.</p>
+      <div class="about-stats">
+        <div class="stat"><span class="stat-num">20+</span><span class="stat-label">Years Open</span></div>
+        <div class="stat"><span class="stat-num">50+</span><span class="stat-label">Menu Items</span></div>
+        <div class="stat"><span class="stat-num">1000s</span><span class="stat-label">Happy Customers</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section id="menu">
+  <div class="text-center">
+    <span class="section-label">Our Menu</span>
+    <h2>Fresh, Flavorful, Unforgettable</h2>
+    <p class="section-subtitle">Classic Thai dishes made with authentic ingredients — dine in, takeout, or catered for your next event.</p>
+  </div>
+  <div class="menu-grid">
+
+    <div class="menu-card">
+      <img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&q=75" alt="Pad Thai" />
+      <div class="menu-card-body">
+        <h3>Pad Thai</h3>
+        <p>Stir-fried rice noodles with egg, bean sprouts, scallions, and your choice of protein.</p>
+        <span class="menu-price">From $13.95</span>
+      </div>
+    </div>
+
+    <div class="menu-card">
+      <img src="https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&q=75" alt="Green Curry" />
+      <div class="menu-card-body">
+        <h3>Green Curry</h3>
+        <p>Creamy coconut milk with Thai green curry paste, bamboo shoots, and fresh basil.</p>
+        <span class="menu-price">From $14.95</span>
+      </div>
+    </div>
+
+    <div class="menu-card">
+      <img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&q=75" alt="Pad See Ew" />
+      <div class="menu-card-body">
+        <h3>Pad See Ew</h3>
+        <p>Wide rice noodles wok-tossed with egg, Chinese broccoli, and sweet soy sauce.</p>
+        <span class="menu-price">From $13.95</span>
+      </div>
+    </div>
+
+    <div class="menu-card">
+      <img src="https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=75" alt="Tom Yum Soup" />
+      <div class="menu-card-body">
+        <h3>Tom Yum Soup</h3>
+        <p>Classic hot-and-sour broth with lemongrass, kaffir lime, galangal, and mushrooms.</p>
+        <span class="menu-price">From $9.95</span>
+      </div>
+    </div>
+
+    <div class="menu-card">
+      <img src="https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&q=75" alt="Thai Basil Chicken" />
+      <div class="menu-card-body">
+        <h3>Thai Basil Chicken</h3>
+        <p>Ground chicken stir-fried with fresh Thai basil, chilies, and oyster sauce over rice.</p>
+        <span class="menu-price">From $13.50</span>
+      </div>
+    </div>
+
+    <div class="menu-card">
+      <img src="https://images.unsplash.com/photo-1559847844-d9d2bc805e19?w=600&q=75" alt="Mango Sticky Rice" />
+      <div class="menu-card-body">
+        <h3>Mango Sticky Rice</h3>
+        <p>Sweet glutinous rice topped with fresh ripe mango and rich coconut cream.</p>
+        <span class="menu-price">$7.95</span>
+      </div>
+    </div>
+
+    <div class="menu-card">
+      <img src="https://images.unsplash.com/photo-1561047029-3000c68339ca?w=600&q=75" alt="Fresh Grocery Ingredients" />
+      <div class="menu-card-body">
+        <h3>Thai Grocery</h3>
+        <p>Imported sauces, fresh lemongrass, kaffir lime leaves, Thai chilies, and more.</p>
+        <span class="menu-price">In-store</span>
+      </div>
+    </div>
+
+    <div class="menu-card">
+      <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=75" alt="Catering" />
+      <div class="menu-card-body">
+        <h3>Catering &amp; Events</h3>
+        <p>Full Thai spreads for parties, weddings, corporate events, and family gatherings.</p>
+        <span class="menu-price">Call for Quote</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials" id="reviews">
+  <div class="text-center">
+    <span class="section-label">Customer Reviews</span>
+    <h2>What Orange County Is Saying</h2>
+    <p class="section-subtitle">Don't just take our word for it — hear from our regulars.</p>
+  </div>
+  <div class="reviews-grid">
+
+    <div class="review-card">
+      <div class="stars">★★★★★</div>
+      <p class="review-text">"Best Pad Thai in all of Orange County — and I've tried them all. The noodles are perfectly cooked and the sauce has this depth you just can't get anywhere else. We order at least twice a week."</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">J</div>
+        <div>
+          <div class="reviewer-name">Jennifer M.</div>
+          <div class="reviewer-location">Anaheim, CA · Yelp</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="stars">★★★★★</div>
+      <p class="review-text">"We hired Lucky's to cater our company holiday party and the food was the highlight of the evening. Every single dish was outstanding and the team was incredibly professional."</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">D</div>
+        <div>
+          <div class="reviewer-name">David R.</div>
+          <div class="reviewer-location">Irvine, CA · Google</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="stars">★★★★★</div>
+      <p class="review-text">"The grocery section is a hidden gem. I finally found fresh kaffir lime leaves and good-quality fish sauce here. The staff helped me pick the right ingredients for my recipe. Wonderful place!"</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">P</div>
+        <div>
+          <div class="reviewer-name">Priya S.</div>
+          <div class="reviewer-location">Garden Grove, CA · Yelp</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="stars">★★★★★</div>
+      <p class="review-text">"Tom Yum Soup cured my cold — no joke. This place has been our family's go-to for 10 years. The owners remember our order and greet us by name. Real community gem."</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar">T</div>
+        <div>
+          <div class="reviewer-name">Tom &amp; Lisa K.</div>
+          <div class="reviewer-location">Orange, CA · Google</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- LOCATION & HOURS -->
+<section class="location" id="location">
+  <div class="location-grid">
+    <div>
+      <span class="section-label">Find Us</span>
+      <h2>Visit Us Today</h2>
+
+      <div class="info-block">
+        <h3>📍 Address</h3>
+        <p>1234 E Chapman Ave<br />Orange, CA 92869</p>
+      </div>
+
+      <div class="info-block">
+        <h3>📞 Phone</h3>
+        <p><a href="tel:7145380021">(714) 538-0021</a></p>
+      </div>
+
+      <div class="info-block">
+        <h3>✉️ Email</h3>
+        <p><a href="mailto:hello@luckysthaioc.com">hello@luckysthaioc.com</a></p>
+      </div>
+
+      <div class="info-block">
+        <h3>🕐 Hours</h3>
+        <table class="hours-table">
+          <tr><td>Monday – Thursday</td><td>11am – 9pm</td></tr>
+          <tr><td>Friday – Saturday</td><td>11am – 10pm</td></tr>
+          <tr><td>Sunday</td><td>12pm – 8pm</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="map-placeholder">
+        <div class="map-icon">📍</div>
+        <h3 style="color:white;margin-bottom:8px;">1234 E Chapman Ave, Orange CA</h3>
+        <p>Easy parking · 2 min from the 55 Freeway · Dine-in &amp; takeout</p>
+        <a href="https://maps.google.com/?q=1234+E+Chapman+Ave+Orange+CA" target="_blank" rel="noopener">Get Directions →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <span class="section-label" style="color:rgba(255,255,255,0.7)">Ready to Order?</span>
+  <h2>Your Next Favorite Meal<br />Is One Call Away</h2>
+  <p>Dine in, take out, or let us cater your next event. We're here Monday through Sunday.</p>
+  <div class="cta-btns">
+    <a href="tel:7145380021" class="btn btn-white">📞 Call to Order</a>
+    <a href="#menu" class="btn btn-dark">Browse the Menu</a>
+  </div>
+  <p class="cta-phone"><a href="tel:7145380021">(714) 538-0021</a></p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Lucky's <span>Thai</span> Pantry</div>
+      <p>Authentic Thai cuisine and fresh imported ingredients in the heart of Orange County since 2005. Family owned, family run.</p>
+      <div class="social-links">
+        <a class="social-link" href="#" aria-label="Facebook">f</a>
+        <a class="social-link" href="#" aria-label="Instagram">📸</a>
+        <a class="social-link" href="#" aria-label="Yelp">★</a>
+      </div>
+    </div>
+    <div>
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#menu">Menu</a></li>
+        <li><a href="#reviews">Reviews</a></li>
+        <li><a href="#location">Location &amp; Hours</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="tel:7145380021">(714) 538-0021</a></li>
+        <li><a href="mailto:hello@luckysthaioc.com">hello@luckysthaioc.com</a></li>
+        <li>1234 E Chapman Ave<br />Orange, CA 92869</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Lucky's Thai Pantry. All rights reserved. &nbsp;·&nbsp; Website ready to deploy to GitHub Pages.</p>
+  </div>
+</footer>
+
+</body>
+</html>
