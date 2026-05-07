@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Heating and Air | Family-Owned HVAC - Orange County</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .banner {
+            background: #d32f2f;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #ff6f00 0%, #e65100 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        header p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: #1565c0;
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .cta-button:hover {
+            background: #0d47a1;
+        }
+        
+        .phone-cta {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            display: block;
+        }
+        
+        section {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .about {
+            background: #f5f5f5;
+            text-align: center;
+        }
+        
+        .about h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #ff6f00;
+        }
+        
+        .about p {
+            font-size: 18px;
+            margin-bottom: 15px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .services {
+            background: white;
+        }
+        
+        .services h2 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: #ff6f00;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .service-card {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 5px solid #ff6f00;
+            transition: transform 0.3s;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .service-card h3 {
+            color: #ff6f00;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .service-card p {
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .testimonials {
+            background: #f5f5f5;
+        }
+        
+        .testimonials h2 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: #ff6f00;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .testimonial-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stars {
+            color: #ffc107;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .testimonial-text {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        
+        .testimonial-author {
+            font-weight: bold;
+            color: #ff6f00;
+        }
+        
+        .location {
+            background: white;
+            text-align: center;
+        }
+        
+        .location h2 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #ff6f00;
+        }
+        
+        .location-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .location-item h3 {
+            color: #ff6f00;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .location-item p {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .cta-final {
+            background: linear-gradient(135deg, #ff6f00 0%, #e65100 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        .cta-final h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .cta-final p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        footer {
+            background: #222;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 14px;
+        }
+        
+        .signature {
+            background: #d32f2f;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 32px; }
+            header p { font-size: 16px; }
+            .phone-cta { font-size: 20px; }
+            section { padding: 40px 15px; }
+            .cta-final h2 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        ⚡ This website mockup created by Ryan Triplett | (512) 569-3089 | triplettrj@gmail.com
+    </div>
+    
+    <header>
+        <h1>Apex Heating and Air</h1>
+        <p>Family-Owned HVAC Excellence</p>
+        <p style="font-size: 16px; margin-top: 20px;">Professional Service • Expert Technicians • Trusted Since Day One</p>
+        <button class="cta-button">Schedule Your Service</button>
+        <span class="phone-cta">(949) 237-8872</span>
+    </header>
+    
+    <section class="about">
+        <h2>Premium HVAC Service, Family Values</h2>
+        <p>Apex Heating and Air is a family-owned HVAC company dedicated to keeping Orange County comfortable year-round. We provide professional heating and cooling service with the personal touch of a business that treats every customer like family.</p>
+        <p style="margin-top: 30px; font-weight: bold; color: #ff6f00;">Let us build your online presence and grow your business together.</p>
+    </section>
+    
+    <section class="services">
+        <h2>Complete HVAC Solutions</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <h3>❄️ AC Repair & Service</h3>
+                <p>Emergency AC repair, maintenance, and optimization.</p>
+            </div>
+            <div class="service-card">
+                <h3>🔧 AC Installation</h3>
+                <p>New system installation with professional expertise.</p>
+            </div>
+            <div class="service-card">
+                <h3>🌡️ Heating Service</h3>
+                <p>Furnace repair, maintenance, and winter preparation.</p>
+            </div>
+            <div class="service-card">
+                <h3>💨 Indoor Air Quality</h3>
+                <p>Air filters, duct cleaning, and air quality solutions.</p>
+            </div>
+            <div class="service-card">
+                <h3>🛠️ System Diagnostics</h3>
+                <p>Professional inspection and system assessment.</p>
+            </div>
+            <div class="service-card">
+                <h3>📋 Maintenance Plans</h3>
+                <p>Seasonal prep and ongoing system care.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="testimonials">
+        <h2>What Our Customers Say</h2>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Apex is family-owned and it shows. Professional, fair pricing, and they actually care about doing good work."</p>
+                <p class="testimonial-author">— Susan Martinez, Laguna Hills</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"AC needed repair. Apex came out, diagnosed it quickly, fixed it right, no surprises. Great service."</p>
+                <p class="testimonial-author">— Kevin Thompson, Orange County</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Installed new AC system. Apex explained everything, professional install, great follow-up. Very happy."</p>
+                <p class="testimonial-author">— Angela Lopez, Mission Viejo</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Maintenance plan keeps our system running perfect. Apex is a trusted part of our home care routine."</p>
+                <p class="testimonial-author">— Richard Johnson, Aliso Viejo</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="location">
+        <h2>Your Orange County HVAC Experts</h2>
+        <div class="location-info">
+            <div class="location-item">
+                <h3>📞 Call Today</h3>
+                <p>(949) 237-8872</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">Available for service appointments</p>
+            </div>
+            <div class="location-item">
+                <h3>⚡ Professional Service</h3>
+                <p>Same-day & emergency service</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">Expert technicians</p>
+            </div>
+            <div class="location-item">
+                <h3>✓ Family-Owned Trust</h3>
+                <p>Serving Orange County</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">Your trusted HVAC partner</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta-final">
+        <h2>Let's Keep You Comfortable</h2>
+        <p>Professional HVAC service from a family you can trust.</p>
+        <button class="cta-button">Call (949) 237-8872 Now</button>
+    </section>
+    
+    <footer>
+        <p>&copy; 2026 Apex Heating and Air. All rights reserved. | Orange County, CA</p>
+    </footer>
+    
+    <div class="signature">
+        Built by Ryan Triplett | Web Developer | (512) 569-3089 | triplettrj@gmail.com
+    </div>
+</body>
+</html>

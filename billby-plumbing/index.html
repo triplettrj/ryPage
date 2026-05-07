@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billby Plumbing | 24/7 Emergency Plumbing Services - Orange County</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .banner {
+            background: #d32f2f;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        header p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: #d32f2f;
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .cta-button:hover {
+            background: #b71c1c;
+        }
+        
+        .phone-cta {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            display: block;
+        }
+        
+        section {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .about {
+            background: #f5f5f5;
+            text-align: center;
+        }
+        
+        .about h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #1565c0;
+        }
+        
+        .about p {
+            font-size: 18px;
+            margin-bottom: 15px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .services {
+            background: white;
+        }
+        
+        .services h2 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: #1565c0;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .service-card {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 5px solid #d32f2f;
+            transition: transform 0.3s;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .service-card h3 {
+            color: #1565c0;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .service-card p {
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .testimonials {
+            background: #f5f5f5;
+        }
+        
+        .testimonials h2 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: #1565c0;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .testimonial-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stars {
+            color: #ffc107;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .testimonial-text {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        
+        .testimonial-author {
+            font-weight: bold;
+            color: #1565c0;
+        }
+        
+        .location {
+            background: white;
+            text-align: center;
+        }
+        
+        .location h2 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #1565c0;
+        }
+        
+        .location-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .location-item h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .location-item p {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .cta-final {
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        .cta-final h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .cta-final p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        footer {
+            background: #222;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 14px;
+        }
+        
+        .signature {
+            background: #d32f2f;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 32px; }
+            header p { font-size: 16px; }
+            .phone-cta { font-size: 20px; }
+            section { padding: 40px 15px; }
+            .cta-final h2 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        ⚡ This website mockup created by Ryan Triplett | (512) 569-3089 | triplettrj@gmail.com
+    </div>
+    
+    <header>
+        <h1>Billby Plumbing</h1>
+        <p>24/7 Emergency Plumbing Services</p>
+        <p style="font-size: 16px; margin-top: 20px;">Fast Response • Licensed & Insured • Same-Day Service</p>
+        <button class="cta-button">Call Now for Emergency Service</button>
+        <span class="phone-cta">(949) 317-4417</span>
+    </header>
+    
+    <section class="about">
+        <h2>Pipe Burst at 2am?</h2>
+        <p>We're here for you 24/7. Whether it's a burst pipe, water heater failure, or drain clog, Billby Plumbing responds fast with professional, guaranteed solutions. Serving Orange County for years with integrity and expertise.</p>
+        <p style="margin-top: 30px; font-weight: bold; color: #1565c0;">One emergency call covers the cost of this website. Let's get you online.</p>
+    </section>
+    
+    <section class="services">
+        <h2>Our Emergency Services</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <h3>💧 Burst Pipes & Leaks</h3>
+                <p>Fast detection and repair. We stop water damage immediately.</p>
+            </div>
+            <div class="service-card">
+                <h3>🔧 Water Heater Repair</h3>
+                <p>No hot water? We diagnose and fix same-day.</p>
+            </div>
+            <div class="service-card">
+                <h3>🚰 Drain Cleaning</h3>
+                <p>Clogs, backups, slow drains—we clear them fast.</p>
+            </div>
+            <div class="service-card">
+                <h3>🏠 Slab Leak Detection</h3>
+                <p>Underground leaks? We find and fix them precisely.</p>
+            </div>
+            <div class="service-card">
+                <h3>🔌 Sewer Repair</h3>
+                <p>Main line issues? We have you covered 24/7.</p>
+            </div>
+            <div class="service-card">
+                <h3>🛠️ General Plumbing</h3>
+                <p>Fixtures, installations, maintenance—expert service.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="testimonials">
+        <h2>What Customers Say</h2>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Pipe burst at midnight. Billby responded in 30 minutes. Professional, fast, saved my home from major damage. Worth every penny."</p>
+                <p class="testimonial-author">— Maria Rodriguez, Orange CA</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Called for an emergency drain backup. They showed up same-day, fixed it properly, and explained everything. Great service."</p>
+                <p class="testimonial-author">— James Chen, Irvine CA</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Water heater failed on Sunday. Billby got someone out, diagnosed it, and had a new one installed by evening. Lifesaver."</p>
+                <p class="testimonial-author">— Sarah Williams, Anaheim CA</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Slab leak was scary. They found it, explained options, and fixed it clean. Honest, skilled, professional."</p>
+                <p class="testimonial-author">— Robert Thompson, Santa Ana CA</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="location">
+        <h2>Emergency Plumbing When You Need It</h2>
+        <div class="location-info">
+            <div class="location-item">
+                <h3>📞 Call Now</h3>
+                <p>(949) 317-4417</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">24 hours, 7 days a week</p>
+            </div>
+            <div class="location-item">
+                <h3>⏱️ Response Time</h3>
+                <p>30 minutes or less</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">Same-day emergency service</p>
+            </div>
+            <div class="location-item">
+                <h3>✓ Guaranteed</h3>
+                <p>Licensed & Insured</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">All work guaranteed</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta-final">
+        <h2>Don't Wait. Call Now.</h2>
+        <p>Emergency plumbing doesn't wait. Neither should you.</p>
+        <button class="cta-button">Call (949) 317-4417 Now</button>
+    </section>
+    
+    <footer>
+        <p>&copy; 2026 Billby Plumbing. All rights reserved. | Licensed & Insured | Service Area: Orange County, CA</p>
+    </footer>
+    
+    <div class="signature">
+        Built by Ryan Triplett | Web Developer | (512) 569-3089 | triplettrj@gmail.com
+    </div>
+</body>
+</html>

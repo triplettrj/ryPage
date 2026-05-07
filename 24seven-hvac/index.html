@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24Seven Heating and Cooling | Emergency AC Repair - Orange County</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .banner {
+            background: #d32f2f;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        header p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: #d32f2f;
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .cta-button:hover {
+            background: #b71c1c;
+        }
+        
+        .phone-cta {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            display: block;
+        }
+        
+        section {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .about {
+            background: #f5f5f5;
+            text-align: center;
+        }
+        
+        .about h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #00897b;
+        }
+        
+        .about p {
+            font-size: 18px;
+            margin-bottom: 15px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .services {
+            background: white;
+        }
+        
+        .services h2 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: #00897b;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .service-card {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 5px solid #00897b;
+            transition: transform 0.3s;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .service-card h3 {
+            color: #00897b;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .service-card p {
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .testimonials {
+            background: #f5f5f5;
+        }
+        
+        .testimonials h2 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: #00897b;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .testimonial-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stars {
+            color: #ffc107;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .testimonial-text {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        
+        .testimonial-author {
+            font-weight: bold;
+            color: #00897b;
+        }
+        
+        .location {
+            background: white;
+            text-align: center;
+        }
+        
+        .location h2 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #00897b;
+        }
+        
+        .location-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .location-item h3 {
+            color: #00897b;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .location-item p {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .cta-final {
+            background: linear-gradient(135deg, #00897b 0%, #004d40 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        .cta-final h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .cta-final p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        footer {
+            background: #222;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 14px;
+        }
+        
+        .signature {
+            background: #d32f2f;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 32px; }
+            header p { font-size: 16px; }
+            .phone-cta { font-size: 20px; }
+            section { padding: 40px 15px; }
+            .cta-final h2 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        ⚡ This website mockup created by Ryan Triplett | (512) 569-3089 | triplettrj@gmail.com
+    </div>
+    
+    <header>
+        <h1>24Seven Heating & Cooling</h1>
+        <p>AC Repair When You Need It Most</p>
+        <p style="font-size: 16px; margin-top: 20px;">95° Outside? We're Here • Same-Day Service • Expert HVAC</p>
+        <button class="cta-button">Schedule AC Service Now</button>
+        <span class="phone-cta">(714) 951-0466</span>
+    </header>
+    
+    <section class="about">
+        <h2>Summer Heat Got You Down?</h2>
+        <p>When your AC breaks on a 100° day, you don't have time for slow service. 24Seven Heating and Cooling responds fast with expert technicians ready to fix your air conditioning same-day. Serving Orange County with professional, reliable HVAC service.</p>
+        <p style="margin-top: 30px; font-weight: bold; color: #00897b;">One summer AC emergency call covers this website investment. Let's capture those calls.</p>
+    </section>
+    
+    <section class="services">
+        <h2>Our HVAC Services</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <h3>❄️ AC Emergency Repair</h3>
+                <p>AC not cooling? We diagnose and fix same-day, any time.</p>
+            </div>
+            <div class="service-card">
+                <h3>🔧 AC Installation</h3>
+                <p>New system? Expert installation with warranty.</p>
+            </div>
+            <div class="service-card">
+                <h3>🛠️ Maintenance Plans</h3>
+                <p>Keep your AC running peak performance year-round.</p>
+            </div>
+            <div class="service-card">
+                <h3>🌡️ Heating Service</h3>
+                <p>Furnace repair, maintenance, and installation.</p>
+            </div>
+            <div class="service-card">
+                <h3>🔍 Diagnostics</h3>
+                <p>Professional system inspection and assessment.</p>
+            </div>
+            <div class="service-card">
+                <h3>💨 Seasonal Prep</h3>
+                <p>Get ready for summer or winter—on our schedule.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="testimonials">
+        <h2>Customer Reviews</h2>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"AC died on a Saturday in July. 24Seven came out same-day, diagnosed the issue, and had us cool again by evening. Lifesaver!"</p>
+                <p class="testimonial-author">— Linda Anderson, Huntington Beach</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Professional, on-time, fair pricing. Had a new AC installed in one day. Very happy with the service."</p>
+                <p class="testimonial-author">— Robert Brown, Costa Mesa</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Maintenance plan saves money and keeps my AC running perfect. Highly recommend 24Seven."</p>
+                <p class="testimonial-author">— Amanda Garcia, Fountain Valley</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Called for emergency repair. Friendly, knowledgeable, fixed it right. Best HVAC company in Orange County."</p>
+                <p class="testimonial-author">— Carlos Rodriguez, Orange</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="location">
+        <h2>Expert HVAC Service 24/7</h2>
+        <div class="location-info">
+            <div class="location-item">
+                <h3>📞 Call Now</h3>
+                <p>(714) 951-0466</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">Available day & night</p>
+            </div>
+            <div class="location-item">
+                <h3>⚡ Same-Day Service</h3>
+                <p>Emergency AC repair available</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">Fast response time</p>
+            </div>
+            <div class="location-item">
+                <h3>✓ Fully Certified</h3>
+                <p>Licensed & Insured</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">Expert technicians</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta-final">
+        <h2>Don't Sweat the Heat</h2>
+        <p>Professional AC service when summer gets serious.</p>
+        <button class="cta-button">Call (714) 951-0466 Now</button>
+    </section>
+    
+    <footer>
+        <p>&copy; 2026 24Seven Heating & Cooling. All rights reserved. | Licensed & Insured | Orange County & Huntington Beach, CA</p>
+    </footer>
+    
+    <div class="signature">
+        Built by Ryan Triplett | Web Developer | (512) 569-3089 | triplettrj@gmail.com
+    </div>
+</body>
+</html>
