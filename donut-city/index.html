@@ -208,7 +208,8 @@
   .bigquote blockquote em { color: var(--pink); font-weight: 400; }
   .bigquote .src { margin-top: 28px; }
   .press { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 16px; margin-top: 26px; }
-  .press span { border: 1px solid rgba(255,243,224,.35); padding: 8px 18px; border-radius: 999px; font-size: .85rem; font-weight: 600; letter-spacing: .05em; color: rgba(255,243,224,.85); }
+  .press span, .press a { border: 1px solid rgba(255,243,224,.35); padding: 8px 18px; border-radius: 999px; font-size: .85rem; font-weight: 600; letter-spacing: .05em; color: rgba(255,243,224,.85); text-decoration: none; transition: border-color .2s, color .2s; }
+  .press a:hover { border-color: var(--pink); color: var(--pink); }
 
   /* ---------- VISIT ---------- */
   .visit-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(40px, 6vw, 90px); align-items: start; }
@@ -408,7 +409,7 @@
     <blockquote>"A hidden gem with a <em>warm family feeling</em> — the kind of place that remembers your order before you say it."</blockquote>
     <div class="src label" style="color: rgba(255,243,224,.6);">— our neighbors, more or less unanimously</div>
     <div class="press">
-      <span>The Washington Post</span><span>NPR</span><span>BBC</span><span>CBS News</span>
+      <a href="https://www.washingtonpost.com/lifestyle/2018/11/05/this-shop-owners-wife-fell-ill-now-customers-line-up-early-buy-all-doughnuts/" target="_blank" rel="noopener">The Washington Post</a><a href="https://www.npr.org/2018/11/06/664617132/donut-city-customers-help-owner-care-for-his-wife" target="_blank" rel="noopener">NPR</a><a href="https://www.cnn.com/2018/11/05/us/iyw-donut-city-seal-beach-california-trnd" target="_blank" rel="noopener">CNN</a><a href="https://www.cbsnews.com/news/california-community-buys-out-donuts-so-shop-owner-can-spend-time-with-sick-wife/" target="_blank" rel="noopener">CBS News</a>
     </div>
   </div>
 </section>
