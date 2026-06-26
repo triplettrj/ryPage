@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Donut City — Seal Beach · Fresh at 5 AM, Gone by Noon</title>
+<meta name="description" content="Donut City is Seal Beach's legendary family donut shop, hand-rolling every donut before dawn since 1990. Apple fritters, old-fashioned glazed & Ounces Coffee. 1210 Pacific Coast Hwy — open daily at 5 AM.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,300;1,9..144,400;1,9..144,900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Bakery",
+  "name": "Donut City",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "1210 Pacific Coast Hwy",
+    "addressLocality": "Seal Beach",
+    "addressRegion": "CA",
+    "postalCode": "90740"
+  },
+  "telephone": "+15627997007",
+  "servesCuisine": "Donuts",
+  "priceRange": "$",
+  "openingHoursSpecification": [
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"], "opens": "05:00", "closes": "14:00" },
+    { "@type": "OpeningHoursSpecification", "dayOfWeek": "Sunday", "opens": "05:00", "closes": "15:00" }
+  ],
+  "sameAs": ["https://www.instagram.com/donutcity_sb/"]
+}
+</script>
+<style>
+  :root {
+    --cream: #FFF3E0;
+    --paper: #FFFBF3;
+    --espresso: #2A1409;
+    --espresso-2: #1C0D05;
+    --pink: #FF4D8D;
+    --pink-deep: #E0246B;
+    --glaze: #FFB42E;
+    --mint: #2FD4C2;
+    --ink: #2A1409;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--pink); color: #fff; }
+  h1,h2,h3,.serif { font-family: 'Fraunces', serif; }
+  a { color: inherit; }
+
+  /* grain overlay */
+  body::after {
+    content: ''; position: fixed; inset: 0; z-index: 999; pointer-events: none; opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  }
+
+  .label {
+    font-size: .78rem; font-weight: 700; letter-spacing: .28em; text-transform: uppercase;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--ink); color: var(--cream); text-decoration: none;
+    padding: 16px 32px; border-radius: 999px; font-weight: 700; font-size: 1rem;
+    letter-spacing: .02em; transition: transform .25s cubic-bezier(.2,.9,.3,1.4), background .2s, color .2s;
+  }
+  .btn:hover { background: var(--pink); color: #fff; transform: translateY(-3px) rotate(-1deg); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 2px solid currentColor; }
+  .btn.ghost:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+  .btn.pink { background: var(--pink); color: #fff; }
+  .btn.pink:hover { background: var(--glaze); color: var(--ink); }
+
+  /* ---------- NAV ---------- */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 4vw;
+    mix-blend-mode: normal;
+    transition: background .3s, box-shadow .3s;
+  }
+  nav.scrolled { background: rgba(255,243,224,.9); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 1px 0 rgba(42,20,9,.1); }
+  .nav-logo { font-family:'Fraunces',serif; font-weight: 900; font-size: 1.45rem; text-decoration: none; letter-spacing: -.01em; display:flex; align-items:center; gap:10px; }
+  .nav-logo .ring { width: 30px; height: 30px; border-radius: 50%; border: 9px solid var(--pink); display:inline-block; }
+  .nav-right { display: flex; gap: 28px; align-items: center; }
+  .nav-right a.link { text-decoration: none; font-weight: 600; font-size: .95rem; position: relative; }
+  .nav-right a.link::after { content:''; position:absolute; left:0; bottom:-4px; height:2px; width:0; background: var(--pink); transition: width .25s; }
+  .nav-right a.link:hover::after { width: 100%; }
+  .nav-right .btn { padding: 11px 22px; font-size: .9rem; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    min-height: 100svh; position: relative;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 120px 4vw 0; overflow: hidden;
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2vh; position: relative; z-index: 3; gap: 16px; flex-wrap: wrap; }
+  .status {
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 2px solid var(--ink); border-radius: 999px; padding: 10px 20px;
+    font-weight: 700; font-size: .85rem; letter-spacing: .12em; text-transform: uppercase;
+    background: var(--paper); white-space: nowrap;
+  }
+  .status .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--mint); animation: blink 1.8s infinite; }
+  .status.closed .dot { background: var(--glaze); }
+  @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:.25 } }
+
+  .wordmark { position: relative; z-index: 2; line-height: .82; user-select: none; }
+  .wordmark .line { display: block; font-family: 'Fraunces', serif; font-weight: 900; letter-spacing: -.03em; font-size: clamp(4.5rem, 17.5vw, 16rem); }
+  .wordmark .line.outline {
+    color: transparent; -webkit-text-stroke: 3px var(--ink); text-stroke: 3px var(--ink);
+  }
+  .wordmark .line .it { font-style: italic; font-weight: 300; color: var(--pink); -webkit-text-stroke: 0; }
+
+  .hero-donut {
+    position: absolute; right: 2vw; top: 50%; transform: translateY(-54%);
+    width: clamp(260px, 38vw, 620px); z-index: 1;
+    animation: heroSpin 60s linear infinite;
+    filter: drop-shadow(0 40px 60px rgba(42,20,9,.25));
+  }
+  @keyframes heroSpin { from { transform: translateY(-54%) rotate(0) } to { transform: translateY(-54%) rotate(360deg) } }
+
+  .hero-bottom {
+    position: relative; z-index: 3;
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 30px;
+    padding: 5vh 0 4vh; flex-wrap: wrap;
+  }
+  .hero-tag { max-width: 34ch; font-size: clamp(1.05rem, 1.6vw, 1.35rem); font-weight: 500; }
+  .hero-tag strong { color: var(--pink-deep); }
+  .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+
+  /* ---------- TICKER ---------- */
+  .ticker { background: var(--ink); color: var(--cream); overflow: hidden; padding: 18px 0; white-space: nowrap; position: relative; z-index: 4; }
+  .ticker-track { display: inline-block; animation: scroll 24s linear infinite; }
+  .ticker span { font-family:'Fraunces',serif; font-size: 1.5rem; font-weight: 600; font-style: italic; margin: 0 30px; }
+  .ticker .o { color: var(--glaze); font-style: normal; }
+  @keyframes scroll { to { transform: translateX(-50%) } }
+
+  /* ---------- STATS ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 2px solid var(--ink); }
+  .stat { padding: 56px 3vw; border-top: 2px solid var(--ink); text-align: left; }
+  .stat + .stat { border-left: 2px solid var(--ink); }
+  .stat .num { font-family: 'Fraunces', serif; font-weight: 900; font-size: clamp(3rem, 5.5vw, 5rem); line-height: 1; letter-spacing: -.02em; }
+  .stat .num sup { font-size: .45em; color: var(--pink); }
+  .stat .desc { margin-top: 12px; font-weight: 600; color: rgba(42,20,9,.65); }
+
+  /* ---------- SECTIONS ---------- */
+  section { position: relative; }
+  .pad { padding: clamp(80px, 12vh, 150px) 4vw; }
+  .sec-head { display: flex; align-items: baseline; gap: 24px; margin-bottom: clamp(40px, 7vh, 80px); }
+  .sec-head .label { color: var(--pink-deep); white-space: nowrap; }
+  .sec-head .rule { flex: 1; height: 2px; background: var(--ink); opacity: .15; }
+  h2.giant { font-size: clamp(2.6rem, 6.5vw, 5.5rem); font-weight: 900; line-height: .95; letter-spacing: -.02em; max-width: 18ch; }
+  h2.giant .it { font-style: italic; font-weight: 300; color: var(--pink-deep); }
+
+  /* ---------- MENU (editorial index) ---------- */
+  .menu-list { margin-top: 10px; border-top: 2px solid var(--ink); }
+  .menu-row {
+    display: grid; grid-template-columns: 80px 1fr minmax(220px, 38%) 60px;
+    gap: 24px; align-items: center;
+    padding: 34px 10px; border-bottom: 2px solid var(--ink);
+    text-decoration: none; position: relative; overflow: hidden;
+    transition: padding .3s;
+  }
+  .menu-row::before {
+    content: ''; position: absolute; inset: 0; background: var(--ink);
+    transform: scaleY(0); transform-origin: bottom; transition: transform .35s cubic-bezier(.7,0,.3,1); z-index: 0;
+  }
+  .menu-row:hover::before { transform: scaleY(1); }
+  .menu-row > * { position: relative; z-index: 1; transition: color .35s; }
+  .menu-row:hover > * { color: var(--cream); }
+  .menu-row .idx { font-weight: 700; font-size: .9rem; letter-spacing: .2em; color: var(--pink-deep); }
+  .menu-row:hover .idx { color: var(--glaze); }
+  .menu-row .name { font-family: 'Fraunces', serif; font-size: clamp(1.7rem, 3.6vw, 3rem); font-weight: 600; line-height: 1.05; letter-spacing: -.01em; }
+  .menu-row:hover .name { font-style: italic; }
+  .menu-row .desc { font-size: 1rem; color: rgba(42,20,9,.7); }
+  .menu-row:hover .desc { color: rgba(255,243,224,.8); }
+  .menu-row .arrow { font-size: 1.6rem; justify-self: end; transform: rotate(-45deg); transition: transform .35s; }
+  .menu-row:hover .arrow { transform: rotate(0) translateX(4px); }
+  .menu-foot { margin-top: 28px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-weight: 600; color: rgba(42,20,9,.65); }
+
+  /* ---------- STORY ---------- */
+  .story { background: var(--espresso); color: var(--cream); }
+  .story .sec-head .rule { background: var(--cream); }
+  .story .label { color: var(--glaze); }
+  .story h2.giant { color: var(--cream); }
+  .story h2.giant .it { color: var(--pink); }
+  .timeline { margin-top: 20px; display: grid; gap: 0; }
+  .moment {
+    display: grid; grid-template-columns: minmax(120px, 220px) 1fr; gap: 30px;
+    padding: 48px 0; border-top: 1px solid rgba(255,243,224,.2);
+  }
+  .moment .year { font-family:'Fraunces',serif; font-weight: 900; font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: 1; color: var(--glaze); letter-spacing: -.02em; }
+  .moment h3 { font-size: clamp(1.4rem, 2.4vw, 2rem); font-weight: 600; margin-bottom: 12px; }
+  .moment p { color: rgba(255,243,224,.78); max-width: 62ch; font-size: 1.08rem; }
+  .bigquote {
+    margin: clamp(50px, 9vh, 90px) auto 0; max-width: 1100px; text-align: center;
+  }
+  .bigquote blockquote {
+    font-family: 'Fraunces', serif; font-weight: 300; font-style: italic;
+    font-size: clamp(1.8rem, 4.4vw, 3.6rem); line-height: 1.25; letter-spacing: -.01em;
+  }
+  .bigquote blockquote em { color: var(--pink); font-weight: 400; }
+  .bigquote .src { margin-top: 28px; }
+  .press { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 16px; margin-top: 26px; }
+  .press span { border: 1px solid rgba(255,243,224,.35); padding: 8px 18px; border-radius: 999px; font-size: .85rem; font-weight: 600; letter-spacing: .05em; color: rgba(255,243,224,.85); }
+
+  /* ---------- VISIT ---------- */
+  .visit-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(40px, 6vw, 90px); align-items: start; }
+  .alarm { font-family:'Fraunces',serif; font-weight: 900; font-size: clamp(4.5rem, 13vw, 12rem); line-height: .9; letter-spacing: -.03em; }
+  .alarm .am { color: var(--pink); font-style: italic; font-weight: 300; }
+  .visit-copy { margin-top: 26px; font-size: 1.15rem; max-width: 46ch; color: rgba(42,20,9,.75); }
+  .visit-ctas { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .info-card { border: 2px solid var(--ink); border-radius: 24px; overflow: hidden; background: var(--paper); }
+  .info-block { padding: 30px 32px; border-bottom: 2px solid var(--ink); }
+  .info-block:last-child { border-bottom: 0; }
+  .info-block .label { color: var(--pink-deep); margin-bottom: 10px; display: block; }
+  .info-block .big { font-family:'Fraunces',serif; font-size: 1.5rem; font-weight: 600; line-height: 1.25; }
+  .hours-line { display: flex; justify-content: space-between; padding: 8px 0; font-weight: 600; font-size: 1.05rem; }
+  .hours-line span:last-child { color: var(--pink-deep); }
+  .soldout { background: var(--glaze); padding: 18px 32px; font-weight: 700; font-size: .95rem; }
+
+  /* ---------- FOOTER ---------- */
+  footer { background: var(--espresso-2); color: var(--cream); padding: clamp(70px, 10vh, 110px) 4vw 30px; overflow: hidden; }
+  .foot-mark {
+    font-family:'Fraunces',serif; font-weight: 900; letter-spacing: -.03em; line-height: .85;
+    font-size: clamp(3.4rem, 12.5vw, 11.5rem); white-space: nowrap;
+    color: transparent; -webkit-text-stroke: 2px rgba(255,243,224,.5);
+    transition: color .6s;
+  }
+  .foot-mark:hover { color: var(--pink); -webkit-text-stroke: 2px var(--pink); }
+  .foot-grid { display: flex; justify-content: space-between; gap: 40px; flex-wrap: wrap; margin-top: 60px; }
+  .foot-grid .label { color: var(--glaze); margin-bottom: 14px; display: block; }
+  footer a { text-decoration: none; }
+  footer a:hover { color: var(--pink); }
+  .foot-grid p, .foot-grid a { color: rgba(255,243,224,.8); font-size: 1rem; line-height: 1.8; }
+  .foot-bottom { margin-top: 70px; padding-top: 24px; border-top: 1px solid rgba(255,243,224,.15); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: .85rem; color: rgba(255,243,224,.5); }
+
+  /* sticky mobile CTA */
+  .sticky-cta { display: none; }
+
+  /* reveal */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity .8s cubic-bezier(.2,.7,.3,1), transform .8s cubic-bezier(.2,.7,.3,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @media (max-width: 920px) {
+    .nav-right a.link { display: none; }
+    .hero { padding-top: 100px; }
+    .hero-donut { right: -18vw; top: 38%; width: 64vw; opacity: .9; }
+    .wordmark .line { font-size: clamp(4rem, 19vw, 9rem); }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .stat + .stat { border-left: 0; }
+    .stat:nth-child(even) { border-left: 2px solid var(--ink); }
+    .menu-row { grid-template-columns: 50px 1fr 40px; }
+    .menu-row .desc { display: none; }
+    .visit-grid { grid-template-columns: 1fr; }
+    .moment { grid-template-columns: 1fr; gap: 12px; }
+    .sticky-cta {
+      display: flex; position: fixed; bottom: 16px; left: 16px; right: 16px; z-index: 90;
+      gap: 10px;
+    }
+    .sticky-cta .btn { flex: 1; justify-content: center; padding: 16px 10px; box-shadow: 0 12px 30px rgba(42,20,9,.35); }
+    footer { padding-bottom: 110px; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a class="nav-logo" href="#top"><span class="ring"></span>Donut City</a>
+  <div class="nav-right">
+    <a class="link" href="#menu">The Case</a>
+    <a class="link" href="#story">Our Story</a>
+    <a class="link" href="#visit">Hours</a>
+    <a class="btn" href="tel:+15627997007">Call the Shop</a>
+  </div>
+</nav>
+
+<section class="hero" id="top">
+  <svg class="hero-donut" viewBox="0 0 400 400" aria-hidden="true">
+    <defs>
+      <radialGradient id="glz" cx="38%" cy="32%" r="80%">
+        <stop offset="0%" stop-color="#FF7FAC"/><stop offset="60%" stop-color="#FF4D8D"/><stop offset="100%" stop-color="#E0246B"/>
+      </radialGradient>
+    </defs>
+    <circle cx="200" cy="200" r="178" fill="#F0A93C"/>
+    <circle cx="200" cy="200" r="178" fill="url(#glz)"/>
+    <path d="M200 22a178 178 0 0 1 0 356 178 178 0 0 1 0-356zm0 116a62 62 0 1 0 0 124 62 62 0 0 0 0-124z" fill="none"/>
+    <circle cx="200" cy="200" r="64" fill="#FFF3E0"/>
+    <g fill="#FFF3E0"><rect x="120" y="86" width="34" height="13" rx="6.5" transform="rotate(28 137 92)"/><rect x="262" y="100" width="34" height="13" rx="6.5" transform="rotate(-34 279 106)"/><rect x="296" y="252" width="34" height="13" rx="6.5" transform="rotate(42 313 258)"/><rect x="180" y="316" width="34" height="13" rx="6.5" transform="rotate(8 197 322)"/></g>
+    <g fill="#FFB42E"><rect x="84" y="220" width="34" height="13" rx="6.5" transform="rotate(-22 101 226)"/><rect x="232" y="60" width="34" height="13" rx="6.5" transform="rotate(-6 249 66)"/><rect x="118" y="288" width="34" height="13" rx="6.5" transform="rotate(55 135 294)"/></g>
+    <g fill="#2FD4C2"><rect x="160" y="52" width="34" height="13" rx="6.5" transform="rotate(14 177 58)"/><rect x="306" y="170" width="34" height="13" rx="6.5" transform="rotate(80 323 176)"/><rect x="62" y="150" width="34" height="13" rx="6.5" transform="rotate(-50 79 156)"/></g>
+  </svg>
+
+  <div class="hero-top">
+    <span class="label">Seal Beach, California — Est. 1990</span>
+    <span class="status" id="status"><span class="dot"></span><span id="statusText">Open · Fresh out of the fryer</span></span>
+  </div>
+
+  <h1 class="wordmark" aria-label="Donut City">
+    <span class="line">DONUT</span>
+    <span class="line outline">CITY<span class="it">*</span></span>
+  </h1>
+
+  <div class="hero-bottom">
+    <p class="hero-tag"><strong>*Hand-rolled before dawn, every day, for 35 years.</strong> When the case is empty, we're done — and the case has a habit of emptying early.</p>
+    <div class="hero-ctas">
+      <a class="btn pink" href="#visit">Set Your Alarm ↓</a>
+      <a class="btn ghost" href="https://maps.google.com/?q=Donut+City+1210+Pacific+Coast+Hwy+Seal+Beach+CA+90740" target="_blank" rel="noopener">Directions</a>
+    </div>
+  </div>
+</section>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span>Apple Fritters</span><span class="o">●</span><span>Old-Fashioned Glazed</span><span class="o">●</span><span>Fresh at 5 AM</span><span class="o">●</span><span>Ounces Coffee</span><span class="o">●</span><span>One Block from the Beach</span><span class="o">●</span><span>Apple Fritters</span><span class="o">●</span><span>Old-Fashioned Glazed</span><span class="o">●</span><span>Fresh at 5 AM</span><span class="o">●</span><span>Ounces Coffee</span><span class="o">●</span><span>One Block from the Beach</span><span class="o">●</span>
+  </div>
+</div>
+
+<section class="stats" aria-label="Donut City by the numbers">
+  <div class="stat reveal"><div class="num">35<sup>+</sup></div><div class="desc">years on Pacific Coast Highway</div></div>
+  <div class="stat reveal"><div class="num">4.7<sup>★</sup></div><div class="desc">from 160+ neighbors who'd rather keep us secret</div></div>
+  <div class="stat reveal"><div class="num">5<sup>AM</sup></div><div class="desc">when the first hot tray hits the case</div></div>
+  <div class="stat reveal"><div class="num">1</div><div class="desc">block from the sand</div></div>
+</section>
+
+<section class="pad" id="menu">
+  <div class="sec-head"><span class="label">01 — The Case</span><span class="rule"></span></div>
+  <h2 class="giant reveal">Made before sunrise.<br><span class="it">Gone by noon.</span></h2>
+  <div class="menu-list" style="margin-top: clamp(40px,6vh,70px);">
+    <div class="menu-row reveal">
+      <span class="idx">01</span>
+      <span class="name">Apple Fritter</span>
+      <span class="desc">Crackly edges, molten cinnamon-apple center. The one people cross the county for.</span>
+      <span class="arrow">→</span>
+    </div>
+    <div class="menu-row reveal">
+      <span class="idx">02</span>
+      <span class="name">Old-Fashioned Glazed</span>
+      <span class="desc">Still warm if you're early. Light enough that "just one" never survives contact.</span>
+      <span class="arrow">→</span>
+    </div>
+    <div class="menu-row reveal">
+      <span class="idx">03</span>
+      <span class="name">Blueberry Cake</span>
+      <span class="desc">The regulars' quiet favorite — tender crumb, real blueberry, zero apologies.</span>
+      <span class="arrow">→</span>
+    </div>
+    <div class="menu-row reveal">
+      <span class="idx">04</span>
+      <span class="name">Sugar, Sprinkles &amp; Chocolate</span>
+      <span class="desc">Every classic in the case, raised and iced the same way since 1990.</span>
+      <span class="arrow">→</span>
+    </div>
+    <div class="menu-row reveal">
+      <span class="idx">05</span>
+      <span class="name">Croissants &amp; Bagels</span>
+      <span class="desc">For the not-quite-donut mornings. We won't tell.</span>
+      <span class="arrow">→</span>
+    </div>
+    <div class="menu-row reveal">
+      <span class="idx">06</span>
+      <span class="name">Ounces Coffee</span>
+      <span class="desc">Locally roasted, poured hot, born to sit next to a glazed.</span>
+      <span class="arrow">→</span>
+    </div>
+  </div>
+  <div class="menu-foot reveal">
+    <span>Donuts from $1.50 · dozens boxed while you watch</span>
+    <span>Early birds get the full case — sellouts are routine</span>
+  </div>
+</section>
+
+<section class="story pad" id="story">
+  <div class="sec-head"><span class="label">02 — Our Story</span><span class="rule"></span></div>
+  <h2 class="giant reveal">The town that<br><span class="it">bought out the case.</span></h2>
+
+  <div class="timeline" style="margin-top: clamp(40px,6vh,70px);">
+    <div class="moment reveal">
+      <div class="year">1990</div>
+      <div>
+        <h3>A family, a fryer, and 5 AM</h3>
+        <p>John and Stella Chhan came to California as refugees from Cambodia and opened a small donut shop on Pacific Coast Highway. Every morning since, the lights have come on before dawn — John at the fryer, Stella at the counter, every donut rolled by hand.</p>
+      </div>
+    </div>
+    <div class="moment reveal">
+      <div class="year">2018</div>
+      <div>
+        <h3>The morning Seal Beach showed up</h3>
+        <p>When Stella was recovering from an aneurysm, the neighborhood made a quiet pact: buy the donuts out early — dozens at a time, every single morning — so John could close up and spend the day at her side. The story traveled from Seal Beach to newsrooms around the world.</p>
+      </div>
+    </div>
+    <div class="moment reveal">
+      <div class="year">Today</div>
+      <div>
+        <h3>Stella came back. The line never left.</h3>
+        <p>She recovered. The case still empties early. And the little shop a block from the beach is still proof that a town and a donut shop can love each other back.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bigquote reveal">
+    <blockquote>"A hidden gem with a <em>warm family feeling</em> — the kind of place that remembers your order before you say it."</blockquote>
+    <div class="src label" style="color: rgba(255,243,224,.6);">— our neighbors, more or less unanimously</div>
+    <div class="press">
+      <span>The Washington Post</span><span>NPR</span><span>BBC</span><span>CBS News</span>
+    </div>
+  </div>
+</section>
+
+<section class="pad" id="visit">
+  <div class="sec-head"><span class="label">03 — Hours &amp; Visit</span><span class="rule"></span></div>
+  <div class="visit-grid">
+    <div class="reveal">
+      <div class="alarm">Set your<br>alarm<span class="am">.</span></div>
+      <p class="visit-copy">We open at 5 AM, the case is fullest before 9, and when the last donut goes, we lock up — sometimes hours early. That's not a marketing line; it's a warning.</p>
+      <div class="visit-ctas">
+        <a class="btn" href="https://maps.google.com/?q=Donut+City+1210+Pacific+Coast+Hwy+Seal+Beach+CA+90740" target="_blank" rel="noopener">Get Directions</a>
+        <a class="btn ghost" href="https://www.instagram.com/donutcity_sb/" target="_blank" rel="noopener">@donutcity_sb</a>
+      </div>
+    </div>
+    <div class="info-card reveal">
+      <div class="info-block">
+        <span class="label">Find Us</span>
+        <div class="big">1210 Pacific Coast Hwy<br>Seal Beach, CA 90740</div>
+      </div>
+      <div class="info-block">
+        <span class="label">Hours</span>
+        <div class="hours-line"><span>Mon – Sat</span><span>5:00 AM – 2:00 PM</span></div>
+        <div class="hours-line"><span>Sunday</span><span>5:00 AM – 3:00 PM</span></div>
+      </div>
+      <div class="info-block">
+        <span class="label">Call Ahead for Dozens</span>
+        <div class="big"><a href="tel:+15627997007" style="text-decoration:none;">(562) 799-7007</a></div>
+      </div>
+      <div class="soldout">⚠ Sold out = closed. Early birds eat better.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <a href="#top" style="text-decoration:none;"><div class="foot-mark">DONUT CITY</div></a>
+  <div class="foot-grid">
+    <div>
+      <span class="label">The Shop</span>
+      <p>Family-owned and hand-rolled in Seal Beach since 1990.<br>Fresh at 5 AM. Gone by noon.</p>
+    </div>
+    <div>
+      <span class="label">Visit</span>
+      <p><a href="https://maps.google.com/?q=Donut+City+1210+Pacific+Coast+Hwy+Seal+Beach+CA+90740" target="_blank" rel="noopener">1210 Pacific Coast Hwy<br>Seal Beach, CA 90740</a></p>
+    </div>
+    <div>
+      <span class="label">Talk to Us</span>
+      <p><a href="tel:+15627997007">(562) 799-7007</a><br><a href="https://www.instagram.com/donutcity_sb/" target="_blank" rel="noopener">Instagram @donutcity_sb</a></p>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 Donut City · Seal Beach, California</span>
+    <span>Hand-rolled daily. Website included.</span>
+  </div>
+</footer>
+
+<div class="sticky-cta">
+  <a class="btn pink" href="https://maps.google.com/?q=Donut+City+1210+Pacific+Coast+Hwy+Seal+Beach+CA+90740" target="_blank" rel="noopener">Directions</a>
+  <a class="btn" href="tel:+15627997007">Call</a>
+</div>
+
+<script>
+  // open / closed status (Mon–Sat 5–14, Sun 5–15)
+  (function () {
+    const now = new Date();
+    const h = now.getHours() + now.getMinutes() / 60;
+    const close = now.getDay() === 0 ? 15 : 14;
+    const el = document.getElementById('status');
+    const txt = document.getElementById('statusText');
+    if (h >= 5 && h < close) {
+      txt.textContent = h < 9 ? 'Open · Case is full' : 'Open · Until the case empties';
+    } else {
+      el.classList.add('closed');
+      txt.textContent = 'Closed · Fresh again at 5 AM';
+    }
+  })();
+
+  // nav background on scroll
+  const nav = document.getElementById('nav');
+  addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 40), { passive: true });
+
+  // reveal on scroll
+  const io = new IntersectionObserver((es) => {
+    es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>
