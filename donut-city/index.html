@@ -207,15 +207,20 @@
   }
   .bigquote blockquote em { color: var(--pink); font-weight: 400; }
   .bigquote .src { margin-top: 28px; }
-  .press { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 16px; margin-top: 26px; }
-  .press a {
-    display: inline-flex; align-items: center; justify-content: center;
-    background: rgba(255,243,224,.96); border-radius: 12px;
-    padding: 10px 22px; text-decoration: none;
-    transition: transform .25s cubic-bezier(.2,.9,.3,1.3), box-shadow .25s;
+  /* press cards */
+  .press { display: flex; gap: 16px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+  .press::-webkit-scrollbar { display: none; }
+  .press-card {
+    flex: 0 0 280px; background: rgba(255,243,224,.07); border: 1px solid rgba(255,243,224,.18);
+    border-radius: 18px; padding: 26px 24px; text-decoration: none;
+    display: flex; flex-direction: column; gap: 14px;
+    transition: background .25s, border-color .25s, transform .25s cubic-bezier(.2,.9,.3,1.3);
   }
-  .press a:hover { transform: translateY(-3px) rotate(-1deg); box-shadow: 0 10px 24px rgba(0,0,0,.4); }
-  .press img { height: 20px; width: auto; max-width: 140px; display: block; object-fit: contain; }
+  .press-card:hover { background: rgba(255,243,224,.13); border-color: var(--pink); transform: translateY(-4px); }
+  .press-outlet { font-size: .78rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
+  .press-headline { font-family: 'Fraunces', serif; font-size: 1.1rem; font-style: italic; font-weight: 400; line-height: 1.4; color: rgba(255,243,224,.92); flex: 1; }
+  .press-arrow { font-size: .85rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,243,224,.45); transition: color .2s; }
+  .press-card:hover .press-arrow { color: var(--pink); }
 
   /* ---------- VISIT ---------- */
   .visit-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(40px, 6vw, 90px); align-items: start; }
@@ -414,11 +419,30 @@
   <div class="bigquote reveal">
     <blockquote>"A hidden gem with a <em>warm family feeling</em> — the kind of place that remembers your order before you say it."</blockquote>
     <div class="src label" style="color: rgba(255,243,224,.6);">— our neighbors, more or less unanimously</div>
-    <div class="press">
-      <a href="https://www.washingtonpost.com/lifestyle/2018/11/05/this-shop-owners-wife-fell-ill-now-customers-line-up-early-buy-all-doughnuts/" target="_blank" rel="noopener"><img src="logos/wapo.svg" alt="The Washington Post"></a>
-      <a href="https://www.npr.org/2018/11/06/664617132/donut-city-customers-help-owner-care-for-his-wife" target="_blank" rel="noopener"><img src="logos/npr.svg" alt="NPR"></a>
-      <a href="https://www.cnn.com/2018/11/05/us/iyw-donut-city-seal-beach-california-trnd" target="_blank" rel="noopener"><img src="logos/cnn.svg" alt="CNN"></a>
-      <a href="https://www.cbsnews.com/news/california-community-buys-out-donuts-so-shop-owner-can-spend-time-with-sick-wife/" target="_blank" rel="noopener"><img src="logos/cbs.svg" alt="CBS News"></a>
+    <div style="margin-top: 48px;">
+      <p class="label" style="text-align:center; opacity:.5; letter-spacing:.25em; margin-bottom: 20px;">As featured in</p>
+      <div class="press">
+        <a class="press-card" href="https://www.washingtonpost.com/lifestyle/2018/11/05/this-shop-owners-wife-fell-ill-now-customers-line-up-early-buy-all-doughnuts/" target="_blank" rel="noopener">
+          <span class="press-outlet" style="color:#5F9EE1;">The Washington Post</span>
+          <span class="press-headline">"This shop owner's wife fell ill. Now customers line up early to buy all the doughnuts."</span>
+          <span class="press-arrow">Read story →</span>
+        </a>
+        <a class="press-card" href="https://www.npr.org/2018/11/06/664617132/donut-city-customers-help-owner-care-for-his-wife" target="_blank" rel="noopener">
+          <span class="press-outlet" style="color:#E5443C;">NPR</span>
+          <span class="press-headline">"Donut City customers help owner care for his ailing wife — buying him out every morning."</span>
+          <span class="press-arrow">Read story →</span>
+        </a>
+        <a class="press-card" href="https://www.cnn.com/2018/11/05/us/iyw-donut-city-seal-beach-california-trnd" target="_blank" rel="noopener">
+          <span class="press-outlet" style="color:#E5443C;">CNN</span>
+          <span class="press-headline">"Customers buy out his donuts early every day so he can spend time with his sick wife."</span>
+          <span class="press-arrow">Read story →</span>
+        </a>
+        <a class="press-card" href="https://www.cbsnews.com/news/california-community-buys-out-donuts-so-shop-owner-can-spend-time-with-sick-wife/" target="_blank" rel="noopener">
+          <span class="press-outlet" style="color:#88C0D6;">CBS News</span>
+          <span class="press-headline">"California community buys out the donuts so the shop owner can be with his sick wife."</span>
+          <span class="press-arrow">Read story →</span>
+        </a>
+      </div>
     </div>
   </div>
 </section>
