@@ -62,6 +62,16 @@
   }
   .sk { display: inline-block; vertical-align: middle; flex-shrink: 0; }
   .label .sk { width: 15px; height: 18px; color: var(--flame); }
+
+  /* skull divider strips between sections */
+  .skull-strip { display: flex; justify-content: center; align-items: center; gap: clamp(18px, 3vw, 36px); padding: clamp(26px, 5vh, 44px) 5vw 0; }
+  .skull-strip .sk { width: 20px; height: 24px; color: rgba(244,237,227,.25); transition: color .3s; }
+  .skull-strip .sk:nth-child(2n) { width: 14px; height: 17px; transform: rotate(-9deg); color: rgba(255,90,31,.4); }
+  .skull-strip .sk:nth-child(4n) { transform: rotate(9deg); color: rgba(255,183,66,.4); }
+  .skull-strip .sk:hover { color: var(--flame); }
+
+  /* watermark skull on cards */
+  .wm { position: absolute; right: -14px; bottom: -20px; width: 96px; height: 115px; color: rgba(244,237,227,.055); pointer-events: none; }
   .pad { padding: clamp(70px, 11vh, 130px) 5vw; }
   .sec-head { display: flex; align-items: center; gap: 20px; margin-bottom: clamp(30px, 5vh, 55px); }
   .sec-head .rule { flex: 1; height: 1px; background: rgba(244,237,227,.18); }
@@ -122,6 +132,8 @@
     display: block; color: transparent;
     -webkit-text-stroke: 2px var(--flame);
   }
+  .h1-sk { width: clamp(34px, 8vw, 110px); height: auto; aspect-ratio: 100/120; margin-left: .08em; vertical-align: baseline; }
+  .eyebrow .sk { width: 14px; height: 17px; color: var(--flame); }
   .hero-sub {
     display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
     gap: 26px; margin-top: clamp(26px, 4.5vh, 50px);
@@ -174,6 +186,7 @@
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid rgba(244,237,227,.12); border-bottom: 1px solid rgba(244,237,227,.12); }
   .stat { padding: clamp(28px, 4.5vh, 46px) 24px; text-align: center; border-left: 1px solid rgba(244,237,227,.12); }
   .stat:first-child { border-left: none; }
+  .stat .sk { width: 17px; height: 20px; color: var(--flame); opacity: .9; margin-bottom: 12px; }
   .stat .num { font-family: 'Anton', sans-serif; font-size: clamp(2rem, 4.2vw, 3.4rem); color: var(--gold); }
   .stat .cap { margin-top: 6px; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: var(--bone-dim); }
 
@@ -194,7 +207,11 @@
   .step p strong { color: var(--gold); font-weight: 600; }
 
   /* ---------- menu ---------- */
-  .menu-sec { background: var(--soot); }
+  .menu-sec {
+    background-color: var(--soot);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cpath fill='%23F4EDE3' fill-opacity='.028' fill-rule='evenodd' d='M50 4C26 4 10 22 10 46c0 15 6 25 14 31v19c0 10 8 18 18 18h16c10 0 18-8 18-18V77c8-6 14-16 14-31C90 22 74 4 50 4ZM22 50a9 9 0 1 0 18 0 9 9 0 1 0-18 0Zm38 0a9 9 0 1 0 18 0 9 9 0 1 0-18 0Zm-10 13c-3-5-10-4-10 2 0 5 6 8 10 12 4-4 10-7 10-12 0-6-7-7-10-2ZM32 85h36v4H32Z'/%3E%3C/svg%3E");
+    background-size: 74px; background-position: 0 0;
+  }
   .giant { font-size: clamp(2.6rem, 7vw, 5.6rem); line-height: .98; }
   .giant .fl { color: var(--flame); }
   .menu-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(30px, 5vw, 70px); margin-top: clamp(36px, 6vh, 64px); align-items: start; }
@@ -209,7 +226,8 @@
   }
   .fixins h3 { color: var(--gold); font-size: 1.2rem; letter-spacing: .05em; margin-bottom: 18px; }
   .fixins ul { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; }
-  .fixins li { border: 1px solid rgba(244,237,227,.22); border-radius: 999px; padding: 8px 16px; font-size: .82rem; color: var(--bone-dim); }
+  .fixins li { border: 1px solid rgba(244,237,227,.22); border-radius: 999px; padding: 8px 16px; font-size: .82rem; color: var(--bone-dim); display: inline-flex; align-items: center; gap: 8px; }
+  .fixins li .sk { width: 11px; height: 13px; color: var(--gold); }
   .fixins .note { margin-top: 20px; font-size: .85rem; line-height: 1.6; color: var(--bone-dim); font-weight: 300; }
   .fixins .note strong { color: var(--bone); }
 
@@ -219,7 +237,11 @@
     background: var(--soot); border: 1px solid rgba(244,237,227,.09); border-radius: 18px;
     padding: 30px 28px; display: flex; flex-direction: column; gap: 18px;
     transition: transform .25s, border-color .25s;
+    position: relative; overflow: hidden;
   }
+  .rev .wm { color: rgba(255,183,66,.06); }
+  .rev .who { display: flex; align-items: center; gap: 9px; }
+  .rev .who .sk { width: 13px; height: 16px; color: var(--gold); opacity: .8; }
   .rev:hover { transform: translateY(-5px); border-color: rgba(255,183,66,.5); }
   .rev .stars { color: var(--gold); letter-spacing: 3px; font-size: .95rem; }
   .rev blockquote { font-size: 1.02rem; line-height: 1.6; font-weight: 300; color: rgba(244,237,227,.9); flex: 1; }
@@ -230,11 +252,17 @@
     font-size: clamp(1.9rem, 4.6vw, 3.8rem); line-height: 1.12;
   }
   .bigline .fl { color: var(--flame); }
+  .bigline .sk { width: clamp(28px, 4.5vw, 50px); height: auto; aspect-ratio: 100/120; margin: 0 clamp(10px, 2vw, 22px); vertical-align: -12%; }
   .trusted { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 14px; margin-top: 34px; }
   .trusted span { border: 1px solid rgba(244,237,227,.2); border-radius: 999px; padding: 10px 22px; font-size: .82rem; letter-spacing: .1em; text-transform: uppercase; color: var(--bone-dim); }
 
   /* ---------- quote ---------- */
-  .quote-sec { background: linear-gradient(180deg, var(--char), #160D08 65%, #1D0F07); }
+  .quote-sec {
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cpath fill='%23FF5A1F' fill-opacity='.03' fill-rule='evenodd' d='M50 4C26 4 10 22 10 46c0 15 6 25 14 31v19c0 10 8 18 18 18h16c10 0 18-8 18-18V77c8-6 14-16 14-31C90 22 74 4 50 4ZM22 50a9 9 0 1 0 18 0 9 9 0 1 0-18 0Zm38 0a9 9 0 1 0 18 0 9 9 0 1 0-18 0Zm-10 13c-3-5-10-4-10 2 0 5 6 8 10 12 4-4 10-7 10-12 0-6-7-7-10-2ZM32 85h36v4H32Z'/%3E%3C/svg%3E"),
+      linear-gradient(180deg, var(--char), #160D08 65%, #1D0F07);
+    background-size: 84px, auto;
+  }
   .quote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(36px, 6vw, 80px); align-items: start; margin-top: clamp(30px, 5vh, 55px); }
   .quote-copy h2 { font-size: clamp(2.4rem, 5.5vw, 4.4rem); line-height: 1; }
   .quote-copy h2 .fl { color: var(--flame); }
@@ -365,11 +393,11 @@
 <header class="hero" id="top">
   <div class="embers" aria-hidden="true"></div>
   <svg class="hero-skull" aria-hidden="true"><use href="#calavera"/></svg>
-  <span class="eyebrow"><span class="dot" id="status-dot"></span><span id="status-text">Booking events daily · 10 AM – 10 PM</span></span>
+  <span class="eyebrow"><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg><span class="dot" id="status-dot"></span><span id="status-text">Booking events daily · 10 AM – 10 PM</span></span>
   <h1>
     <span class="solid">Tacos that</span>
     <span class="outline">kill it</span>
-    <span class="solid">at every party.</span>
+    <span class="solid">at every party<svg class="h1-sk" aria-hidden="true"><use href="#calavera"/></svg></span>
   </h1>
   <div class="hero-sub">
     <p class="reveal in"><strong>Family-run taco catering, fresh off the grill at your event since 2012.</strong> Carne asada seared on-site, tortillas made that morning, and a crew that treats your guests like family. Weddings, corporate events, backyard birthdays — all of Orange County, LA &amp; San Diego.</p>
@@ -387,11 +415,15 @@
 </div>
 
 <section class="stats">
-  <div class="stat reveal"><div class="num">2012</div><div class="cap">Slinging tacos since</div></div>
-  <div class="stat reveal"><div class="num">100+</div><div class="cap">Five-star Yelp reviews</div></div>
-  <div class="stat reveal"><div class="num">3</div><div class="cap">Counties served — OC · LA · SD</div></div>
-  <div class="stat reveal"><div class="num">0</div><div class="cap">Dishes you'll wash</div></div>
+  <div class="stat reveal"><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg><div class="num">2012</div><div class="cap">Slinging tacos since</div></div>
+  <div class="stat reveal"><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg><div class="num">100+</div><div class="cap">Five-star Yelp reviews</div></div>
+  <div class="stat reveal"><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg><div class="num">3</div><div class="cap">Counties served — OC · LA · SD</div></div>
+  <div class="stat reveal"><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg><div class="num">0</div><div class="cap">Dishes you'll wash</div></div>
 </section>
+
+<div class="skull-strip" aria-hidden="true">
+  <svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg>
+</div>
 
 <section class="pad" id="how">
   <div class="sec-head"><span class="label"><svg class="sk"><use href="#calavera-mono"/></svg>01 — How It Works</span><span class="rule"></span></div>
@@ -401,19 +433,26 @@
       <div class="n">01</div>
       <h3>Tell us about your party</h3>
       <p>Date, headcount, vibe — that's it. <strong>60 seconds</strong>, and Alberto gets back to you fast with a straight-up quote. No haggling, no hidden fees.</p>
+      <svg class="wm" aria-hidden="true"><use href="#calavera-mono"/></svg>
     </div>
     <div class="step reveal">
       <div class="n">02</div>
       <h3>We roll up &amp; cook fresh</h3>
       <p>No steam trays, no reheat. Skirt steak hits the grill <strong>at your event</strong> — tortillas made that morning, salsas made in-house, served hot off the fire.</p>
+      <svg class="wm" aria-hidden="true"><use href="#calavera-mono"/></svg>
     </div>
     <div class="step reveal">
       <div class="n">03</div>
       <h3>You take the credit</h3>
       <p>We serve your guests, keep the line moving, and <strong>clean up before we go</strong>. You just stand there accepting compliments. We won't tell.</p>
+      <svg class="wm" aria-hidden="true"><use href="#calavera-mono"/></svg>
     </div>
   </div>
 </section>
+
+<div class="skull-strip" aria-hidden="true" style="padding-bottom: clamp(26px, 5vh, 44px);">
+  <svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg>
+</div>
 
 <section class="menu-sec pad" id="menu">
   <div class="sec-head"><span class="label"><svg class="sk"><use href="#calavera-mono"/></svg>02 — The Spread</span><span class="rule"></span></div>
@@ -430,14 +469,14 @@
     <aside class="fixins reveal">
       <h3>The Fixins Bar</h3>
       <ul>
-        <li>Corn tortillas — made that day</li>
-        <li>Salsa roja</li>
-        <li>Salsa verde</li>
-        <li>Guacamole</li>
-        <li>Cilantro &amp; onion</li>
-        <li>Limes</li>
-        <li>Radishes</li>
-        <li>Grilled onions</li>
+        <li><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Corn tortillas — made that day</li>
+        <li><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Salsa roja</li>
+        <li><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Salsa verde</li>
+        <li><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Guacamole</li>
+        <li><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Cilantro &amp; onion</li>
+        <li><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Limes</li>
+        <li><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Radishes</li>
+        <li><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Grilled onions</li>
       </ul>
       <p class="note"><strong>Served on real plates — not paper.</strong> Every package includes setup, service, and cleanup. Vegetarian options available; just ask when you book.</p>
     </aside>
@@ -451,20 +490,23 @@
     <div class="rev reveal">
       <div class="stars">★★★★★</div>
       <blockquote>"After sorting through so many 'taco guys' and taco catering companies, <strong>I kept coming back to Killer Tacos OC.</strong>"</blockquote>
-      <div class="who">Yelp review — backyard event</div>
+      <svg class="wm" aria-hidden="true"><use href="#calavera-mono"/></svg>
+      <div class="who"><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Yelp review — backyard event</div>
     </div>
     <div class="rev reveal">
       <div class="stars">★★★★★</div>
       <blockquote>"The tacos are beyond incredible. <strong>I can't get over how good the quality of food was</strong> and how hospitable the people were that made it."</blockquote>
-      <div class="who">Yelp review — corporate event</div>
+      <svg class="wm" aria-hidden="true"><use href="#calavera-mono"/></svg>
+      <div class="who"><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Yelp review — corporate event</div>
     </div>
     <div class="rev reveal">
       <div class="stars">★★★★★</div>
       <blockquote>"From the beginning it has been a great experience. <strong>Alberto was very responsive</strong> and answered all my questions."</blockquote>
-      <div class="who">Yelp review — private party</div>
+      <svg class="wm" aria-hidden="true"><use href="#calavera-mono"/></svg>
+      <div class="who"><svg class="sk" aria-hidden="true"><use href="#calavera-mono"/></svg>Yelp review — private party</div>
     </div>
   </div>
-  <p class="bigline reveal">Trusted by <span class="fl">weddings, businesses &amp; backyards</span><br>across Southern California.</p>
+  <p class="bigline reveal"><svg class="sk" aria-hidden="true"><use href="#calavera"/></svg>Trusted by <span class="fl">weddings, businesses &amp; backyards</span><br>across Southern California.<svg class="sk" aria-hidden="true"><use href="#calavera"/></svg></p>
   <div class="trusted reveal">
     <span>Elmore Toyota</span>
     <span>Highway 39 Event Center</span>
@@ -475,6 +517,10 @@
     <span>Your backyard</span>
   </div>
 </section>
+
+<div class="skull-strip" aria-hidden="true">
+  <svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg><svg class="sk"><use href="#calavera-mono"/></svg>
+</div>
 
 <section class="quote-sec pad" id="quote">
   <div class="sec-head"><span class="label"><svg class="sk"><use href="#calavera-mono"/></svg>04 — Get a Quote</span><span class="rule"></span></div>
@@ -520,7 +566,7 @@
         <label for="q-notes">Anything else?</label>
         <textarea id="q-notes" name="notes" placeholder="Location, timing, dietary needs — whatever we should know."></textarea>
       </div>
-      <div class="full"><button class="btn" type="submit">Send my quote request →</button></div>
+      <div class="full"><button class="btn" type="submit"><svg class="sk" style="width:18px;height:22px;" aria-hidden="true"><use href="#calavera-mono"/></svg>Send my quote request →</button></div>
       <p class="form-note">Opens in your email app — or just call (949) 278-1009.</p>
     </form>
   </div>
@@ -547,7 +593,9 @@
   <div class="skull-row" aria-hidden="true">
     <svg class="sk alt"><use href="#calavera"/></svg>
     <svg class="sk"><use href="#calavera"/></svg>
+    <svg class="sk alt"><use href="#calavera"/></svg>
     <svg class="sk mid"><use href="#calavera"/></svg>
+    <svg class="sk alt"><use href="#calavera"/></svg>
     <svg class="sk"><use href="#calavera"/></svg>
     <svg class="sk alt"><use href="#calavera"/></svg>
   </div>
@@ -560,7 +608,7 @@
 
 <div class="sticky-cta">
   <a href="tel:+19492781009">☎ Call now</a>
-  <a class="hot" href="#quote">Get a free quote</a>
+  <a class="hot" href="#quote"><svg class="sk" style="width:15px;height:18px;margin-right:7px;" aria-hidden="true"><use href="#calavera-mono"/></svg>Get a free quote</a>
 </div>
 
 <script>
