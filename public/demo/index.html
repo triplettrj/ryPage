@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Jasmine Thai Spa — Traditional Thai massage and wellness treatments in Orange County, CA. Restore balance, calm your body, and find your peace." />
+  <title>Jasmine Thai Spa | Traditional Thai Massage in Orange County</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #FAF8F5;
+      --cream-dark: #F0EDE7;
+      --sage: #8A9E8A;
+      --sage-light: #B8C9B8;
+      --sage-dark: #5A7A5A;
+      --text: #2C2C2C;
+      --text-light: #6B6B6B;
+      --white: #FFFFFF;
+      --border: #E8E4DC;
+      --shadow: 0 2px 20px rgba(0,0,0,0.07);
+    }
+
+    html { scroll-behavior: smooth; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Georgia, serif; color: var(--text); background: var(--white); line-height: 1.7; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 6%;
+    }
+    .nav-logo { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); text-decoration: none; }
+    .nav-logo span { color: var(--sage-dark); }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--text-light); font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--sage-dark); }
+    .nav-book {
+      background: var(--sage-dark); color: var(--white);
+      padding: 9px 20px; border-radius: 100px;
+      text-decoration: none; font-size: 0.875rem; font-weight: 600;
+      transition: background 0.2s;
+    }
+    .nav-book:hover { background: var(--sage); }
+    .nav-social { display: flex; gap: 12px; }
+    .nav-social a { color: var(--text-light); text-decoration: none; font-size: 1.1rem; }
+    @media (max-width: 700px) {
+      .nav-links { display: none; }
+      .nav-social { display: none; }
+    }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      min-height: 88vh;
+      display: flex; align-items: center; justify-content: center;
+      background: url('https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=1600&q=80') center/cover no-repeat;
+      text-align: center;
+      padding: 80px 24px;
+    }
+    .hero::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.55) 100%);
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 680px; }
+    .hero-content h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 300;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+    .hero-content h1 em { font-style: italic; color: var(--sage-dark); }
+    .hero-content p {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      max-width: 480px;
+      margin: 0 auto 32px;
+      font-weight: 400;
+    }
+    .btn-primary {
+      display: inline-block;
+      background: var(--sage-dark); color: var(--white);
+      padding: 14px 36px; border-radius: 100px;
+      text-decoration: none; font-size: 1rem; font-weight: 600;
+      letter-spacing: 0.01em;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { background: var(--sage); transform: translateY(-1px); }
+
+    /* ── Sections ── */
+    section { padding: 80px 6%; }
+    .section-inner { max-width: 900px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--sage-dark);
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 300; line-height: 1.25;
+      letter-spacing: -0.01em; color: var(--text);
+      margin-bottom: 20px;
+    }
+    h2 em { font-style: italic; color: var(--sage-dark); }
+
+    /* ── Is This You ── */
+    .is-you { background: var(--cream); }
+    .is-you-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-top: 32px;
+    }
+    @media (max-width: 600px) { .is-you-grid { grid-template-columns: 1fr; } }
+    .is-you-item {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 0.95rem;
+      color: var(--text-light);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .is-you-item span { font-size: 1.3rem; }
+    .is-you-cta { margin-top: 36px; text-align: center; }
+    .is-you-cta p { color: var(--text-light); margin-bottom: 16px; }
+
+    /* ── About ── */
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center; margin-top: 16px;
+    }
+    @media (max-width: 700px) { .about-grid { grid-template-columns: 1fr; } }
+    .about-img {
+      width: 100%; border-radius: 20px;
+      aspect-ratio: 4/5; object-fit: cover;
+      box-shadow: var(--shadow);
+    }
+    .about-text h2 { margin-bottom: 16px; }
+    .about-text p { color: var(--text-light); margin-bottom: 16px; font-size: 1rem; }
+
+    /* ── Services ── */
+    .services { background: var(--cream); }
+    .services-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 20px; margin-top: 36px;
+    }
+    @media (max-width: 700px) { .services-grid { grid-template-columns: 1fr; } }
+    .service-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 32px 24px;
+    }
+    .service-card .icon { font-size: 2rem; margin-bottom: 14px; }
+    .service-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
+    .service-card p { font-size: 0.9rem; color: var(--text-light); line-height: 1.6; }
+    .service-card .price {
+      margin-top: 16px; font-weight: 700; font-size: 0.95rem; color: var(--sage-dark);
+    }
+
+    /* ── Testimonials ── */
+    .testimonials-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 20px; margin-top: 36px;
+    }
+    @media (max-width: 700px) { .testimonials-grid { grid-template-columns: 1fr; } }
+    blockquote {
+      background: var(--cream);
+      border-left: 3px solid var(--sage-light);
+      border-radius: 12px; padding: 28px 24px;
+    }
+    blockquote p { font-size: 0.95rem; color: var(--text-light); font-style: italic; line-height: 1.7; }
+    blockquote cite {
+      display: block; margin-top: 14px;
+      font-size: 0.8rem; font-weight: 700;
+      color: var(--sage-dark); font-style: normal;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+
+    /* ── Reasons ── */
+    .reasons { background: var(--cream); }
+    .reasons-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin-top: 28px;
+    }
+    @media (max-width: 600px) { .reasons-grid { grid-template-columns: 1fr; } }
+    .reason-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem; color: var(--text-light);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .reason-item::before { content: '—'; color: var(--sage-light); font-weight: 300; }
+
+    /* ── CTA Band ── */
+    .cta-band {
+      background: var(--sage-dark);
+      padding: 80px 6%;
+      text-align: center;
+      color: var(--white);
+    }
+    .cta-band h2 { color: var(--white); font-weight: 300; margin-bottom: 14px; }
+    .cta-band p { color: rgba(255,255,255,0.75); margin-bottom: 32px; font-size: 1.05rem; }
+    .btn-white {
+      display: inline-block;
+      background: var(--white); color: var(--sage-dark);
+      padding: 14px 36px; border-radius: 100px;
+      text-decoration: none; font-size: 1rem; font-weight: 700;
+      transition: opacity 0.2s;
+    }
+    .btn-white:hover { opacity: 0.9; }
+
+    /* ── Contact ── */
+    .contact-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; margin-top: 16px;
+    }
+    @media (max-width: 700px) { .contact-grid { grid-template-columns: 1fr; } }
+    .contact-info h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; }
+    .contact-info p { color: var(--text-light); margin-bottom: 8px; font-size: 0.95rem; }
+    .contact-info a { color: var(--sage-dark); text-decoration: none; font-weight: 500; }
+    .hours-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    .hours-table td { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-light); }
+    .hours-table td:last-child { text-align: right; }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--text); color: rgba(255,255,255,0.5);
+      padding: 32px 6%; text-align: center; font-size: 0.82rem;
+    }
+    footer a { color: rgba(255,255,255,0.6); text-decoration: none; }
+
+    /* ── Demo banner ── */
+    .demo-banner {
+      background: #1A1A2E; color: #E0E0FF;
+      text-align: center; padding: 14px 24px;
+      font-size: 0.88rem; font-weight: 500;
+    }
+    .demo-banner strong { color: #A8B4FF; }
+    .demo-banner a { color: #7B8CFF; text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <!-- Demo notice -->
+  <div class="demo-banner">
+    ✨ This page was built in minutes with <strong>Claude AI</strong> — <a href="https://claude.ai" target="_blank">try it yourself →</a>
+  </div>
+
+  <!-- Nav -->
+  <nav>
+    <a class="nav-logo" href="#">Jasmine <span>Thai Spa</span></a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#reviews">Reviews</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><a class="nav-book" href="#contact">Book Now</a></li>
+    </ul>
+    <div class="nav-social">
+      <a href="#" title="Instagram">📷</a>
+      <a href="#" title="Facebook">📘</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-content">
+      <h1>Restore your body.<br><em>Calm your mind.</em></h1>
+      <p>Traditional Thai massage and wellness treatments in Orange County, CA — rooted in ancient healing, tailored for modern life.</p>
+      <a class="btn-primary" href="#contact">Book your session</a>
+    </div>
+  </div>
+
+  <!-- Is This You? -->
+  <section class="is-you">
+    <div class="section-inner">
+      <div class="section-label">Sound familiar?</div>
+      <h2>Is this <em>you?</em></h2>
+      <div class="is-you-grid">
+        <div class="is-you-item"><span>😮‍💨</span> Carrying stress in your neck and shoulders</div>
+        <div class="is-you-item"><span>😴</span> Struggling to get restful sleep</div>
+        <div class="is-you-item"><span>🤕</span> Dealing with chronic muscle tension or pain</div>
+        <div class="is-you-item"><span>😰</span> Feeling anxious and unable to fully relax</div>
+        <div class="is-you-item"><span>🔋</span> Running on empty — exhausted but wired</div>
+        <div class="is-you-item"><span>🧍</span> Sitting at a desk all day with a stiff back</div>
+      </div>
+      <div class="is-you-cta">
+        <p>You're in the right place. Thai massage works with your body — not against it.</p>
+        <a class="btn-primary" href="#contact">Book your session</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about">
+    <div class="section-inner">
+      <div class="about-grid">
+        <img class="about-img"
+          src="https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=600&q=80"
+          alt="Jasmine Thai Spa therapist" />
+        <div class="about-text">
+          <div class="section-label">Our story</div>
+          <h2>Healing hands,<br><em>genuine care.</em></h2>
+          <p>At Jasmine Thai Spa, every session is a return to tradition. Our therapists trained in the ancient temples of Chiang Mai, bringing authentic techniques passed down through generations.</p>
+          <p>We believe wellness isn't a luxury — it's a necessity. Whether you're managing chronic pain, recovering from stress, or simply seeking balance, we meet you exactly where you are.</p>
+          <p>Located in the heart of Orange County, we've been restoring bodies and calming minds since 2012.</p>
+          <a class="btn-primary" href="#contact" style="margin-top:8px;">Book your session</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="services" id="services">
+    <div class="section-inner">
+      <div class="section-label">What we offer</div>
+      <h2>How we can <em>help.</em></h2>
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="icon">🙏</div>
+          <h3>Traditional Thai Massage</h3>
+          <p>A full-body treatment using rhythmic compression, gentle stretching, and acupressure to release tension and restore energy flow throughout the body.</p>
+          <div class="price">60 min · $85 &nbsp;|&nbsp; 90 min · $115</div>
+        </div>
+        <div class="service-card">
+          <div class="icon">🌿</div>
+          <h3>Thai Herbal Compress</h3>
+          <p>Warm herbal bundles packed with lemongrass, turmeric, and kaffir lime applied to sore muscles — deeply soothing for chronic pain and inflammation.</p>
+          <div class="price">75 min · $105</div>
+        </div>
+        <div class="service-card">
+          <div class="icon">🫧</div>
+          <h3>Aromatherapy Oil Massage</h3>
+          <p>A slower, meditative massage using warm essential oils — ideal for stress relief, nervous system calming, and deep relaxation.</p>
+          <div class="price">60 min · $90 &nbsp;|&nbsp; 90 min · $125</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section id="reviews">
+    <div class="section-inner">
+      <div class="section-label">Client love</div>
+      <h2>What people are <em>saying.</em></h2>
+      <div class="testimonials-grid">
+        <blockquote>
+          <p>"I've been to a lot of spas, but Jasmine is on a different level. After one session my back pain of three years was finally gone. I cried. I'll never go anywhere else."</p>
+          <cite>— Sarah M., Irvine</cite>
+        </blockquote>
+        <blockquote>
+          <p>"The herbal compress treatment is absolutely magical. I came in hunched over from sitting at my computer and left feeling like a completely new person. Book it."</p>
+          <cite>— David K., Anaheim</cite>
+        </blockquote>
+        <blockquote>
+          <p>"I've been coming every month for two years. The therapists remember your problem areas, they're gentle but effective, and the whole vibe is so calm and welcoming."</p>
+          <cite>— Linda T., Santa Ana</cite>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- Common reasons -->
+  <section class="reasons">
+    <div class="section-inner">
+      <div class="section-label">Common reasons people come to us</div>
+      <h2>You don't have to be in <em>pain</em> to deserve this.</h2>
+      <div class="reasons-grid">
+        <div class="reason-item">Lower back pain</div>
+        <div class="reason-item">Neck and shoulder tension</div>
+        <div class="reason-item">Stress and anxiety</div>
+        <div class="reason-item">Poor sleep</div>
+        <div class="reason-item">Sports recovery</div>
+        <div class="reason-item">Sciatica</div>
+        <div class="reason-item">Headaches and migraines</div>
+        <div class="reason-item">Post-travel fatigue</div>
+        <div class="reason-item">General self-care</div>
+        <div class="reason-item">Desk worker tension</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Band -->
+  <div class="cta-band">
+    <h2>Ready to feel like yourself again?</h2>
+    <p>New clients welcome. Book online or call us — we'll find the right treatment for you.</p>
+    <a class="btn-white" href="#contact">Book your session</a>
+  </div>
+
+  <!-- Contact -->
+  <section id="contact">
+    <div class="section-inner">
+      <div class="section-label">Find us</div>
+      <h2>Acupuncture in <em>Orange County</em></h2>
+      <div class="contact-grid">
+        <div class="contact-info">
+          <h3>Location</h3>
+          <p>📍 1234 Wellness Blvd, Suite 100<br>Orange, CA 92868</p>
+          <p style="margin-top:16px;">📞 <a href="tel:7145550123">(714) 555-0123</a></p>
+          <p>✉️ <a href="mailto:hello@jasminethaispa.com">hello@jasminethaispa.com</a></p>
+          <p style="margin-top:16px; font-size:0.88rem; color:var(--text-light);">Free parking in the building lot. Walk-ins welcome when space allows.</p>
+        </div>
+        <div class="contact-info">
+          <h3>Hours</h3>
+          <table class="hours-table">
+            <tr><td>Monday – Friday</td><td>10am – 8pm</td></tr>
+            <tr><td>Saturday</td><td>9am – 7pm</td></tr>
+            <tr><td>Sunday</td><td>10am – 6pm</td></tr>
+          </table>
+          <p style="margin-top:20px; font-size:0.88rem; color:var(--text-light);">Appointments preferred. Same-day bookings available by phone.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2026 Jasmine Thai Spa · Orange County, CA · <a href="#">Privacy Policy</a></p>
+    <p style="margin-top:6px; font-size:0.75rem;">Built in minutes with <a href="https://claude.ai" target="_blank">Claude AI</a> 🤖</p>
+  </footer>
+
+</body>
+</html>
