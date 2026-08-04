@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 03, 2026 18:29";
+    const BUILD_DATE    = "Aug 04, 2026 11:59";
     const BUILD_VERSION = "7068975";
 
     // ============================================================
@@ -1409,7 +1409,9 @@ Return ONLY valid JSON — no prose:
       const fav = state.favorites.includes(r.id);
       const readyText = r.ratio === 1
         ? "✓ All ingredients"
-        : `${r.have.length} of ${r.total} in stock`;
+        : r.have.length === 0
+          ? `Missing all ${r.total} ingredients`
+          : `${r.have.length} of ${r.total} ingredients`;
       const lastCooked = state.history[r.id] ? `· last: ${daysAgo(state.history[r.id])}` : "";
       return `
         <div class="recipe-row ${cls}" data-id="${r.id}">
@@ -4045,7 +4047,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "7068975") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 03, 2026 18:29")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 04, 2026 11:59")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
