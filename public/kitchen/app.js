@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 01, 2026 12:40";
+    const BUILD_DATE    = "Aug 03, 2026 18:29";
     const BUILD_VERSION = "7068975";
 
     // ============================================================
@@ -1872,9 +1872,89 @@ Return ONLY valid JSON — no prose:
 
     // ── Build Storage modal — 3-step wizard ──────────────────────
     // Wizard state
-    let bsPending  = null; // { name, icon, type } — set in step 1
-    let bsZones    = [];   // string[] — built in step 3
-    let bsPhotoUrl = null; // dataUrl of the photo taken in step 2
+    let bsPending        = null; // { name, icon, type } — set in step 1
+    let bsZones          = [];   // string[] — zone names for step 3
+    let bsZoneData       = [];   // [{name, y, h}] — positions returned by AI (fractions 0-1)
+    let bsPhotoUrl       = null; // original dataUrl of the photo taken in step 2
+    let bsLabeledPhotoUrl = null; // canvas-rendered photo with zone labels drawn on it
+
+    // ── Draw zone labels on top of the original photo ─────────────
+    const BS_ZONE_COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#FFA07A","#A78BFA","#34D399","#FBBF24","#F472B6"];
+
+    async function drawLabeledPhoto(dataUrl, zones) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width  = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+
+          zones.forEach((zone, i) => {
+            const color  = BS_ZONE_COLORS[i % BS_ZONE_COLORS.length];
+            const iy     = (zone.y || 0) * img.height;
+            const ih     = (zone.h || (1 / Math.max(zones.length, 1))) * img.height;
+
+            // Semi-transparent fill
+            ctx.fillStyle = color + "33";
+            ctx.fillRect(0, iy, img.width, ih);
+
+            // Solid border line
+            ctx.strokeStyle = color;
+            ctx.lineWidth   = Math.max(2, img.width / 200);
+            ctx.strokeRect(ctx.lineWidth / 2, iy + ctx.lineWidth / 2, img.width - ctx.lineWidth, ih - ctx.lineWidth);
+
+            // Label pill
+            const fontSize = Math.max(14, Math.min(32, img.width / 18));
+            ctx.font = `700 ${fontSize}px -apple-system, system-ui, sans-serif`;
+            const label  = zone.name;
+            const textW  = ctx.measureText(label).width;
+            const padX   = fontSize * 0.6;
+            const padY   = fontSize * 0.35;
+            const pillW  = textW + padX * 2;
+            const pillH  = fontSize + padY * 2;
+            const pillX  = 14;
+            const pillY  = iy + 12;
+            const r      = pillH / 2;
+
+            // Pill background
+            ctx.fillStyle = color + "EE";
+            ctx.beginPath();
+            ctx.moveTo(pillX + r, pillY);
+            ctx.lineTo(pillX + pillW - r, pillY);
+            ctx.arcTo(pillX + pillW, pillY, pillX + pillW, pillY + r, r);
+            ctx.lineTo(pillX + pillW, pillY + pillH - r);
+            ctx.arcTo(pillX + pillW, pillY + pillH, pillX + pillW - r, pillY + pillH, r);
+            ctx.lineTo(pillX + r, pillY + pillH);
+            ctx.arcTo(pillX, pillY + pillH, pillX, pillY + pillH - r, r);
+            ctx.lineTo(pillX, pillY + r);
+            ctx.arcTo(pillX, pillY, pillX + r, pillY, r);
+            ctx.closePath();
+            ctx.fill();
+
+            // Pill text
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillText(label, pillX + padX, pillY + padY + fontSize * 0.85);
+          });
+
+          resolve(canvas.toDataURL("image/jpeg", 0.92));
+        };
+        img.onerror = () => resolve(dataUrl); // fallback: return original
+        img.src = dataUrl;
+      });
+    }
+
+    async function bsRedrawLabeledPhoto() {
+      if (!bsPhotoUrl || !bsZoneData.length) return;
+      // Filter to only currently active zones
+      const activeZones = bsZoneData.filter(zd => bsZones.includes(zd.name));
+      bsLabeledPhotoUrl = await drawLabeledPhoto(bsPhotoUrl, activeZones);
+      const photoEl = document.getElementById("bsStep3Photo");
+      if (photoEl) {
+        photoEl.innerHTML = `<img src="${bsLabeledPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; object-fit:contain;" alt="Labeled zones" />`;
+      }
+    }
 
     function bsShowStep(n) {
       [1,2,3].forEach(i => {
@@ -1885,7 +1965,9 @@ Return ONLY valid JSON — no prose:
     function openBuildStorageModal() {
       bsPending = null;
       bsZones = [];
+      bsZoneData = [];
       bsPhotoUrl = null;
+      bsLabeledPhotoUrl = null;
       document.getElementById("bsPhotoPreview").innerHTML = "";
       document.getElementById("bsCustomZone").value = "";
       document.getElementById("customStorageName").value = "";
@@ -1968,10 +2050,20 @@ Return ONLY valid JSON — no prose:
         if (hasKey) {
           try {
             const aiZones = await analyzeStorageLayoutPhoto(dataUrl, bsPending.type, bsPending.name);
-            if (aiZones.length) bsZones = aiZones;
+            if (aiZones.length) {
+              bsZoneData = aiZones;
+              bsZones = aiZones.map(z => z.name);
+              // Generate labeled photo — zones with real coordinates get overlays
+              const hasCoords = aiZones.some(z => z.y !== null && z.h > 0);
+              if (hasCoords) {
+                analyzeEl.innerHTML = `
+                  <div class="ai-spinner"></div>
+                  <div class="ai-label">Drawing zone labels…</div>`;
+                bsLabeledPhotoUrl = await drawLabeledPhoto(dataUrl, aiZones);
+              }
+            }
           } catch (err) {
             console.warn("Layout AI failed, using presets:", err.message);
-            // Show a brief error note before proceeding
             analyzeEl.innerHTML = `
               <div class="ai-label" style="color:var(--amber);">⚠️ AI couldn't read the photo</div>
               <p class="ai-sub">Using preset zones instead — you can edit them next</p>`;
@@ -1995,9 +2087,11 @@ Return ONLY valid JSON — no prose:
         ? "Claude identified these zones from your photo. Tap × to remove any, or add your own."
         : "These zones come from a preset. Remove any that don't apply, or add your own.";
 
-      // Show photo reference above the zone list if we have one
+      // Show labeled photo (or plain photo fallback) above the zone list
       const photoEl = document.getElementById("bsStep3Photo");
-      if (bsPhotoUrl) {
+      if (bsLabeledPhotoUrl) {
+        photoEl.innerHTML = `<img src="${bsLabeledPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; object-fit:contain;" alt="Labeled zones" />`;
+      } else if (bsPhotoUrl) {
         photoEl.innerHTML = `<img src="${bsPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; max-height:220px; object-fit:cover;" alt="Your photo" />`;
       } else {
         photoEl.innerHTML = "";
@@ -2018,6 +2112,7 @@ Return ONLY valid JSON — no prose:
         btn.addEventListener("click", () => {
           bsZones.splice(Number(btn.dataset.i), 1);
           bsRenderZoneList();
+          if (bsZoneData.length) bsRedrawLabeledPhoto();
         });
       });
     }
@@ -2048,31 +2143,28 @@ Return ONLY valid JSON — no prose:
       const b64 = match[2];
 
       const locLabel = { fridge:"refrigerator", freezer:"freezer", pantry:"pantry", counter:"kitchen countertop" }[locType] || locName;
-      const examples = {
-        fridge:  '["Top shelf","Middle shelf","Bottom shelf","Crisper drawer","Door - top","Door - bottom"]',
-        freezer: '["Top shelf","Middle drawer","Bottom basket","Door shelf"]',
-        pantry:  '["Top shelf","Eye-level shelf","Lower shelf","Bottom shelf","Door rack"]',
-        counter: '["Main counter","Fruit bowl area","Appliance corner"]',
-      };
 
       const prompt = [
         `This is a photo of the inside of a ${locLabel}.`,
         "",
         "Identify every distinct shelf, drawer, compartment, and storage zone that is visible.",
-        "Give each one a short, descriptive name (2–5 words).",
+        "For each zone, estimate its vertical position and height as a fraction of the total image height (0.0 = very top, 1.0 = very bottom).",
         "",
         "Rules:",
-        "- Be specific: 'Top shelf', 'Egg tray', 'Crisper drawer', 'Door top rack', etc.",
-        "- If there are two side-by-side drawers, name them separately (e.g. 'Left crisper', 'Right crisper')",
-        "- List zones top-to-bottom, front-to-back as they appear",
-        "- 3–10 zones is typical; don't over-split",
+        "- Name each zone specifically: 'Top shelf', 'Egg tray', 'Crisper drawer', 'Door top rack', etc.",
+        "- If two side-by-side drawers, name separately: 'Left crisper', 'Right crisper'",
+        "- List zones top-to-bottom",
+        "- 3–8 zones is typical; don't over-split",
+        "- y + h should roughly equal the next zone's y; zones should tile without big gaps",
         "",
-        `Return ONLY a valid JSON array of strings, no prose, no markdown. Example: ${examples[locType] || examples.fridge}`,
+        'Return ONLY a valid JSON array of objects. Each object must have "name" (string), "y" (number 0-1), "h" (number 0-1).',
+        'Example: [{"name":"Top shelf","y":0.0,"h":0.2},{"name":"Middle shelf","y":0.2,"h":0.25},{"name":"Bottom shelf","y":0.45,"h":0.3},{"name":"Crisper drawer","y":0.75,"h":0.25}]',
+        "No prose, no markdown, no code fences.",
       ].join("\n");
 
       const res = await claudeMessages({
         model: "claude-sonnet-4-6",
-        max_tokens: 500,
+        max_tokens: 600,
         messages: [{
           role: "user",
           content: [
@@ -2091,7 +2183,14 @@ Return ONLY valid JSON — no prose:
       if (!jsonMatch) throw new Error("No JSON array in response");
       const parsed = JSON.parse(jsonMatch[0]);
       if (!Array.isArray(parsed)) throw new Error("Not an array");
-      return parsed.map(s => String(s).trim()).filter(Boolean);
+
+      // Support both old string format and new {name,y,h} format
+      const zones = parsed.map(item => {
+        if (typeof item === "string") return { name: item.trim(), y: null, h: null };
+        return { name: String(item.name || "").trim(), y: Number(item.y) || 0, h: Number(item.h) || 0.2 };
+      }).filter(z => z.name);
+
+      return zones;
     }
 
     function addStorageLocation(name, icon, type, defaultZones) {
@@ -3946,7 +4045,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "7068975") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 01, 2026 12:40")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 03, 2026 18:29")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
