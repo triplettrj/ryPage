@@ -1,3 +1,7 @@
+    // ── Build info (replaced by sync.sh at copy time) ────────────
+    const BUILD_DATE    = "Aug 03, 2026 18:29";
+    const BUILD_VERSION = "7068975";
+
     // ============================================================
     // RECIPE LIBRARY (16 recipes with full steps + tags)
     // ============================================================
@@ -387,6 +391,10 @@
           onboardStep: 0,
           expiryNotifications: false,
           claudeKey: "",
+          proxyUrl: "https://fridgelisty-claude-proxy.triplettrj.workers.dev",
+          accessCode: "",
+          geminiKey: "",
+          region: "world",
           anyListEmail: "",
           storageLayout: [], // [{ id, name, icon, type, zones: [{id, name}] }]
           prefs: {
@@ -434,6 +442,8 @@
       return s;
     }
     function saveState() {
+      // Stamp modification time so cloud sync can compare freshness
+      state._lastModified = Date.now();
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch (e) {
@@ -696,11 +706,117 @@
       return null;
     }
 
+    // ── AI API helper ─────────────────────────────────────────────
+    // Priority: Claude proxy → Claude direct key → Google Gemini (free).
+    // All call sites use claudeMessages() with Claude-format bodies;
+    // Gemini calls are translated internally so nothing else needs to change.
+    function hasClaude() {
+      const s = state.settings;
+      return !!((s.proxyUrl && s.accessCode) || s.claudeKey || s.geminiKey);
+    }
+
+    // Translate a Claude-format request body to Gemini format
+    function _claudeToGemini(body) {
+      const gemini = {};
+      if (body.system) {
+        gemini.system_instruction = { parts: [{ text: body.system }] };
+      }
+      if (body.max_tokens) {
+        gemini.generationConfig = { maxOutputTokens: body.max_tokens };
+      }
+      gemini.contents = (body.messages || []).map(msg => {
+        const role = msg.role === "assistant" ? "model" : "user";
+        let parts;
+        if (typeof msg.content === "string") {
+          parts = [{ text: msg.content }];
+        } else if (Array.isArray(msg.content)) {
+          parts = msg.content.map(part => {
+            if (part.type === "text") return { text: part.text };
+            if (part.type === "image") {
+              // Claude: source.type=base64, source.media_type, source.data
+              // Gemini: inlineData.mimeType, inlineData.data
+              return { inlineData: { mimeType: part.source?.media_type || "image/jpeg", data: part.source?.data || "" } };
+            }
+            return { text: String(part) };
+          });
+        } else {
+          parts = [{ text: "" }];
+        }
+        return { role, parts };
+      });
+      return gemini;
+    }
+
+    // Call Gemini and return a Response-like object in Claude format
+    async function _callGemini(body, apiKey, opts) {
+      const gemBody = _claudeToGemini(body);
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const res = await fetchWithTimeout(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(gemBody),
+        timeout: opts.timeout,
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const msg = errData.error?.message || `Gemini API ${res.status}`;
+        return new Response(JSON.stringify({ error: { type: "api_error", message: msg } }), {
+          status: res.status,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      const data = await res.json();
+      const text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+      // Return in Claude response format so all call sites work unchanged
+      return new Response(JSON.stringify({ content: [{ type: "text", text }] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+
+    async function claudeMessages(body, opts) {
+      opts = opts || {};
+      const s = state.settings;
+      const proxyUrl  = (s.proxyUrl   || "").trim();
+      const access    = (s.accessCode || "").trim();
+      const directKey = (s.claudeKey  || "").trim();
+      const geminiKey = (s.geminiKey  || "").trim();
+
+      // Gemini path (only if no Claude proxy or direct key configured)
+      if (geminiKey && !directKey && !(proxyUrl && access)) {
+        return await _callGemini(body, geminiKey, opts);
+      }
+
+      let url, headers;
+      if (proxyUrl && access) {
+        url = proxyUrl.replace(/\/+$/, "") + "/v1/messages";
+        headers = {
+          "content-type": "application/json",
+          "x-app-access-code": access,
+        };
+      } else if (directKey) {
+        url = "https://api.anthropic.com/v1/messages";
+        headers = {
+          "content-type": "application/json",
+          "x-api-key": directKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        };
+      } else {
+        throw new Error("No AI configured — add a Gemini key or Claude proxy in Settings");
+      }
+      return await fetchWithTimeout(url, {
+        method: "POST",
+        headers,
+        body: typeof body === "string" ? body : JSON.stringify(body),
+        timeout: opts.timeout,
+      });
+    }
+
     // Tier 2: ask Claude for anything not in the local table
     async function lookupExpiryAI(itemName) {
       if (!itemName || itemName.length < 2) return null;
-      const key = (state.settings.claudeKey || "").trim();
-      if (!key) return null;
+      if (!hasClaude()) return null;
       const lower = itemName.toLowerCase().trim();
       // Return cached result immediately if available
       const cache = getExpiryCache();
@@ -709,26 +825,17 @@
       if (suggestExpiry(itemName)) return suggestExpiry(itemName);
 
       try {
-        const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-api-key": key,
-            "anthropic-version": "2023-06-01",
-            "anthropic-dangerous-direct-browser-access": "true",
-          },
-          body: JSON.stringify({
-            model: "claude-haiku-4-5",
-            max_tokens: 60,
-            messages: [{
-              role: "user",
-              content: `Food safety expert. How many days does "${itemName}" typically last when stored properly (fridge for perishables, pantry for shelf-stable)?
+        const res = await claudeMessages({
+          model: "claude-haiku-4-5",
+          max_tokens: 60,
+          messages: [{
+            role: "user",
+            content: `Food safety expert. How many days does "${itemName}" typically last when stored properly (fridge for perishables, pantry for shelf-stable)?
 
 Return ONLY valid JSON — no prose:
 {"days": NUMBER}   ← perishable (e.g. milk=9, eggs=28, apple=42, chicken=2)
 {"days": 0}        ← shelf-stable/no expiry needed (canned goods, pasta, spices, oil)`,
-            }],
-          }),
+          }],
         });
         if (!res.ok) return null;
         const data = await res.json();
@@ -1534,6 +1641,7 @@ Return ONLY valid JSON — no prose:
             <span class="sl-loc-name">${escapeHtml(loc.name)}</span>
             <span class="sl-loc-meta">${totalItems} item${totalItems !== 1 ? "s" : ""} · ${(loc.zones||[]).length} zone${(loc.zones||[]).length !== 1?"s":""}</span>
             <span class="sl-loc-chevron">▼</span>
+            <div class="sl-swipe-del" data-loc-id="${escapeHtml(loc.id)}">🗑 Delete</div>
           </div>
           <div class="sl-loc-body">
             ${zonesHtml || `<div class="sl-zone-empty">No zones yet — add one below</div>`}
@@ -1633,6 +1741,77 @@ Return ONLY valid JSON — no prose:
 
       document.getElementById("addMoreStorageBtn")?.addEventListener("click", openBuildStorageModal);
 
+      // Swipe-to-delete for location cards
+      let _swipeStartX = 0, _swipeTracking = false, _swipeOpen = null;
+
+      function _resetSwipe(card) {
+        card.querySelector(".sl-loc-header").style.transform = "";
+        card.classList.remove("swipe-delete-ready");
+      }
+
+      section.querySelectorAll(".sl-loc-header").forEach(header => {
+        const card = header.closest(".sl-location-card");
+
+        header.addEventListener("touchstart", e => {
+          // Close any previously open swipe
+          if (_swipeOpen && _swipeOpen !== card) _resetSwipe(_swipeOpen);
+          _swipeStartX = e.touches[0].clientX;
+          _swipeTracking = true;
+        }, { passive: true });
+
+        header.addEventListener("touchmove", e => {
+          if (!_swipeTracking) return;
+          const dx = e.touches[0].clientX - _swipeStartX;
+          if (dx < -5) {
+            e.preventDefault();
+            // Slide header content left (revealing the delete strip behind)
+            const shift = Math.min(Math.abs(dx), 80);
+            header.style.transform = `translateX(-${shift}px)`;
+            card.classList.toggle("swipe-delete-ready", shift >= 55);
+          } else if (dx > 5) {
+            header.style.transform = "";
+            card.classList.remove("swipe-delete-ready");
+          }
+        }, { passive: false });
+
+        header.addEventListener("touchend", () => {
+          _swipeTracking = false;
+          if (card.classList.contains("swipe-delete-ready")) {
+            // Snap fully open
+            header.style.transform = "translateX(-80px)";
+            _swipeOpen = card;
+          } else {
+            header.style.transform = "";
+            card.classList.remove("swipe-delete-ready");
+            _swipeOpen = null;
+          }
+        });
+      });
+
+      // Tap away to close open swipe
+      section.addEventListener("touchstart", e => {
+        if (_swipeOpen && !_swipeOpen.querySelector(".sl-swipe-del").contains(e.target)) {
+          _resetSwipe(_swipeOpen);
+          _swipeOpen = null;
+        }
+      }, { passive: true });
+
+      // Swipe-delete button handler
+      section.querySelectorAll(".sl-swipe-del").forEach(btn => {
+        btn.addEventListener("click", e => {
+          e.stopPropagation();
+          const loc = getStorageLayout().find(l => l.id === btn.dataset.locId);
+          if (!loc) return;
+          if (!confirm(`Remove "${loc.name}" and all its zones?\n\nItems will remain in inventory (unassigned).`)) {
+            _resetSwipe(btn.closest(".sl-location-card"));
+            _swipeOpen = null;
+            return;
+          }
+          state.settings.storageLayout = getStorageLayout().filter(l => l.id !== btn.dataset.locId);
+          saveState(); renderStorageSection();
+        });
+      });
+
       // Unassigned + restock item interactions
       section.querySelectorAll(".inv-item").forEach(el => {
         el.addEventListener("click", e => {
@@ -1693,9 +1872,89 @@ Return ONLY valid JSON — no prose:
 
     // ── Build Storage modal — 3-step wizard ──────────────────────
     // Wizard state
-    let bsPending  = null; // { name, icon, type } — set in step 1
-    let bsZones    = [];   // string[] — built in step 3
-    let bsPhotoUrl = null; // dataUrl of the photo taken in step 2
+    let bsPending        = null; // { name, icon, type } — set in step 1
+    let bsZones          = [];   // string[] — zone names for step 3
+    let bsZoneData       = [];   // [{name, y, h}] — positions returned by AI (fractions 0-1)
+    let bsPhotoUrl       = null; // original dataUrl of the photo taken in step 2
+    let bsLabeledPhotoUrl = null; // canvas-rendered photo with zone labels drawn on it
+
+    // ── Draw zone labels on top of the original photo ─────────────
+    const BS_ZONE_COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#FFA07A","#A78BFA","#34D399","#FBBF24","#F472B6"];
+
+    async function drawLabeledPhoto(dataUrl, zones) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width  = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+
+          zones.forEach((zone, i) => {
+            const color  = BS_ZONE_COLORS[i % BS_ZONE_COLORS.length];
+            const iy     = (zone.y || 0) * img.height;
+            const ih     = (zone.h || (1 / Math.max(zones.length, 1))) * img.height;
+
+            // Semi-transparent fill
+            ctx.fillStyle = color + "33";
+            ctx.fillRect(0, iy, img.width, ih);
+
+            // Solid border line
+            ctx.strokeStyle = color;
+            ctx.lineWidth   = Math.max(2, img.width / 200);
+            ctx.strokeRect(ctx.lineWidth / 2, iy + ctx.lineWidth / 2, img.width - ctx.lineWidth, ih - ctx.lineWidth);
+
+            // Label pill
+            const fontSize = Math.max(14, Math.min(32, img.width / 18));
+            ctx.font = `700 ${fontSize}px -apple-system, system-ui, sans-serif`;
+            const label  = zone.name;
+            const textW  = ctx.measureText(label).width;
+            const padX   = fontSize * 0.6;
+            const padY   = fontSize * 0.35;
+            const pillW  = textW + padX * 2;
+            const pillH  = fontSize + padY * 2;
+            const pillX  = 14;
+            const pillY  = iy + 12;
+            const r      = pillH / 2;
+
+            // Pill background
+            ctx.fillStyle = color + "EE";
+            ctx.beginPath();
+            ctx.moveTo(pillX + r, pillY);
+            ctx.lineTo(pillX + pillW - r, pillY);
+            ctx.arcTo(pillX + pillW, pillY, pillX + pillW, pillY + r, r);
+            ctx.lineTo(pillX + pillW, pillY + pillH - r);
+            ctx.arcTo(pillX + pillW, pillY + pillH, pillX + pillW - r, pillY + pillH, r);
+            ctx.lineTo(pillX + r, pillY + pillH);
+            ctx.arcTo(pillX, pillY + pillH, pillX, pillY + pillH - r, r);
+            ctx.lineTo(pillX, pillY + r);
+            ctx.arcTo(pillX, pillY, pillX + r, pillY, r);
+            ctx.closePath();
+            ctx.fill();
+
+            // Pill text
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillText(label, pillX + padX, pillY + padY + fontSize * 0.85);
+          });
+
+          resolve(canvas.toDataURL("image/jpeg", 0.92));
+        };
+        img.onerror = () => resolve(dataUrl); // fallback: return original
+        img.src = dataUrl;
+      });
+    }
+
+    async function bsRedrawLabeledPhoto() {
+      if (!bsPhotoUrl || !bsZoneData.length) return;
+      // Filter to only currently active zones
+      const activeZones = bsZoneData.filter(zd => bsZones.includes(zd.name));
+      bsLabeledPhotoUrl = await drawLabeledPhoto(bsPhotoUrl, activeZones);
+      const photoEl = document.getElementById("bsStep3Photo");
+      if (photoEl) {
+        photoEl.innerHTML = `<img src="${bsLabeledPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; object-fit:contain;" alt="Labeled zones" />`;
+      }
+    }
 
     function bsShowStep(n) {
       [1,2,3].forEach(i => {
@@ -1706,7 +1965,9 @@ Return ONLY valid JSON — no prose:
     function openBuildStorageModal() {
       bsPending = null;
       bsZones = [];
+      bsZoneData = [];
       bsPhotoUrl = null;
+      bsLabeledPhotoUrl = null;
       document.getElementById("bsPhotoPreview").innerHTML = "";
       document.getElementById("bsCustomZone").value = "";
       document.getElementById("customStorageName").value = "";
@@ -1765,7 +2026,7 @@ Return ONLY valid JSON — no prose:
       reader.onload = async (ev) => {
         const dataUrl = ev.target.result;
         bsPhotoUrl = dataUrl; // persist so step 3 can show it
-        const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
+        const hasKey = hasClaude();
 
         // Replace step 2 content with photo + prominent analyzing state
         document.getElementById("bsPhotoPreview").innerHTML = `
@@ -1789,10 +2050,20 @@ Return ONLY valid JSON — no prose:
         if (hasKey) {
           try {
             const aiZones = await analyzeStorageLayoutPhoto(dataUrl, bsPending.type, bsPending.name);
-            if (aiZones.length) bsZones = aiZones;
+            if (aiZones.length) {
+              bsZoneData = aiZones;
+              bsZones = aiZones.map(z => z.name);
+              // Generate labeled photo — zones with real coordinates get overlays
+              const hasCoords = aiZones.some(z => z.y !== null && z.h > 0);
+              if (hasCoords) {
+                analyzeEl.innerHTML = `
+                  <div class="ai-spinner"></div>
+                  <div class="ai-label">Drawing zone labels…</div>`;
+                bsLabeledPhotoUrl = await drawLabeledPhoto(dataUrl, aiZones);
+              }
+            }
           } catch (err) {
             console.warn("Layout AI failed, using presets:", err.message);
-            // Show a brief error note before proceeding
             analyzeEl.innerHTML = `
               <div class="ai-label" style="color:var(--amber);">⚠️ AI couldn't read the photo</div>
               <p class="ai-sub">Using preset zones instead — you can edit them next</p>`;
@@ -1810,15 +2081,17 @@ Return ONLY valid JSON — no prose:
     });
 
     function bsShowZoneReview() {
-      const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
+      const hasKey = hasClaude();
       document.getElementById("bsStep3Title").textContent = `${bsPending?.icon || "📦"} ${bsPending?.name || "Storage"} zones`;
       document.getElementById("bsStep3Sub").textContent = hasKey && bsPhotoUrl && bsZones.length
         ? "Claude identified these zones from your photo. Tap × to remove any, or add your own."
         : "These zones come from a preset. Remove any that don't apply, or add your own.";
 
-      // Show photo reference above the zone list if we have one
+      // Show labeled photo (or plain photo fallback) above the zone list
       const photoEl = document.getElementById("bsStep3Photo");
-      if (bsPhotoUrl) {
+      if (bsLabeledPhotoUrl) {
+        photoEl.innerHTML = `<img src="${bsLabeledPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; object-fit:contain;" alt="Labeled zones" />`;
+      } else if (bsPhotoUrl) {
         photoEl.innerHTML = `<img src="${bsPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; max-height:220px; object-fit:cover;" alt="Your photo" />`;
       } else {
         photoEl.innerHTML = "";
@@ -1839,6 +2112,7 @@ Return ONLY valid JSON — no prose:
         btn.addEventListener("click", () => {
           bsZones.splice(Number(btn.dataset.i), 1);
           bsRenderZoneList();
+          if (bsZoneData.length) bsRedrawLabeledPhoto();
         });
       });
     }
@@ -1862,55 +2136,42 @@ Return ONLY valid JSON — no prose:
 
     // ── AI: analyze a photo and return zone names ─────────────────
     async function analyzeStorageLayoutPhoto(dataUrl, locType, locName) {
-      const key = (state.settings.claudeKey || "").trim();
-      if (!key) throw new Error("No API key");
+      if (!hasClaude()) throw new Error("Set up Claude proxy or API key in Settings first");
       const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
       if (!match) throw new Error("Bad image format");
       const mediaType = match[1];
       const b64 = match[2];
 
       const locLabel = { fridge:"refrigerator", freezer:"freezer", pantry:"pantry", counter:"kitchen countertop" }[locType] || locName;
-      const examples = {
-        fridge:  '["Top shelf","Middle shelf","Bottom shelf","Crisper drawer","Door - top","Door - bottom"]',
-        freezer: '["Top shelf","Middle drawer","Bottom basket","Door shelf"]',
-        pantry:  '["Top shelf","Eye-level shelf","Lower shelf","Bottom shelf","Door rack"]',
-        counter: '["Main counter","Fruit bowl area","Appliance corner"]',
-      };
 
       const prompt = [
         `This is a photo of the inside of a ${locLabel}.`,
         "",
         "Identify every distinct shelf, drawer, compartment, and storage zone that is visible.",
-        "Give each one a short, descriptive name (2–5 words).",
+        "For each zone, estimate its vertical position and height as a fraction of the total image height (0.0 = very top, 1.0 = very bottom).",
         "",
         "Rules:",
-        "- Be specific: 'Top shelf', 'Egg tray', 'Crisper drawer', 'Door top rack', etc.",
-        "- If there are two side-by-side drawers, name them separately (e.g. 'Left crisper', 'Right crisper')",
-        "- List zones top-to-bottom, front-to-back as they appear",
-        "- 3–10 zones is typical; don't over-split",
+        "- Name each zone specifically: 'Top shelf', 'Egg tray', 'Crisper drawer', 'Door top rack', etc.",
+        "- If two side-by-side drawers, name separately: 'Left crisper', 'Right crisper'",
+        "- List zones top-to-bottom",
+        "- 3–8 zones is typical; don't over-split",
+        "- y + h should roughly equal the next zone's y; zones should tile without big gaps",
         "",
-        `Return ONLY a valid JSON array of strings, no prose, no markdown. Example: ${examples[locType] || examples.fridge}`,
+        'Return ONLY a valid JSON array of objects. Each object must have "name" (string), "y" (number 0-1), "h" (number 0-1).',
+        'Example: [{"name":"Top shelf","y":0.0,"h":0.2},{"name":"Middle shelf","y":0.2,"h":0.25},{"name":"Bottom shelf","y":0.45,"h":0.3},{"name":"Crisper drawer","y":0.75,"h":0.25}]',
+        "No prose, no markdown, no code fences.",
       ].join("\n");
 
-      const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-api-key": key,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 500,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
-              { type: "text", text: prompt },
-            ],
-          }],
-        }),
+      const res = await claudeMessages({
+        model: "claude-sonnet-4-6",
+        max_tokens: 600,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
+            { type: "text", text: prompt },
+          ],
+        }],
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -1922,7 +2183,14 @@ Return ONLY valid JSON — no prose:
       if (!jsonMatch) throw new Error("No JSON array in response");
       const parsed = JSON.parse(jsonMatch[0]);
       if (!Array.isArray(parsed)) throw new Error("Not an array");
-      return parsed.map(s => String(s).trim()).filter(Boolean);
+
+      // Support both old string format and new {name,y,h} format
+      const zones = parsed.map(item => {
+        if (typeof item === "string") return { name: item.trim(), y: null, h: null };
+        return { name: String(item.name || "").trim(), y: Number(item.y) || 0, h: Number(item.h) || 0.2 };
+      }).filter(z => z.name);
+
+      return zones;
     }
 
     function addStorageLocation(name, icon, type, defaultZones) {
@@ -2235,7 +2503,7 @@ Return ONLY valid JSON — no prose:
     }
 
     function renderCloseUpReview(dataUrl) {
-      const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
+      const hasKey = hasClaude();
       closeUpDraft = { dataUrl, name: "", brand: "", canonicalName: "", qty: null, unit: "", upc: "", storageLocId: scanTarget?.locId || "", storageZoneId: scanTarget?.zoneId || "", size: "" };
 
       const container = document.getElementById("scanResult");
@@ -2361,8 +2629,7 @@ Return ONLY valid JSON — no prose:
     }
 
     async function analyzeOneItemWithClaude(dataUrl) {
-      const key = (state.settings.claudeKey || "").trim();
-      if (!key) throw new Error("No API key set");
+      if (!hasClaude()) throw new Error("Set up Claude proxy or API key in Settings first");
       const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
       if (!match) throw new Error("Bad image format");
       const mediaType = match[1];
@@ -2385,25 +2652,16 @@ Return ONLY valid JSON — no prose:
         '',
         'Example: {"name":"marinara sauce","brand":"Rao\'s Homemade","canonicalName":"marinara sauce","qty":24,"unit":"oz","upc":"715365110012"}',
       ].join("\n");
-      const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-api-key": key,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 600,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
-              { type: "text", text: prompt },
-            ],
-          }],
-        }),
+      const res = await claudeMessages({
+        model: "claude-sonnet-4-6",
+        max_tokens: 600,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
+            { type: "text", text: prompt },
+          ],
+        }],
       });
       if (!res.ok) {
         let detail = "";
@@ -2426,16 +2684,20 @@ Return ONLY valid JSON — no prose:
     }
 
     // ---- OpenFoodFacts lookup ----
-    async function lookupUpc(upc) {
-      const cleaned = String(upc || "").trim().replace(/\D/g, "");
-      if (!cleaned || cleaned.length < 8) throw new Error("UPC must be 8–14 digits");
-      const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cleaned)}.json?fields=product_name,brands,quantity,product_quantity,product_quantity_unit,categories_tags,generic_name`;
+    // Region subdomains: th = Thailand, us = USA, world = global fallback
+    const OFF_REGION_HOSTS = { us: "us", th: "th", world: "world" };
+
+    async function _offFetch(host, cleaned) {
+      const fields = "product_name,brands,quantity,product_quantity,product_quantity_unit,categories_tags,generic_name";
+      const url = `https://${host}.openfoodfacts.org/api/v2/product/${encodeURIComponent(cleaned)}.json?fields=${fields}`;
       const res = await fetchWithTimeout(url, {}, 10000);
-      if (!res.ok) throw new Error(`OpenFoodFacts ${res.status}`);
+      if (!res.ok) return null;
       const data = await res.json();
       if (data.status !== 1 || !data.product) return null;
-      const p = data.product;
-      // Parse size from "quantity" string like "24 oz" or "500 g"
+      return data.product;
+    }
+
+    function _parseOffProduct(p, cleaned) {
       let qty = null, unit = "";
       if (p.product_quantity && p.product_quantity_unit) {
         qty = Number(p.product_quantity);
@@ -2446,20 +2708,87 @@ Return ONLY valid JSON — no prose:
       }
       const name = (p.generic_name || p.product_name || "").trim();
       const brand = (p.brands || "").split(",")[0].trim();
-      return {
-        name: name.toLowerCase(),
-        brand,
-        canonicalName: normalize(name),
-        qty,
-        unit,
-        upc: cleaned,
-      };
+      return { name: name.toLowerCase(), brand, canonicalName: normalize(name), qty, unit, upc: cleaned };
+    }
+
+    async function lookupUpc(upc) {
+      const cleaned = String(upc || "").trim().replace(/\D/g, "");
+      if (!cleaned || cleaned.length < 8) throw new Error("UPC must be 8–14 digits");
+
+      const region = (state.settings.region || "world");
+      const host = OFF_REGION_HOSTS[region] || "world";
+
+      // Try regional DB first; fall back to global
+      let product = await _offFetch(host, cleaned);
+      if (!product && host !== "world") {
+        product = await _offFetch("world", cleaned);
+      }
+      return product ? _parseOffProduct(product, cleaned) : null;
     }
 
     // ---- Barcode scanner (html5-qrcode — better iOS Safari support) ----
     let html5QrScanner = null;
 
     async function openBarcodeScanner() {
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        await openNativeBarcodeScanner();
+      } else {
+        await openWebBarcodeScanner();
+      }
+    }
+
+    async function openNativeBarcodeScanner() {
+      const { BarcodeScanner } = window.Capacitor.Plugins;
+      try {
+        const status = await BarcodeScanner.checkPermission({ force: true });
+        if (!status.granted) { showToast("Camera access denied — allow it in Settings → FridgeListy"); return; }
+
+        // Overlay with cancel button — camera shows through transparent body
+        const overlay = document.createElement("div");
+        overlay.id = "nativeScanOverlay";
+        overlay.style.cssText = "position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;justify-content:space-between;align-items:center;pointer-events:none;";
+        overlay.innerHTML = `
+          <button id="nativeScanBack" style="pointer-events:auto;width:100%;background:rgba(0,0,0,0.72);color:#fff;border:none;padding:env(safe-area-inset-top,20px) 20px 16px;font-size:17px;font-weight:700;text-align:left;letter-spacing:-0.01em;cursor:pointer;display:flex;align-items:flex-end;gap:8px;">← Back</button>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:16px;pointer-events:none;">
+            <div style="background:rgba(0,0,0,0.55);color:#fff;padding:10px 24px;border-radius:20px;font-size:14px;font-weight:500;">Point camera at barcode</div>
+            <div style="width:260px;height:120px;border:2px solid #4caf50;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.45);"></div>
+          </div>
+          <div style="pointer-events:auto;padding-bottom:env(safe-area-inset-bottom,32px);padding-top:20px;">
+            <button id="nativeScanCancel" style="background:white;color:#333;border:none;padding:14px 44px;border-radius:30px;font-size:16px;font-weight:600;box-shadow:0 2px 12px rgba(0,0,0,0.3);">Cancel</button>
+          </div>`;
+        document.body.appendChild(overlay);
+        document.body.style.background = "transparent";
+        BarcodeScanner.hideBackground();
+
+        let cancelled = false;
+        const doCancel = async () => {
+          cancelled = true;
+          await BarcodeScanner.stopScan();
+          cleanupNativeScanner();
+        };
+        document.getElementById("nativeScanBack").onclick = doCancel;
+        document.getElementById("nativeScanCancel").onclick = doCancel;
+
+        const result = await BarcodeScanner.startScan();
+        if (!cancelled) {
+          cleanupNativeScanner();
+          if (result.hasContent) onBarcodeDecoded(result.content);
+        }
+      } catch (err) {
+        cleanupNativeScanner();
+        showToast("Scanner error — " + apiError(err));
+      }
+    }
+
+    function cleanupNativeScanner() {
+      if (window.Capacitor && window.Capacitor.Plugins.BarcodeScanner) {
+        try { window.Capacitor.Plugins.BarcodeScanner.showBackground(); } catch {}
+      }
+      document.body.style.background = "";
+      document.getElementById("nativeScanOverlay")?.remove();
+    }
+
+    async function openWebBarcodeScanner() {
       showModal("barcodeModal");
       const statusEl = document.getElementById("barcodeStatus");
       statusEl.textContent = "Loading scanner…";
@@ -2467,7 +2796,6 @@ Return ONLY valid JSON — no prose:
         if (!window.Html5Qrcode) {
           await loadScript("https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js");
         }
-        // Clear any previous instance
         const box = document.getElementById("barcodeReaderBox");
         box.innerHTML = "";
         html5QrScanner = new Html5Qrcode("barcodeReaderBox");
@@ -2475,11 +2803,8 @@ Return ONLY valid JSON — no prose:
         await html5QrScanner.start(
           { facingMode: "environment" },
           { fps: 15, qrbox: { width: 250, height: 150 }, aspectRatio: 1.5 },
-          (decodedText) => {
-            closeBarcodeScanner();
-            onBarcodeDecoded(decodedText);
-          },
-          () => { /* scan errors are normal, ignore */ }
+          (decodedText) => { closeBarcodeScanner(); onBarcodeDecoded(decodedText); },
+          () => {}
         );
       } catch (err) {
         statusEl.innerHTML = `<span style="color:var(--red);">Scanner error: ${escapeHtml(apiError(err))}</span>`;
@@ -2555,6 +2880,93 @@ Return ONLY valid JSON — no prose:
     }
 
     async function startBbScanner() {
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        await startNativeBbScanner();
+      } else {
+        await startWebBbScanner();
+      }
+    }
+
+    let _nativeBbActive = false;
+
+    async function startNativeBbScanner() {
+      const { BarcodeScanner } = window.Capacitor.Plugins;
+      try {
+        const status = await BarcodeScanner.checkPermission({ force: true });
+        if (!status.granted) { bbSetStatus("Camera access denied — check Settings", false); return; }
+
+        // Switch the modal into "native mode" — opaque header/items/footer
+        // bars over a transparent middle that shows the live camera through
+        // the WebView. Hide every other top-level page element so nothing
+        // bleeds through the transparent areas.
+        const modal = document.getElementById("bulkBarcodeModal");
+        document.getElementById("bbScannerBox").style.display = "none";
+        modal.classList.add("native-mode");
+
+        // Add the native reticle overlay (positioned over the camera area)
+        if (!document.getElementById("nativeReticle")) {
+          const r = document.createElement("div");
+          r.id = "nativeReticle";
+          r.className = "native-reticle";
+          modal.appendChild(r);
+        }
+
+        // Hide everything outside the modal so the transparent areas
+        // only reveal the native camera (not the page underneath).
+        document.querySelectorAll("body > *").forEach(el => {
+          if (el === modal || el.id === "toast" || el.tagName === "SCRIPT" || el.tagName === "STYLE") return;
+          if (el.style.display !== "none") {
+            el.dataset._scannerHidden = el.style.display || "";
+            el.style.display = "none";
+          }
+        });
+
+        document.body.style.background = "transparent";
+        BarcodeScanner.hideBackground();
+        _nativeBbActive = true;
+
+        bbSetStatus("Point camera at the green box", false);
+
+        while (_nativeBbActive) {
+          const result = await BarcodeScanner.startScan();
+          if (!_nativeBbActive) break;
+          if (result.hasContent) await onBulkScan(result.content);
+        }
+      } catch (err) {
+        if (_nativeBbActive) bbSetStatus("Scanner error — " + apiError(err), false);
+      }
+    }
+
+    async function stopBbScanner() {
+      _nativeBbActive = false;
+      if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        try {
+          await window.Capacitor.Plugins.BarcodeScanner.stopScan();
+          window.Capacitor.Plugins.BarcodeScanner.showBackground();
+        } catch {}
+        document.body.style.background = "";
+        const modal = document.getElementById("bulkBarcodeModal");
+        if (modal) modal.classList.remove("native-mode");
+        const reticle = document.getElementById("nativeReticle");
+        if (reticle) reticle.remove();
+        document.getElementById("bbScannerBox").style.display = "";
+        // Restore previously hidden top-level elements
+        document.querySelectorAll("body > *").forEach(el => {
+          if ("_scannerHidden" in el.dataset) {
+            el.style.display = el.dataset._scannerHidden;
+            delete el.dataset._scannerHidden;
+          }
+        });
+      } else if (bbScanner) {
+        try {
+          if (bbScanner.isScanning) await bbScanner.stop();
+          bbScanner.clear();
+        } catch {}
+        bbScanner = null;
+      }
+    }
+
+    async function startWebBbScanner() {
       const statusEl = document.getElementById("bbStatus");
       statusEl.textContent = "Loading scanner…";
       statusEl.className = "bb-status";
@@ -2574,16 +2986,6 @@ Return ONLY valid JSON — no prose:
         statusEl.textContent = "Point the barcode at the green box";
       } catch (err) {
         statusEl.innerHTML = `<span style="color:var(--red);">Camera error: ${escapeHtml(apiError(err))}</span>`;
-      }
-    }
-
-    async function stopBbScanner() {
-      if (bbScanner) {
-        try {
-          if (bbScanner.isScanning) await bbScanner.stop();
-          bbScanner.clear();
-        } catch {}
-        bbScanner = null;
       }
     }
 
@@ -2688,6 +3090,21 @@ Return ONLY valid JSON — no prose:
           </div>`;
       }).join("");
 
+      // Update mini chip list (last 6 scanned items)
+      const miniEl = document.getElementById("bbMiniList");
+      if (miniEl) {
+        if (!bbItems.length) { miniEl.innerHTML = ""; }
+        else {
+          const chips = bbItems.slice(0, 6).map(item => {
+            const label = item.status === "loading"
+              ? `⏳ ${item.upc.slice(-4)}`
+              : `${item.name || item.upc} ×${item.qty}`;
+            return `<span class="bb-mini-chip">${escapeHtml(label)}</span>`;
+          }).join("");
+          miniEl.innerHTML = chips;
+        }
+      }
+
       // Wire events
       listEl.querySelectorAll(".bb-name-input").forEach(input => {
         input.addEventListener("input", e => {
@@ -2735,10 +3152,21 @@ Return ONLY valid JSON — no prose:
       const dest = scanTarget
         ? `${scanTarget.locIcon || "📦"} ${scanTarget.locName} › ${scanTarget.zoneName}`
         : "your inventory";
+      console.log("[Bulk] saved", toSave.length, "items to", dest, toSave.map(i => i.name || i.upc));
       closeBulkBarcodeScanner();
       showToast(`Added ${toSave.length} item${toSave.length !== 1 ? "s" : ""} to ${dest}`);
       haptic(20);
+      // Jump to inventory and scroll to the destination zone so the user sees them
+      const invTab = document.querySelector('[data-view="inventory"]');
+      if (invTab) invTab.click();
       renderInventory();
+      // Pre-filter by the destination location/zone if a scan target was set
+      if (scanTarget?.locId) {
+        setTimeout(() => {
+          const zoneEl = document.querySelector(`[data-loc-id="${scanTarget.locId}"][data-zone-id="${scanTarget.zoneId}"]`);
+          if (zoneEl?.scrollIntoView) zoneEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 200);
+      }
     }
 
     document.getElementById("bbClose")?.addEventListener("click", () => {
@@ -2876,7 +3304,7 @@ Return ONLY valid JSON — no prose:
 
     function renderScanResult(dataUrl) {
       const container = document.getElementById("scanResult");
-      const hasKey = !!(state.settings.claudeKey && state.settings.claudeKey.trim());
+      const hasKey = hasClaude();
       container.innerHTML = `
         <img class="preview-img" src="${dataUrl}" alt="Captured photo" />
         <div class="card">
@@ -2950,33 +3378,41 @@ Return ONLY valid JSON — no prose:
     function renderScanItemsList(targetId) {
       const listEl = document.getElementById(targetId || "scanItemsList");
       if (!listEl) return;
-      const unitOptions = ["","oz","fl oz","lb","g","kg","cup","tbsp","tsp","piece","can","bottle","jar","bag","box","packet","bunch","head"];
-      listEl.innerHTML = scanDraftItems.map((i, idx) => `
-        <div class="scan-item-card ${i.included ? "" : "excluded"}" data-idx="${idx}">
-          <input type="checkbox" class="include-cb" ${i.included ? "checked" : ""} aria-label="Include" />
-          <div class="scan-fields">
-            <div class="name-row">
-              <input type="text" class="item-name-input" placeholder="Item name" value="${escapeHtml(i.name || "")}" />
-              <input type="text" class="brand-input" placeholder="Brand (optional)" value="${escapeHtml(i.brand || "")}" />
+      const locIcon = scanTarget?.locIcon || "📦";
+      listEl.innerHTML = scanDraftItems.map((i, idx) => {
+        return `
+          <div class="scan-item-card ${i.included ? "" : "excluded"}" data-idx="${idx}">
+            <div class="sic-toggle-col">
+              <button class="sic-toggle ${i.included ? "on" : ""}" data-idx="${idx}" aria-label="${i.included ? "Exclude" : "Include"}">
+                ${i.included ? "✓" : ""}
+              </button>
             </div>
-            <div class="qty-row">
-              <input type="number" class="qty-input" step="0.25" min="0" placeholder="Qty" value="${i.qty != null ? i.qty : ""}" />
-              <select class="unit-input">
-                ${unitOptions.map(u => `<option value="${u}" ${i.unit === u ? "selected" : ""}>${u || "— unit —"}</option>`).join("")}
-              </select>
+            <div class="sic-icon">${locIcon}</div>
+            <div class="sic-content">
+              <input class="sic-name item-name-input" type="text" placeholder="Item name" value="${escapeHtml(i.name || "")}" data-idx="${idx}" />
+              <div class="sic-sub-row">
+                <input class="sic-brand brand-input" type="text" placeholder="Brand" value="${escapeHtml(i.brand || "")}" data-idx="${idx}" />
+                <input class="sic-qty qty-input" type="number" step="0.25" min="0" placeholder="Qty" value="${i.qty != null ? i.qty : ""}" data-idx="${idx}" />
+                <select class="sic-unit unit-input" data-idx="${idx}">
+                  ${["","oz","fl oz","lb","g","kg","cup","tbsp","tsp","piece","can","bottle","jar","bag","box","packet","bunch","head"].map(u => `<option value="${u}" ${i.unit === u ? "selected" : ""}>${u || "—"}</option>`).join("")}
+                </select>
+              </div>
             </div>
-          </div>
-          <button class="scan-remove-btn" data-action="remove" aria-label="Remove">×</button>
-        </div>
-      `).join("");
+            <button class="sic-remove scan-remove-btn" data-action="remove" data-idx="${idx}" aria-label="Remove">×</button>
+          </div>`;
+      }).join("");
       updateScanSummary();
 
       // Wire per-row events
       listEl.querySelectorAll(".scan-item-card").forEach(card => {
         const idx = Number(card.dataset.idx);
-        card.querySelector(".include-cb").addEventListener("change", (e) => {
-          scanDraftItems[idx].included = e.target.checked;
-          card.classList.toggle("excluded", !e.target.checked);
+        card.querySelector(".sic-toggle").addEventListener("click", () => {
+          scanDraftItems[idx].included = !scanDraftItems[idx].included;
+          const btn = card.querySelector(".sic-toggle");
+          btn.classList.toggle("on", scanDraftItems[idx].included);
+          btn.textContent = scanDraftItems[idx].included ? "✓" : "";
+          btn.setAttribute("aria-label", scanDraftItems[idx].included ? "Exclude" : "Include");
+          card.classList.toggle("excluded", !scanDraftItems[idx].included);
           updateScanSummary();
         });
         card.querySelector(".item-name-input").addEventListener("input", (e) => {
@@ -3014,8 +3450,7 @@ Return ONLY valid JSON — no prose:
     }
 
     async function analyzePhotoWithClaude(dataUrl, locLabel = "storage area", zoneNames = ["Top shelf","Middle shelf","Bottom shelf"]) {
-      const key = (state.settings.claudeKey || "").trim();
-      if (!key) throw new Error("No API key set");
+      if (!hasClaude()) throw new Error("Set up Claude proxy or API key in Settings first");
       const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
       if (!match) throw new Error("Bad image format");
       const mediaType = match[1];
@@ -3039,25 +3474,16 @@ Return ONLY valid JSON — no prose:
         '[{"name":"whole milk","brand":"Horizon","qty":1,"unit":"gal"},{"name":"greek yogurt","brand":"Fage","qty":32,"unit":"oz"}]',
       ].join("\n");
 
-      const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-api-key": key,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 2000,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
-              { type: "text", text: prompt },
-            ],
-          }],
-        }),
+      const res = await claudeMessages({
+        model: "claude-sonnet-4-6",
+        max_tokens: 2000,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
+            { type: "text", text: prompt },
+          ],
+        }],
       });
       if (!res.ok) {
         let detail = "";
@@ -3425,27 +3851,17 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     }
 
     async function callAssistant(userMessage, opts = {}) {
-      const key = (state.settings.claudeKey || "").trim();
-      if (!key) throw new Error("Set your Claude API key in Settings first");
+      if (!hasClaude()) throw new Error("Set up Claude proxy or API key in Settings first");
 
       const system = buildAssistantContext();
       const messages = (state.chatHistory || []).slice(-10).map(m => ({ role: m.role, content: m.content }));
       messages.push({ role: "user", content: userMessage });
 
-      const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-api-key": key,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: opts.model || "claude-sonnet-4-6",
-          max_tokens: opts.maxTokens || 800,
-          system,
-          messages,
-        }),
+      const res = await claudeMessages({
+        model: opts.model || "claude-sonnet-4-6",
+        max_tokens: opts.maxTokens || 800,
+        system,
+        messages,
       });
       if (!res.ok) {
         let detail = "";
@@ -3504,8 +3920,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
     }
 
     async function autoPlanWeek() {
-      const key = (state.settings.claudeKey || "").trim();
-      if (!key) { showToast("Add your Claude API key in Settings first"); setView("settings"); return; }
+      if (!hasClaude()) { showToast("Set up Claude proxy or API key in Settings first"); setView("settings"); return; }
       const btn = document.getElementById("autoPlanWeek");
       const original = btn.textContent;
       btn.disabled = true;
@@ -3612,13 +4027,27 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       document.getElementById("setFamily").value = state.settings.familyDefault;
       document.getElementById("setLowStock").value = state.settings.lowStockThreshold;
       document.getElementById("setClaudeKey").value = state.settings.claudeKey || "";
-      document.getElementById("claudeKeyStatus").textContent = state.settings.claudeKey ? "Key saved in this browser." : "";
+      if (document.getElementById("setProxyUrl"))   document.getElementById("setProxyUrl").value   = state.settings.proxyUrl   || "";
+      if (document.getElementById("setAccessCode")) document.getElementById("setAccessCode").value = state.settings.accessCode || "";
+      if (document.getElementById("setGeminiKey"))  document.getElementById("setGeminiKey").value  = state.settings.geminiKey  || "";
+      if (document.getElementById("setRegion"))      document.getElementById("setRegion").value      = state.settings.region     || "world";
+      document.getElementById("claudeKeyStatus").textContent =
+        (state.settings.proxyUrl && state.settings.accessCode) ? "Using Claude proxy." :
+        state.settings.claudeKey ? "Using Claude API key." :
+        state.settings.geminiKey ? "Using Google Gemini (free)." : "";
       document.getElementById("setAnyListEmail").value = state.settings.anyListEmail || "";
       document.getElementById("prefAllergies").value = p.allergies || "";
       document.getElementById("prefDietary").value = p.dietary || "";
       document.getElementById("prefLikedCuisines").value = p.likedCuisines || "";
       document.getElementById("prefDislikedFoods").value = p.dislikedFoods || "";
       document.getElementById("prefFamilyNotes").value = p.familyNotes || "";
+      // Build info
+      const vEl = document.getElementById("aboutVersion");
+      const dEl = document.getElementById("aboutBuildDate");
+      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "7068975") ? `v${BUILD_VERSION}` : "";
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 03, 2026 18:29")
+        ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
+        : "Built collaboratively with Claude";
       showModal("settingsModal");
     }
     function wireSettings() {
@@ -3656,38 +4085,56 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       document.getElementById("setLowStock").addEventListener("input", e => {
         state.settings.lowStockThreshold = Number(e.target.value) || 1; saveState(); renderInventory();
       });
+      document.getElementById("setRegion")?.addEventListener("change", e => {
+        state.settings.region = e.target.value; saveState();
+      });
       document.getElementById("setClaudeKey").addEventListener("change", e => {
         state.settings.claudeKey = e.target.value.trim();
         saveState();
-        document.getElementById("claudeKeyStatus").textContent = state.settings.claudeKey ? "Key saved in this browser." : "";
+        document.getElementById("claudeKeyStatus").textContent = state.settings.claudeKey ? "Claude key saved." : "";
+      });
+      document.getElementById("setProxyUrl")?.addEventListener("change", e => {
+        state.settings.proxyUrl = e.target.value.trim();
+        saveState();
+      });
+      document.getElementById("setAccessCode")?.addEventListener("change", e => {
+        state.settings.accessCode = e.target.value.trim();
+        saveState();
+      });
+      document.getElementById("setGeminiKey")?.addEventListener("change", e => {
+        state.settings.geminiKey = e.target.value.trim();
+        saveState();
+        document.getElementById("claudeKeyStatus").textContent = state.settings.geminiKey ? "Gemini key saved." : "";
       });
       document.getElementById("setAnyListEmail").addEventListener("change", e => {
         state.settings.anyListEmail = e.target.value.trim();
         saveState();
       });
       document.getElementById("testClaudeKey").addEventListener("click", async () => {
-        const k = document.getElementById("setClaudeKey").value.trim();
         const status = document.getElementById("claudeKeyStatus");
-        if (!k) { status.textContent = "Enter a key first."; return; }
-        state.settings.claudeKey = k; saveState();
+        // Save whichever fields are populated, then exercise claudeMessages
+        const k  = document.getElementById("setClaudeKey").value.trim();
+        const pu = document.getElementById("setProxyUrl")?.value.trim() || "";
+        const ac = document.getElementById("setAccessCode")?.value.trim() || "";
+        const gk = document.getElementById("setGeminiKey")?.value.trim() || "";
+        state.settings.claudeKey = k;
+        state.settings.proxyUrl = pu;
+        state.settings.accessCode = ac;
+        state.settings.geminiKey = gk;
+        saveState();
+        if (!hasClaude()) { status.textContent = "Enter an API key or proxy URL + code."; return; }
         status.textContent = "Testing…";
         try {
-          const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-              "content-type": "application/json",
-              "x-api-key": k,
-              "anthropic-version": "2023-06-01",
-              "anthropic-dangerous-direct-browser-access": "true",
-            },
-            body: JSON.stringify({
-              model: "claude-haiku-4-5-20251001",
-              max_tokens: 10,
-              messages: [{ role: "user", content: "Say OK" }],
-            }),
+          const res = await claudeMessages({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 10,
+            messages: [{ role: "user", content: "Say OK" }],
           });
-          if (res.ok) { status.textContent = "✅ Key works!"; haptic(10); }
-          else {
+          if (res.ok) {
+            const via = (pu && ac) ? "Claude proxy" : k ? "Claude API key" : "Gemini (free)";
+            status.textContent = `✅ Working via ${via}`;
+            haptic(10);
+          } else {
             let msg = `HTTP ${res.status}`;
             try { const j = await res.json(); if (j.error?.message) msg = j.error.message; } catch {}
             status.textContent = `❌ ${msg}`;
@@ -3698,8 +4145,14 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       });
       document.getElementById("clearClaudeKey").addEventListener("click", () => {
         state.settings.claudeKey = "";
+        state.settings.proxyUrl = "";
+        state.settings.accessCode = "";
+        state.settings.geminiKey = "";
         document.getElementById("setClaudeKey").value = "";
-        document.getElementById("claudeKeyStatus").textContent = "Key cleared.";
+        if (document.getElementById("setProxyUrl"))   document.getElementById("setProxyUrl").value = "";
+        if (document.getElementById("setAccessCode")) document.getElementById("setAccessCode").value = "";
+        if (document.getElementById("setGeminiKey"))  document.getElementById("setGeminiKey").value = "";
+        document.getElementById("claudeKeyStatus").textContent = "Cleared.";
         saveState();
       });
       // Preferences — save on blur for natural UX
