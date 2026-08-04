@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J&L Plumbing Services | Orange County Plumber - Family Owned</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .banner {
+            background: #d32f2f;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #c62828 0%, #ad1457 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        header p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: #1565c0;
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .cta-button:hover {
+            background: #0d47a1;
+        }
+        
+        .phone-cta {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            display: block;
+        }
+        
+        section {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .about {
+            background: #f5f5f5;
+            text-align: center;
+        }
+        
+        .about h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #c62828;
+        }
+        
+        .about p {
+            font-size: 18px;
+            margin-bottom: 15px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .services {
+            background: white;
+        }
+        
+        .services h2 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: #c62828;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .service-card {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 5px solid #c62828;
+            transition: transform 0.3s;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .service-card h3 {
+            color: #c62828;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .service-card p {
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .testimonials {
+            background: #f5f5f5;
+        }
+        
+        .testimonials h2 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 40px;
+            color: #c62828;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .testimonial-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stars {
+            color: #ffc107;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .testimonial-text {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        
+        .testimonial-author {
+            font-weight: bold;
+            color: #c62828;
+        }
+        
+        .location {
+            background: white;
+            text-align: center;
+        }
+        
+        .location h2 {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #c62828;
+        }
+        
+        .location-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .location-item h3 {
+            color: #c62828;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .location-item p {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .cta-final {
+            background: linear-gradient(135deg, #c62828 0%, #ad1457 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        .cta-final h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .cta-final p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        footer {
+            background: #222;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 14px;
+        }
+        
+        .signature {
+            background: #d32f2f;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 32px; }
+            header p { font-size: 16px; }
+            .phone-cta { font-size: 20px; }
+            section { padding: 40px 15px; }
+            .cta-final h2 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        ⚡ This website mockup created by Ryan Triplett | (512) 569-3089 | triplettrj@gmail.com
+    </div>
+    
+    <header>
+        <h1>J & L Plumbing Services</h1>
+        <p>Orange County's Family Plumbing Experts</p>
+        <p style="font-size: 16px; margin-top: 20px;">Trusted Local Service • Expert Work • Fair Pricing</p>
+        <button class="cta-button">Call for Service</button>
+        <span class="phone-cta">(626) 722-2266</span>
+    </header>
+    
+    <section class="about">
+        <h2>Local Plumbing You Can Trust</h2>
+        <p>J & L Plumbing has been serving Orange for years with honest, reliable plumbing service. We treat your home like our own—professional, courteous, and fair pricing every time.</p>
+        <p style="margin-top: 30px; font-weight: bold; color: #c62828;">Ready to grow your local plumbing business online? Let's talk.</p>
+    </section>
+    
+    <section class="services">
+        <h2>Plumbing Services</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <h3>🚰 Drain Repair</h3>
+                <p>Clogged drains, backups, and drain cleaning.</p>
+            </div>
+            <div class="service-card">
+                <h3>💧 Leak Detection</h3>
+                <p>Find and fix leaks before they become problems.</p>
+            </div>
+            <div class="service-card">
+                <h3>🔧 Fixture Installation</h3>
+                <p>Faucets, toilets, sinks—professional installation.</p>
+            </div>
+            <div class="service-card">
+                <h3>🏠 Repiping</h3>
+                <p>Complete home piping replacement.</p>
+            </div>
+            <div class="service-card">
+                <h3>💡 Water Heater</h3>
+                <p>Repair, replacement, and maintenance.</p>
+            </div>
+            <div class="service-card">
+                <h3>🔌 General Plumbing</h3>
+                <p>All plumbing needs—residential service.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="testimonials">
+        <h2>Local Customer Stories</h2>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"J & L has been our plumber for years. Honest, fair, and does great work. You can't find better service in Orange."</p>
+                <p class="testimonial-author">— Thomas Wilson, Orange</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Called for a drain issue. They came same-day, fixed it right, explained everything clearly. Great local business."</p>
+                <p class="testimonial-author">— Patricia Davis, Orange</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Reliable, trustworthy, and always fair on pricing. We recommend J & L to all our neighbors."</p>
+                <p class="testimonial-author">— Michael Foster, Orange</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">⭐⭐⭐⭐⭐</div>
+                <p class="testimonial-text">"Family-owned and it shows. Professional, courteous, and honest. The best plumber in town."</p>
+                <p class="testimonial-author">— Nancy Clark, Orange</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="location">
+        <h2>Your Local Orange Plumber</h2>
+        <div class="location-info">
+            <div class="location-item">
+                <h3>📞 Call Now</h3>
+                <p>(626) 722-2266</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">Service in Orange, CA</p>
+            </div>
+            <div class="location-item">
+                <h3>⚡ Fast Service</h3>
+                <p>Same-day appointments available</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">Professional plumbers</p>
+            </div>
+            <div class="location-item">
+                <h3>✓ Trusted Local</h3>
+                <p>Family-Owned Since [Year]</p>
+                <p style="font-size: 13px; margin-top: 10px; color: #999;">Community trusted</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="cta-final">
+        <h2>Local Plumbing Expertise</h2>
+        <p>When you need a plumber you can trust in Orange.</p>
+        <button class="cta-button">Call (626) 722-2266 Today</button>
+    </section>
+    
+    <footer>
+        <p>&copy; 2026 J & L Plumbing Services. All rights reserved. | Orange, CA</p>
+    </footer>
+    
+    <div class="signature">
+        Built by Ryan Triplett | Web Developer | (512) 569-3089 | triplettrj@gmail.com
+    </div>
+</body>
+</html>

@@ -160,9 +160,189 @@
     footer ul a { color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; }
     footer ul a:hover { color: var(--gold); }
     .footer-bottom { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 22px; text-align: center; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.78rem; max-width: 1100px; margin: 0 auto; letter-spacing: 0.05em; }
+
+    /* ── PITCH TOOLS ── */
+    #claim-banner { position:fixed; top:0; left:0; right:0; z-index:10000; background:#0f1923; color:#fff; padding:10px 16px; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; font-family:'Segoe UI',system-ui,sans-serif; font-size:0.82rem; box-shadow:0 2px 12px rgba(0,0,0,0.55); }
+    .cb-text { flex:1; min-width:160px; } .cb-text strong { color:#F0C96B; }
+    .cb-btn { display:inline-block; padding:6px 14px; border-radius:50px; font-weight:700; text-decoration:none; font-size:0.78rem; white-space:nowrap; cursor:pointer; border:none; font-family:'Segoe UI',system-ui,sans-serif; transition:opacity 0.2s; } .cb-btn:hover { opacity:0.82; }
+    .cb-call { background:#C9973A; color:#fff !important; } .cb-wa { background:#25D366; color:#fff !important; } .cb-dismiss { background:transparent; border:1px solid rgba(255,255,255,0.3); color:rgba(255,255,255,0.6); }
+    body { padding-top:44px; } nav { top:44px !important; }
+    #wa-fab { position:fixed; right:20px; bottom:24px; z-index:999; background:#25D366; color:#fff; width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; box-shadow:0 4px 16px rgba(37,211,102,0.45); font-size:1.4rem; transition:transform 0.2s; } #wa-fab:hover { transform:scale(1.1); }
+    #mob-bar { display:none; position:fixed; bottom:0; left:0; right:0; z-index:998; }
+    #mob-bar a { display:flex; align-items:center; justify-content:center; gap:8px; padding:15px 10px; font-family:'Segoe UI',system-ui,sans-serif; font-weight:700; font-size:0.9rem; text-decoration:none; }
+    .mb-call { background:#1A5F6A; color:#fff !important; flex:3; } .mb-wa { background:#25D366; color:#fff !important; flex:2; }
+    @media (max-width:768px) { #mob-bar { display:flex; } #wa-fab { bottom:68px; } body { padding-bottom:54px; } }
+  
+    /* ── v2 UPGRADE: Visual Polish ── */
+    body, h1, h2, h3, h4, p, a, span, li, button, input, textarea {
+      font-family: 'Poppins', 'Segoe UI', system-ui, sans-serif !important;
+    }
+
+    /* Scroll reveal */
+    [data-rv] {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.85s cubic-bezier(0.16,1,0.3,1), transform 0.85s cubic-bezier(0.16,1,0.3,1);
+    }
+    [data-rv].in { opacity: 1 !important; transform: none !important; }
+
+    /* Stagger grid children */
+    [data-sg] > * {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1), transform 0.65s cubic-bezier(0.16,1,0.3,1);
+    }
+    [data-sg].in > * { opacity: 1; transform: none; }
+    [data-sg].in > *:nth-child(1) { transition-delay: 0.04s; }
+    [data-sg].in > *:nth-child(2) { transition-delay: 0.15s; }
+    [data-sg].in > *:nth-child(3) { transition-delay: 0.26s; }
+    [data-sg].in > *:nth-child(4) { transition-delay: 0.37s; }
+    [data-sg].in > *:nth-child(5) { transition-delay: 0.48s; }
+    [data-sg].in > *:nth-child(6) { transition-delay: 0.59s; }
+
+    /* Card lift + glow */
+    [class*="-card"] {
+      transition: transform 0.35s cubic-bezier(0.16,1,0.3,1),
+                  box-shadow 0.35s ease,
+                  border-color 0.3s ease !important;
+    }
+    [class*="-card"]:hover {
+      transform: translateY(-9px) scale(1.016) !important;
+      box-shadow: 0 26px 64px rgba(191,160,90,0.3), 0 6px 20px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Image zoom inside cards */
+    [class*="-img"] { overflow: hidden; }
+    [class*="-img"] img,
+    [class*="-card"] > img { transition: transform 0.55s ease !important; }
+    [class*="-card"]:hover [class*="-img"] img,
+    [class*="-card"]:hover > img { transform: scale(1.08) !important; }
+
+    /* Button glow on hover */
+    .btn-primary:hover, .btn-book:hover, .btn-cta:hover,
+    .nav-cta:hover, .btn-phone:hover {
+      box-shadow: 0 10px 32px rgba(191,160,90,0.5) !important;
+    }
+
+    /* Hero badge float */
+    @keyframes badge-float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-7px); }
+    }
+    .hero-badge { animation: badge-float 4.5s ease-in-out infinite; }
+
+    /* Gradient orb drift */
+    @keyframes orb-drift {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      33%       { transform: translate(55px,-45px) scale(1.1); }
+      67%       { transform: translate(-35px,28px) scale(0.92); }
+    }
+
+    /* Hero orb container */
+    .hero { position: relative; overflow: hidden; }
+    .hero > * { position: relative; z-index: 1; }
+    .up-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+      animation: orb-drift 18s ease-in-out infinite;
+    }
+
+    /* Section h2 gradient text */
+    section h2 {
+      background: linear-gradient(135deg, #D4B878 0%, #7EC8D4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(191,160,90,0.5); border-radius: 4px; }
+
+    /* Nav link underline slide */
+    .nav-links a { position: relative; }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -3px; left: 0; right: 100%;
+      height: 2px;
+      background: #BFA05A;
+      border-radius: 2px;
+      transition: right 0.28s ease;
+    }
+    .nav-links a:hover::after { right: 0; }
+
   </style>
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Sara Thai Spa | Orange County, CA" />
+  <meta property="og:description" content="Luxury Thai spa and wellness treatments in Irvine, Orange County. Master-certified therapists. Private suites." />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200&q=80" />
+  <meta property="og:url" content="https://triplettrj.github.io/ryPage/sara-thai-spa/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌟</text></svg>" />
+  <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BeautySalon",
+  "name": "Sara Thai Spa",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "18200 Von Karman Ave Suite 200",
+    "addressLocality": "Irvine",
+    "addressRegion": "CA",
+    "postalCode": "92612",
+    "addressCountry": "US"
+  },
+  "telephone": "+19496671200",
+  "url": "https://triplettrj.github.io/ryPage/sara-thai-spa/",
+  "image": "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200&q=80",
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+      ],
+      "opens": "10:00",
+      "closes": "20:00"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Saturday"
+      ],
+      "opens": "09:00",
+      "closes": "21:00"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Sunday"
+      ],
+      "opens": "10:00",
+      "closes": "19:00"
+    }
+  ]
+}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
+
+<!-- PITCH BANNER: replace 5125693089 with your phone digits (e.g. 7145550100) -->
+<div id="claim-banner">
+  <span class="cb-text">🎨 <strong>Free Mockup</strong> — This site was built for <strong>Sara Thai Spa</strong>. Want to launch it?</span>
+  <a class="cb-btn cb-call" href="tel:5125693089">📞 Call Ryan</a>
+  <a class="cb-btn cb-wa" href="https://wa.me/15125693089?text=Hi+Ryan%2C+I+saw+the+sara+thai+spa+mockup+and+I%27m+interested!" target="_blank" rel="noopener">💬 WhatsApp</a>
+  <button class="cb-btn cb-dismiss" onclick="document.getElementById('claim-banner').remove();document.body.style.paddingTop='0';var n=document.querySelector('nav');if(n)n.style.top='0'">✕</button>
+</div>
+
 
 <div class="topbar">
   Complimentary herbal tea with every treatment &nbsp;·&nbsp; <a href="tel:9496671200">(949) 667-1200</a> &nbsp;·&nbsp; By appointment · Walk-ins welcome when available
@@ -410,5 +590,58 @@
   <div class="footer-bottom"><p>© 2025 Sara Thai Spa. All rights reserved. · Irvine, Orange County, California</p></div>
 </footer>
 
+
+<!-- WHATSAPP FAB -->
+<a id="wa-fab" href="https://wa.me/19496671200?text=Hi%2C+I%27d+like+to+book+a+treatment!" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">💬</a>
+
+<!-- MOBILE STICKY BAR -->
+<div id="mob-bar">
+  <a class="mb-call" href="tel:9496671200">📞 (949) 667-1200</a>
+  <a class="mb-wa" href="https://wa.me/19496671200?text=Hi%2C+I%27d+like+to+book+a+treatment!" target="_blank" rel="noopener">💬 WhatsApp</a>
+</div>
+
+<script>
+(function() {
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  function bad(el) {
+    return el.closest('#claim-banner') || el.closest('nav') ||
+           el.closest('#mob-bar') || el.id === 'wa-fab' ||
+           el.classList.contains('hero');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Reveal sections
+    document.querySelectorAll('section, .trust-bar, .how-it-works, .topbar ~ div').forEach(function(el) {
+      if (!bad(el)) { el.setAttribute('data-rv', ''); io.observe(el); }
+    });
+
+    // Stagger grids
+    document.querySelectorAll('[class*="-grid"], [class*="-cards"], [class*="-steps"]').forEach(function(g) {
+      if (g.children.length > 1 && !bad(g)) {
+        g.setAttribute('data-sg', '');
+        if (!g.hasAttribute('data-rv')) { g.setAttribute('data-rv', ''); io.observe(g); }
+      }
+    });
+
+    // Inject hero orbs
+    var hero = document.querySelector('.hero');
+    if (hero) {
+      var o1 = document.createElement('div');
+      o1.className = 'up-orb';
+      o1.style.cssText = 'width:700px;height:700px;background:rgba(26,95,106,0.5);top:-180px;left:-140px;animation-delay:0s;';
+      var o2 = document.createElement('div');
+      o2.className = 'up-orb';
+      o2.style.cssText = 'width:540px;height:540px;background:rgba(191,160,90,0.4);bottom:-110px;right:-100px;animation-delay:-9s;';
+      hero.insertBefore(o2, hero.firstChild);
+      hero.insertBefore(o1, hero.firstChild);
+    }
+  });
+})();
+</script>
 </body>
 </html>
