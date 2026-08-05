@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 16:20";
+    const BUILD_DATE    = "Aug 05, 2026 16:40";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -751,10 +751,16 @@
     // Call Gemini and return a Response-like object in Claude format
     async function _callGemini(body, apiKey, opts) {
       const gemBody = _claudeToGemini(body);
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+      // AQ. prefix = OAuth bearer token; AIza = plain API key
+      const isBearer = apiKey.startsWith("AQ.");
+      const url = isBearer
+        ? "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const headers = { "content-type": "application/json" };
+      if (isBearer) headers["Authorization"] = `Bearer ${apiKey}`;
       const res = await fetchWithTimeout(url, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers,
         body: JSON.stringify(gemBody),
         timeout: opts.timeout,
       });
@@ -775,8 +781,35 @@
       });
     }
 
-    // Built-in fallback key so the app works out of the box (free-tier Gemini)
-    const DEFAULT_GEMINI_KEY = "AIzaSyDZml0zR6Vw5Jwnz-yogiWoVrgDzlS8qw8";
+    // Shared Gemini proxy — key lives in Cloudflare Worker env, never in source
+    const GEMINI_PROXY_URL = "https://fridgelisty-claude-proxy.triplettrj.workers.dev/gemini";
+
+    async function _callGeminiProxy(body, opts) {
+      const gemBody = _claudeToGemini(body);
+      const res = await fetchWithTimeout(GEMINI_PROXY_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(gemBody),
+        timeout: opts.timeout,
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const msg = errData.error?.message || `Gemini proxy ${res.status}`;
+        return new Response(JSON.stringify({ error: { type: "api_error", message: msg } }), {
+          status: res.status,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      const data = await res.json();
+      const text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+      return new Response(JSON.stringify({ content: [{ type: "text", text }] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+
+    // DEFAULT_GEMINI_KEY kept for direct-key path (user can paste their own in Settings)
+    const DEFAULT_GEMINI_KEY = "";
 
     // ---- AI connection probe (runs once per session) ----
     // Tests the active key with a tiny request so failures surface early.
@@ -788,11 +821,23 @@
       _aiProbePromise = (async () => {
         try {
           const s = state.settings;
-          const geminiKey = (s.geminiKey || "").trim() || DEFAULT_GEMINI_KEY;
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(geminiKey)}`;
-          const res = await fetchWithTimeout(url, {
+          const geminiKey = (s.geminiKey || "").trim();
+          // Use user's own key if set, otherwise probe the shared proxy
+          let probeUrl, probeHeaders;
+          if (geminiKey) {
+            const isBearer = geminiKey.startsWith("AQ.");
+            probeUrl = isBearer
+              ? "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+              : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(geminiKey)}`;
+            probeHeaders = { "content-type": "application/json" };
+            if (isBearer) probeHeaders["Authorization"] = `Bearer ${geminiKey}`;
+          } else {
+            probeUrl = GEMINI_PROXY_URL;
+            probeHeaders = { "content-type": "application/json" };
+          }
+          const res = await fetchWithTimeout(probeUrl, {
             method: "POST",
-            headers: { "content-type": "application/json" },
+            headers: probeHeaders,
             body: JSON.stringify({ contents: [{ parts: [{ text: "Reply with the single digit 1." }] }] }),
           }, 8000);
           if (!res.ok) {
@@ -833,9 +878,9 @@
         return await _callGemini(body, geminiKey, opts);
       }
 
-      // Fall back to built-in Gemini key when nothing else is configured
+      // Fall back to shared Gemini proxy when nothing else is configured
       if (!directKey && !(proxyUrl && access) && !geminiKey) {
-        return await _callGemini(body, DEFAULT_GEMINI_KEY, opts);
+        return await _callGeminiProxy(body, opts);
       }
 
       let url, headers;
@@ -4095,7 +4140,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 16:20")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 16:40")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
