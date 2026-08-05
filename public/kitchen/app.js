@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 16:14";
+    const BUILD_DATE    = "Aug 05, 2026 16:20";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -777,6 +777,48 @@
 
     // Built-in fallback key so the app works out of the box (free-tier Gemini)
     const DEFAULT_GEMINI_KEY = "AIzaSyDZml0zR6Vw5Jwnz-yogiWoVrgDzlS8qw8";
+
+    // ---- AI connection probe (runs once per session) ----
+    // Tests the active key with a tiny request so failures surface early.
+    let _aiProbePromise = null;  // resolves to true (ok) or false (failed)
+    let _aiProbeError  = "";
+
+    function _runAiProbe() {
+      if (_aiProbePromise) return _aiProbePromise;
+      _aiProbePromise = (async () => {
+        try {
+          const s = state.settings;
+          const geminiKey = (s.geminiKey || "").trim() || DEFAULT_GEMINI_KEY;
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(geminiKey)}`;
+          const res = await fetchWithTimeout(url, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts: [{ text: "Reply with the single digit 1." }] }] }),
+          }, 8000);
+          if (!res.ok) {
+            const j = await res.json().catch(() => ({}));
+            _aiProbeError = j.error?.message || `API ${res.status}`;
+            return false;
+          }
+          _aiProbeError = "";
+          return true;
+        } catch (e) {
+          _aiProbeError = e.message || "Network error";
+          return false;
+        }
+      })();
+      return _aiProbePromise;
+    }
+
+    // Call before any AI-dependent feature — shows a toast if the probe already failed.
+    // Returns true if the connection is good (or still pending), false if known-broken.
+    async function _ensureAiReady() {
+      const ok = await _runAiProbe();
+      if (!ok) {
+        showToast(`⚠️ AI connection failed: ${_aiProbeError}. Check Settings → AI.`);
+      }
+      return ok;
+    }
 
     async function claudeMessages(body, opts) {
       opts = opts || {};
@@ -2491,9 +2533,14 @@ Return ONLY valid JSON — no prose:
         ${dataUrl ? `<img class="preview-img" src="${dataUrl}" alt="Captured" />` : ""}
         <div class="card">
           <h3 style="margin:0 0 4px;">Confirm this item</h3>
-          <p id="closeUpStatus" style="color:var(--muted); font-size:12px; margin:0 0 12px;">
-            ${hasKey ? "🔍 Claude is reading the label…" : "Add a Claude API key in Settings to auto-identify. For now, type the details."}
-          </p>
+          <div id="closeUpStatus" style="margin:0 0 12px;">
+            ${hasKey ? `
+              <div class="ai-analyzing-state" style="padding:10px 0 4px;">
+                <div class="ai-spinner"></div>
+                <div class="ai-label">Analysing photo with AI…</div>
+                <div class="ai-sub">Reading the label — this takes a few seconds</div>
+              </div>` : `<p style="color:var(--muted); font-size:12px; margin:0;">Fill in the details below manually.</p>`}
+          </div>
           <div class="field">
             <label>Name</label>
             <input id="cuName" type="text" placeholder="e.g. marinara sauce" />
@@ -2578,11 +2625,30 @@ Return ONLY valid JSON — no prose:
       document.getElementById("cuSave").addEventListener("click", saveCloseUpItem);
 
       if (hasKey) {
-        analyzeOneItemWithClaude(dataUrl).then((info) => {
-          applyCloseUpInfo(info, "Claude");
-          document.getElementById("closeUpStatus").textContent = "✓ Claude filled in what it could read. Fix anything wrong, then save.";
-        }).catch((err) => {
-          document.getElementById("closeUpStatus").innerHTML = `<span style="color:var(--red);">Scan failed: ${escapeHtml(apiError(err))}.</span> Fill in manually below.`;
+        _ensureAiReady().then((ready) => {
+          if (!ready) {
+            document.getElementById("closeUpStatus").innerHTML = `
+              <div style="background:var(--amber-light,#fff8e1); border-radius:10px; padding:8px 12px; font-size:13px;">
+                <span style="font-weight:700; color:var(--amber,#f59e0b);">⚠️ AI connection failed.</span>
+                <span style="color:var(--muted);"> ${escapeHtml(_aiProbeError)} — fill in the details manually below.</span>
+              </div>`;
+            return;
+          }
+          analyzeOneItemWithClaude(dataUrl).then((info) => {
+            applyCloseUpInfo(info, "Claude");
+            document.getElementById("closeUpStatus").innerHTML = `
+              <div style="display:flex; align-items:center; gap:8px; background:var(--green-light); color:var(--green-dark);
+                border-radius:10px; padding:8px 12px; font-size:13px; font-weight:600;">
+                ✅ Photo analysed — check the fields below and save.
+              </div>`;
+          }).catch((err) => {
+            document.getElementById("closeUpStatus").innerHTML = `
+              <div style="background:var(--red-light); border-radius:10px; padding:8px 12px; font-size:13px;">
+                <span style="font-weight:700; color:var(--red);">❌ Analysis failed.</span>
+                <span style="color:var(--red);"> ${escapeHtml(apiError(err))}.</span>
+                <span style="color:var(--muted);"> Fill in the fields manually below.</span>
+              </div>`;
+          });
         });
       }
     }
@@ -4029,7 +4095,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 16:14")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 16:20")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
@@ -4864,6 +4930,9 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
 
     // Auto-fetch product photos for any inventory items missing one (runs once at startup, then quietly in the background)
     setTimeout(() => { fillMissingProductImages(); }, 1500);
+
+    // Silently probe AI connection at startup — result is cached for the session
+    setTimeout(() => { _runAiProbe(); }, 3000);
 
     // Service worker registration (offline support + push notifications)
     if ("serviceWorker" in navigator) {
