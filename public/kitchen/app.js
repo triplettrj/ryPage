@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 11:02";
+    const BUILD_DATE    = "Aug 05, 2026 11:11";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -1925,13 +1925,11 @@ Return ONLY valid JSON — no prose:
 
     function bsRedrawLabeledPhoto() {
       const photoEl = document.getElementById("bsStep3Photo");
-      if (!photoEl || !bsPhotoUrl) return;
-      if (bsZoneData.length) {
-        const activeZones = bsZoneData.filter(zd => bsZones.includes(zd.name));
-        photoEl.innerHTML = buildLabeledPhotoHtml(bsPhotoUrl, activeZones);
-      } else {
-        photoEl.innerHTML = `<img src="${bsPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; object-fit:cover;" alt="Your photo" />`;
-      }
+      if (!photoEl || !bsPhotoUrl || !bsZones.length) return;
+      const zonesForDisplay = bsZoneData.length
+        ? bsZoneData.filter(zd => bsZones.includes(zd.name))
+        : bsZones.map((name, i) => ({ name, y: i / bsZones.length, h: 1 / bsZones.length }));
+      photoEl.innerHTML = buildLabeledPhotoHtml(bsPhotoUrl, zonesForDisplay);
     }
 
     function bsShowStep(n) {
@@ -2058,8 +2056,12 @@ Return ONLY valid JSON — no prose:
 
       // Show labeled photo overlay above the zone list
       const photoEl = document.getElementById("bsStep3Photo");
-      if (bsPhotoUrl && bsZoneData.length) {
-        photoEl.innerHTML = buildLabeledPhotoHtml(bsPhotoUrl, bsZoneData);
+      if (bsPhotoUrl && bsZones.length) {
+        // Use AI coords if we have them, otherwise distribute zones evenly top→bottom
+        const zonesForDisplay = bsZoneData.length
+          ? bsZoneData
+          : bsZones.map((name, i) => ({ name, y: i / bsZones.length, h: 1 / bsZones.length }));
+        photoEl.innerHTML = buildLabeledPhotoHtml(bsPhotoUrl, zonesForDisplay);
       } else if (bsPhotoUrl) {
         photoEl.innerHTML = `<img src="${bsPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; object-fit:cover;" alt="Your photo" />`;
       } else {
@@ -4014,7 +4016,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 11:02")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 11:11")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
