@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 11:51";
+    const BUILD_DATE    = "Aug 05, 2026 15:56";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -712,7 +712,8 @@
     // Gemini calls are translated internally so nothing else needs to change.
     function hasClaude() {
       const s = state.settings;
-      return !!((s.proxyUrl && s.accessCode) || s.claudeKey || s.geminiKey);
+      // Always true — built-in Gemini key is the fallback when nothing is configured
+      return !!((s.proxyUrl && s.accessCode) || s.claudeKey || s.geminiKey || DEFAULT_GEMINI_KEY);
     }
 
     // Translate a Claude-format request body to Gemini format
@@ -774,6 +775,9 @@
       });
     }
 
+    // Built-in fallback key so the app works out of the box (free-tier Gemini)
+    const DEFAULT_GEMINI_KEY = "AIzaSyDZml0zR6Vw5Jwnz-yogiWoVrgDzlS8qw8";
+
     async function claudeMessages(body, opts) {
       opts = opts || {};
       const s = state.settings;
@@ -785,6 +789,11 @@
       // Gemini path (only if no Claude proxy or direct key configured)
       if (geminiKey && !directKey && !(proxyUrl && access)) {
         return await _callGemini(body, geminiKey, opts);
+      }
+
+      // Fall back to built-in Gemini key when nothing else is configured
+      if (!directKey && !(proxyUrl && access) && !geminiKey) {
+        return await _callGemini(body, DEFAULT_GEMINI_KEY, opts);
       }
 
       let url, headers;
@@ -4016,7 +4025,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 11:51")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 15:56")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
