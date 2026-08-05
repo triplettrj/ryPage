@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 16:20";
+    const BUILD_DATE    = "Aug 05, 2026 16:31";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -751,10 +751,16 @@
     // Call Gemini and return a Response-like object in Claude format
     async function _callGemini(body, apiKey, opts) {
       const gemBody = _claudeToGemini(body);
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+      // AQ. prefix = OAuth bearer token; AIza = plain API key
+      const isBearer = apiKey.startsWith("AQ.");
+      const url = isBearer
+        ? "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const headers = { "content-type": "application/json" };
+      if (isBearer) headers["Authorization"] = `Bearer ${apiKey}`;
       const res = await fetchWithTimeout(url, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers,
         body: JSON.stringify(gemBody),
         timeout: opts.timeout,
       });
@@ -776,7 +782,7 @@
     }
 
     // Built-in fallback key so the app works out of the box (free-tier Gemini)
-    const DEFAULT_GEMINI_KEY = "AIzaSyDZml0zR6Vw5Jwnz-yogiWoVrgDzlS8qw8";
+    const DEFAULT_GEMINI_KEY = "REMOVED";
 
     // ---- AI connection probe (runs once per session) ----
     // Tests the active key with a tiny request so failures surface early.
@@ -789,10 +795,15 @@
         try {
           const s = state.settings;
           const geminiKey = (s.geminiKey || "").trim() || DEFAULT_GEMINI_KEY;
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(geminiKey)}`;
-          const res = await fetchWithTimeout(url, {
+          const isBearer = geminiKey.startsWith("AQ.");
+          const probeUrl = isBearer
+            ? "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+            : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(geminiKey)}`;
+          const probeHeaders = { "content-type": "application/json" };
+          if (isBearer) probeHeaders["Authorization"] = `Bearer ${geminiKey}`;
+          const res = await fetchWithTimeout(probeUrl, {
             method: "POST",
-            headers: { "content-type": "application/json" },
+            headers: probeHeaders,
             body: JSON.stringify({ contents: [{ parts: [{ text: "Reply with the single digit 1." }] }] }),
           }, 8000);
           if (!res.ok) {
@@ -4095,7 +4106,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 16:20")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 16:31")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
