@@ -166,6 +166,14 @@ const APPS = [
 
 const SITES = [
   {
+    href: `${BASE}/wolf-acupuncture/`,
+    emoji: '🌲',
+    name: 'Wolf Acupuncture — Concept',
+    desc: 'Acupuncture and craniosacral therapy in Portland, OR. A concept redesign built live in a few minutes.',
+    accent: 'linear-gradient(90deg, #47533B, #6E7C5A, #B99A5E)',
+    tag: { bg: '#EDEFE0', color: '#3E4634', label: 'Health & Wellness' },
+  },
+  {
     href: `${BASE}/hungry-boy-thai-cafe/`,
     emoji: '🍜',
     name: 'Hungry Boy Thai Cafe',
