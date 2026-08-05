@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 11:47";
+    const BUILD_DATE    = "Aug 05, 2026 11:51";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -4016,7 +4016,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 11:47")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 11:51")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
@@ -4349,14 +4349,28 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       {
         emoji: "🤖",
         title: "Connect AI",
-        bodyHtml: `<p style="margin:0 0 14px; font-size:14px;">AI powers photo scanning, shelf mapping, and the kitchen assistant. Add a free Gemini key to get started.</p>
-          <label style="font-size:12px; font-weight:700; color:var(--muted); display:block; margin-bottom:6px; letter-spacing:0.03em; text-transform:uppercase;">Google Gemini API key &nbsp;<span style="background:var(--green-light);color:var(--green-dark);border-radius:4px;padding:1px 6px;font-weight:700;text-transform:none;letter-spacing:0;">FREE</span></label>
-          <input type="password" id="obGeminiKey" placeholder="AIza…" autocomplete="off" spellcheck="false"
-            style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:monospace; font-size:14px; box-sizing:border-box;" />
-          <div style="font-size:11px; color:var(--muted); margin-top:5px;">Get one free at <strong>aistudio.google.com</strong> → "Get API key". No credit card.</div>
-          <div id="obAiStatus" style="font-size:12px; min-height:18px; margin-top:8px;"></div>`,
-        actionLabel: "Save & continue →",
-        actionFn: null,  // handled specially in renderOnboard
+        bodyHtml: `<p style="margin:0 0 12px; font-size:14px; color:var(--muted);">Powers photo scanning, shelf mapping, and the kitchen assistant.</p>
+
+          <div style="margin-bottom:10px;">
+            <label style="font-size:11px; font-weight:700; color:var(--muted); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">
+              Google Gemini key <span style="background:var(--green-light);color:var(--green-dark);border-radius:4px;padding:1px 6px;text-transform:none;letter-spacing:0;">FREE</span>
+            </label>
+            <input type="password" id="obGeminiKey" placeholder="AIza…" autocomplete="off" spellcheck="false"
+              style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:monospace; font-size:13px; box-sizing:border-box;" />
+            <div style="font-size:11px; color:var(--muted); margin-top:3px;">Free at <strong>aistudio.google.com</strong> → Get API key</div>
+          </div>
+
+          <div style="margin-bottom:10px; padding-top:10px; border-top:1px solid var(--border);">
+            <label style="font-size:11px; font-weight:700; color:var(--muted); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">Access code</label>
+            <input type="password" id="obAccessCode" placeholder="e.g. iamacoolfriend" autocomplete="off" spellcheck="false"
+              style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:monospace; font-size:13px; box-sizing:border-box;" />
+            <div style="font-size:11px; color:var(--muted); margin-top:3px;">If someone shared a proxy access code with you</div>
+          </div>
+
+          <button id="obTestAi" class="btn btn-secondary" style="width:100%; margin-bottom:6px;">Test connection</button>
+          <div id="obAiStatus" style="font-size:13px; min-height:18px; text-align:center;"></div>`,
+        actionLabel: "Continue →",
+        actionFn: null,
         showSkip: true,
         showSkipAll: false,
       },
@@ -4398,10 +4412,13 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         actionBtn.textContent = s.actionLabel;
         actionBtn.style.display = "";
         actionBtn.onclick = () => {
-          // AI screen — save key then advance
+          // AI screen — save both fields before advancing
           if (onboardStep === 1) {
-            const key = (document.getElementById("obGeminiKey")?.value || "").trim();
-            if (key) { state.settings.geminiKey = key; saveState(); }
+            const gk = (document.getElementById("obGeminiKey")?.value || "").trim();
+            const ac = (document.getElementById("obAccessCode")?.value || "").trim();
+            if (gk) { state.settings.geminiKey  = gk; }
+            if (ac) { state.settings.accessCode = ac; }
+            if (gk || ac) saveState();
           }
           if (s.actionFn) {
             document.getElementById("onboard").classList.remove("show");
@@ -4419,18 +4436,48 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         actionBtn.style.display = "none";
       }
 
-      // Wire up AI key input live-save + status
-      const keyInput = document.getElementById("obGeminiKey");
-      if (keyInput) {
-        // Pre-fill if already saved
-        if (state.settings.geminiKey) keyInput.value = state.settings.geminiKey;
-        keyInput.oninput = () => {
-          const v = keyInput.value.trim();
-          state.settings.geminiKey = v;
-          saveState();
-          const st = document.getElementById("obAiStatus");
-          if (st) st.textContent = v ? "✅ Key saved — tap Save & continue" : "";
+      // Wire up AI screen inputs + test button
+      const obGemini = document.getElementById("obGeminiKey");
+      const obAccess = document.getElementById("obAccessCode");
+      const obTestBtn = document.getElementById("obTestAi");
+      if (obGemini) {
+        if (state.settings.geminiKey)   obGemini.value = state.settings.geminiKey;
+        if (state.settings.accessCode)  obAccess.value = state.settings.accessCode;
+        // Save as user types
+        obGemini.oninput = () => { state.settings.geminiKey = obGemini.value.trim(); saveState(); updateObTestLabel(); };
+        obAccess.oninput = () => { state.settings.accessCode = obAccess.value.trim(); saveState(); updateObTestLabel(); };
+        updateObTestLabel();
+      }
+      if (obTestBtn) {
+        obTestBtn.onclick = async () => {
+          const status = document.getElementById("obAiStatus");
+          if (!hasClaude()) { status.style.color = "var(--amber)"; status.textContent = "⚠️ Enter a key or access code first."; return; }
+          status.style.color = "var(--muted)"; status.textContent = "Testing…";
+          obTestBtn.disabled = true;
+          try {
+            const res = await claudeMessages({ model: "claude-haiku-4-5-20251001", max_tokens: 10, messages: [{ role:"user", content:"Say OK" }] });
+            if (res.ok) {
+              const via = state.settings.accessCode ? "access code" : state.settings.geminiKey ? "Gemini" : "Claude key";
+              status.style.color = "var(--green)"; status.textContent = `✅ Connected via ${via}!`;
+              haptic(10);
+            } else {
+              const j = await res.json().catch(() => ({}));
+              status.style.color = "var(--red)"; status.textContent = `❌ ${j.error?.message || "HTTP " + res.status}`;
+            }
+          } catch(err) {
+            status.style.color = "var(--red)"; status.textContent = `❌ ${apiError(err)}`;
+          }
+          obTestBtn.disabled = false;
         };
+      }
+
+      function updateObTestLabel() {
+        if (!obTestBtn) return;
+        const gk = (obGemini?.value || "").trim();
+        const ac = (obAccess?.value || "").trim();
+        if (ac)      obTestBtn.textContent = "Test access code";
+        else if (gk) obTestBtn.textContent = "Test Gemini key";
+        else         obTestBtn.textContent = "Test connection";
       }
     }
 
