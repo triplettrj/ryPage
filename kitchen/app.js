@@ -1,6 +1,6 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 04, 2026 11:59";
-    const BUILD_VERSION = "7068975";
+    const BUILD_DATE    = "Aug 05, 2026 11:02";
+    const BUILD_VERSION = "c035f8b";
 
     // ============================================================
     // RECIPE LIBRARY (16 recipes with full steps + tags)
@@ -1874,87 +1874,63 @@ Return ONLY valid JSON — no prose:
 
     // ── Build Storage modal — 3-step wizard ──────────────────────
     // Wizard state
-    let bsPending        = null; // { name, icon, type } — set in step 1
-    let bsZones          = [];   // string[] — zone names for step 3
-    let bsZoneData       = [];   // [{name, y, h}] — positions returned by AI (fractions 0-1)
-    let bsPhotoUrl       = null; // original dataUrl of the photo taken in step 2
-    let bsLabeledPhotoUrl = null; // canvas-rendered photo with zone labels drawn on it
+    let bsPending  = null; // { name, icon, type } — set in step 1
+    let bsZones    = [];   // string[] — zone names for step 3
+    let bsZoneData = [];   // [{name, y, h}] — positions returned by AI (fractions 0-1)
+    let bsPhotoUrl = null; // original dataUrl of the photo taken in step 2
 
-    // ── Draw zone labels on top of the original photo ─────────────
+    // ── Render zone labels as CSS overlays on the original photo ────
+    // CSS approach: no canvas needed, works perfectly on iOS WebView
     const BS_ZONE_COLORS = ["#FF6B6B","#4ECDC4","#45B7D1","#FFA07A","#A78BFA","#34D399","#FBBF24","#F472B6"];
 
-    async function drawLabeledPhoto(dataUrl, zones) {
-      return new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width  = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0);
+    function buildLabeledPhotoHtml(photoUrl, zones) {
+      if (!photoUrl || !zones.length) return "";
+      const overlays = zones.map((zone, i) => {
+        const color = BS_ZONE_COLORS[i % BS_ZONE_COLORS.length];
+        const top   = ((zone.y || 0) * 100).toFixed(2);
+        const h     = ((zone.h || (1 / Math.max(zones.length, 1))) * 100).toFixed(2);
+        return `
+          <div style="
+            position:absolute; left:0; right:0;
+            top:${top}%; height:${h}%;
+            background:${color}28;
+            border-top:2px solid ${color};
+            border-bottom:2px solid ${color};
+            box-sizing:border-box;
+          ">
+            <span style="
+              display:inline-block;
+              margin:6px 0 0 10px;
+              background:${color}EE;
+              color:#fff;
+              font-size:13px;
+              font-weight:700;
+              padding:3px 10px;
+              border-radius:20px;
+              letter-spacing:0.01em;
+              white-space:nowrap;
+              max-width:calc(100% - 20px);
+              overflow:hidden;
+              text-overflow:ellipsis;
+            ">${escapeHtml(zone.name)}</span>
+          </div>`;
+      }).join("");
 
-          zones.forEach((zone, i) => {
-            const color  = BS_ZONE_COLORS[i % BS_ZONE_COLORS.length];
-            const iy     = (zone.y || 0) * img.height;
-            const ih     = (zone.h || (1 / Math.max(zones.length, 1))) * img.height;
-
-            // Semi-transparent fill
-            ctx.fillStyle = color + "33";
-            ctx.fillRect(0, iy, img.width, ih);
-
-            // Solid border line
-            ctx.strokeStyle = color;
-            ctx.lineWidth   = Math.max(2, img.width / 200);
-            ctx.strokeRect(ctx.lineWidth / 2, iy + ctx.lineWidth / 2, img.width - ctx.lineWidth, ih - ctx.lineWidth);
-
-            // Label pill
-            const fontSize = Math.max(14, Math.min(32, img.width / 18));
-            ctx.font = `700 ${fontSize}px -apple-system, system-ui, sans-serif`;
-            const label  = zone.name;
-            const textW  = ctx.measureText(label).width;
-            const padX   = fontSize * 0.6;
-            const padY   = fontSize * 0.35;
-            const pillW  = textW + padX * 2;
-            const pillH  = fontSize + padY * 2;
-            const pillX  = 14;
-            const pillY  = iy + 12;
-            const r      = pillH / 2;
-
-            // Pill background
-            ctx.fillStyle = color + "EE";
-            ctx.beginPath();
-            ctx.moveTo(pillX + r, pillY);
-            ctx.lineTo(pillX + pillW - r, pillY);
-            ctx.arcTo(pillX + pillW, pillY, pillX + pillW, pillY + r, r);
-            ctx.lineTo(pillX + pillW, pillY + pillH - r);
-            ctx.arcTo(pillX + pillW, pillY + pillH, pillX + pillW - r, pillY + pillH, r);
-            ctx.lineTo(pillX + r, pillY + pillH);
-            ctx.arcTo(pillX, pillY + pillH, pillX, pillY + pillH - r, r);
-            ctx.lineTo(pillX, pillY + r);
-            ctx.arcTo(pillX, pillY, pillX + r, pillY, r);
-            ctx.closePath();
-            ctx.fill();
-
-            // Pill text
-            ctx.fillStyle = "#FFFFFF";
-            ctx.fillText(label, pillX + padX, pillY + padY + fontSize * 0.85);
-          });
-
-          resolve(canvas.toDataURL("image/jpeg", 0.92));
-        };
-        img.onerror = () => resolve(dataUrl); // fallback: return original
-        img.src = dataUrl;
-      });
+      return `
+        <div style="position:relative; width:100%; border-radius:12px; overflow:hidden; margin-bottom:14px; line-height:0;">
+          <img src="${photoUrl}" style="width:100%; display:block; object-fit:cover;" alt="Storage photo" />
+          ${overlays}
+        </div>`;
     }
 
-    async function bsRedrawLabeledPhoto() {
-      if (!bsPhotoUrl || !bsZoneData.length) return;
-      // Filter to only currently active zones
-      const activeZones = bsZoneData.filter(zd => bsZones.includes(zd.name));
-      bsLabeledPhotoUrl = await drawLabeledPhoto(bsPhotoUrl, activeZones);
+    function bsRedrawLabeledPhoto() {
       const photoEl = document.getElementById("bsStep3Photo");
-      if (photoEl) {
-        photoEl.innerHTML = `<img src="${bsLabeledPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; object-fit:contain;" alt="Labeled zones" />`;
+      if (!photoEl || !bsPhotoUrl) return;
+      if (bsZoneData.length) {
+        const activeZones = bsZoneData.filter(zd => bsZones.includes(zd.name));
+        photoEl.innerHTML = buildLabeledPhotoHtml(bsPhotoUrl, activeZones);
+      } else {
+        photoEl.innerHTML = `<img src="${bsPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; object-fit:cover;" alt="Your photo" />`;
       }
     }
 
@@ -1969,7 +1945,6 @@ Return ONLY valid JSON — no prose:
       bsZones = [];
       bsZoneData = [];
       bsPhotoUrl = null;
-      bsLabeledPhotoUrl = null;
       document.getElementById("bsPhotoPreview").innerHTML = "";
       document.getElementById("bsCustomZone").value = "";
       document.getElementById("customStorageName").value = "";
@@ -2055,14 +2030,6 @@ Return ONLY valid JSON — no prose:
             if (aiZones.length) {
               bsZoneData = aiZones;
               bsZones = aiZones.map(z => z.name);
-              // Generate labeled photo — zones with real coordinates get overlays
-              const hasCoords = aiZones.some(z => z.y !== null && z.h > 0);
-              if (hasCoords) {
-                analyzeEl.innerHTML = `
-                  <div class="ai-spinner"></div>
-                  <div class="ai-label">Drawing zone labels…</div>`;
-                bsLabeledPhotoUrl = await drawLabeledPhoto(dataUrl, aiZones);
-              }
             }
           } catch (err) {
             console.warn("Layout AI failed, using presets:", err.message);
@@ -2089,12 +2056,12 @@ Return ONLY valid JSON — no prose:
         ? "Claude identified these zones from your photo. Tap × to remove any, or add your own."
         : "These zones come from a preset. Remove any that don't apply, or add your own.";
 
-      // Show labeled photo (or plain photo fallback) above the zone list
+      // Show labeled photo overlay above the zone list
       const photoEl = document.getElementById("bsStep3Photo");
-      if (bsLabeledPhotoUrl) {
-        photoEl.innerHTML = `<img src="${bsLabeledPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; object-fit:contain;" alt="Labeled zones" />`;
+      if (bsPhotoUrl && bsZoneData.length) {
+        photoEl.innerHTML = buildLabeledPhotoHtml(bsPhotoUrl, bsZoneData);
       } else if (bsPhotoUrl) {
-        photoEl.innerHTML = `<img src="${bsPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; max-height:220px; object-fit:cover;" alt="Your photo" />`;
+        photoEl.innerHTML = `<img src="${bsPhotoUrl}" style="width:100%; border-radius:12px; margin-bottom:14px; object-fit:cover;" alt="Your photo" />`;
       } else {
         photoEl.innerHTML = "";
       }
@@ -4046,8 +4013,8 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       // Build info
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
-      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "7068975") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 04, 2026 11:59")
+      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 11:02")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
