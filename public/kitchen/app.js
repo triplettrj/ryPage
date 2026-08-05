@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 11:11";
+    const BUILD_DATE    = "Aug 05, 2026 11:41";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -4016,7 +4016,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 11:11")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 11:41")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
@@ -4059,24 +4059,49 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       document.getElementById("setRegion")?.addEventListener("change", e => {
         state.settings.region = e.target.value; saveState();
       });
+      // ── Live test-button label ────────────────────────────────────
+      function updateTestBtnLabel() {
+        const k  = (document.getElementById("setClaudeKey")?.value  || "").trim();
+        const pu = (document.getElementById("setProxyUrl")?.value   || "").trim();
+        const ac = (document.getElementById("setAccessCode")?.value || "").trim();
+        const gk = (document.getElementById("setGeminiKey")?.value  || "").trim();
+        const btn = document.getElementById("testClaudeKey");
+        if (!btn) return;
+        // Mirror claudeMessages() priority: proxy > direct key > gemini
+        if (pu && ac)      { btn.textContent = "Test Claude proxy"; }
+        else if (k)        { btn.textContent = "Test Claude API key"; }
+        else if (gk)       { btn.textContent = "Test Gemini key"; }
+        else               { btn.textContent = "Test connection"; }
+      }
+
+      document.getElementById("setClaudeKey").addEventListener("input", updateTestBtnLabel);
       document.getElementById("setClaudeKey").addEventListener("change", e => {
         state.settings.claudeKey = e.target.value.trim();
         saveState();
         document.getElementById("claudeKeyStatus").textContent = state.settings.claudeKey ? "Claude key saved." : "";
+        updateTestBtnLabel();
       });
+      document.getElementById("setProxyUrl")?.addEventListener("input", updateTestBtnLabel);
       document.getElementById("setProxyUrl")?.addEventListener("change", e => {
         state.settings.proxyUrl = e.target.value.trim();
         saveState();
+        updateTestBtnLabel();
       });
+      document.getElementById("setAccessCode")?.addEventListener("input", updateTestBtnLabel);
       document.getElementById("setAccessCode")?.addEventListener("change", e => {
         state.settings.accessCode = e.target.value.trim();
         saveState();
+        updateTestBtnLabel();
       });
+      document.getElementById("setGeminiKey")?.addEventListener("input", updateTestBtnLabel);
       document.getElementById("setGeminiKey")?.addEventListener("change", e => {
         state.settings.geminiKey = e.target.value.trim();
         saveState();
         document.getElementById("claudeKeyStatus").textContent = state.settings.geminiKey ? "Gemini key saved." : "";
+        updateTestBtnLabel();
       });
+      // Set label on page load based on saved values
+      updateTestBtnLabel();
       document.getElementById("setAnyListEmail").addEventListener("change", e => {
         state.settings.anyListEmail = e.target.value.trim();
         saveState();
@@ -4102,8 +4127,8 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
             messages: [{ role: "user", content: "Say OK" }],
           });
           if (res.ok) {
-            const via = (pu && ac) ? "Claude proxy" : k ? "Claude API key" : "Gemini (free)";
-            status.textContent = `✅ Working via ${via}`;
+            const via = (pu && ac) ? "Claude proxy ✅" : k ? "Claude API key ✅" : "Gemini ✅";
+            status.textContent = `Connected — ${via}`;
             haptic(10);
           } else {
             let msg = `HTTP ${res.status}`;
