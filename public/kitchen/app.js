@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 11:41";
+    const BUILD_DATE    = "Aug 05, 2026 11:47";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -4016,7 +4016,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 11:41")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 11:47")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
@@ -4335,63 +4335,83 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       {
         emoji: "🍳",
         title: "Welcome to My Kitchen",
-        bodyHtml: `<p>Track what's in your fridge and pantry, see what you can cook tonight, and never wonder what's for dinner.</p>
+        bodyHtml: `<p style="margin:0 0 14px;">Track what's in your fridge and pantry, see what you can cook tonight, and never wonder what's for dinner.</p>
           <div class="onboard-steps">
             <div class="onboard-step"><div class="onboard-step-num">1</div><div class="onboard-step-text"><strong>Map your storage</strong>Add your fridge, pantry, and freezer so items have a home.</div></div>
             <div class="onboard-step"><div class="onboard-step-num">2</div><div class="onboard-step-text"><strong>Scan your items</strong>Barcode scan a shelf in about 60 seconds.</div></div>
             <div class="onboard-step"><div class="onboard-step-num">3</div><div class="onboard-step-text"><strong>See what you can cook</strong>The app matches your inventory to recipes automatically.</div></div>
           </div>`,
         actionLabel: "Let's set up my kitchen →",
-        actionFn: null, // advances to step 2
-        skipLabel: "Skip setup",
+        actionFn: null,
+        showSkip: false,   // no "Skip →" button — action or bail
+        showSkipAll: true, // show "Skip setup entirely" link
+      },
+      {
+        emoji: "🤖",
+        title: "Connect AI",
+        bodyHtml: `<p style="margin:0 0 14px; font-size:14px;">AI powers photo scanning, shelf mapping, and the kitchen assistant. Add a free Gemini key to get started.</p>
+          <label style="font-size:12px; font-weight:700; color:var(--muted); display:block; margin-bottom:6px; letter-spacing:0.03em; text-transform:uppercase;">Google Gemini API key &nbsp;<span style="background:var(--green-light);color:var(--green-dark);border-radius:4px;padding:1px 6px;font-weight:700;text-transform:none;letter-spacing:0;">FREE</span></label>
+          <input type="password" id="obGeminiKey" placeholder="AIza…" autocomplete="off" spellcheck="false"
+            style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:monospace; font-size:14px; box-sizing:border-box;" />
+          <div style="font-size:11px; color:var(--muted); margin-top:5px;">Get one free at <strong>aistudio.google.com</strong> → "Get API key". No credit card.</div>
+          <div id="obAiStatus" style="font-size:12px; min-height:18px; margin-top:8px;"></div>`,
+        actionLabel: "Save & continue →",
+        actionFn: null,  // handled specially in renderOnboard
+        showSkip: true,
+        showSkipAll: false,
       },
       {
         emoji: "🏗️",
         title: "Add your storage spaces",
-        bodyHtml: `<p>Tell us what you have — fridge, pantry, freezer, counter. We'll map the shelves and zones so every item has a specific home.</p>
-          <p style="font-size:12px; color:var(--green); font-weight:600;">Tap the button below to add your first storage space.</p>`,
+        bodyHtml: `<p style="margin:0 0 10px;">Tell us what you have — fridge, pantry, freezer, counter. We'll map the shelves and zones so every item has a home.</p>
+          <p style="font-size:12px; color:var(--green); font-weight:600; margin:0;">Tap the button below to add your first storage space.</p>`,
         actionLabel: "🏗️ Add storage space",
         actionFn: () => { openBuildStorageModal(); },
-        skipLabel: "Skip →",
-      },
-      {
-        emoji: "📷",
-        title: "Scan your first items",
-        bodyHtml: `<p>Point your camera at any barcode to add it instantly. You can scan an entire shelf at once — the app looks up each item automatically.</p>
-          <p style="font-size:12px; color:var(--muted);">No barcodes handy? Type items manually on the Inventory tab.</p>`,
-        actionLabel: "📷 Open scanner",
-        actionFn: () => { setView("scan"); document.getElementById("scanBarcodeBtn")?.click(); },
-        skipLabel: "Done →",
+        showSkip: true,
+        showSkipAll: false,
       },
     ];
 
     function renderOnboard() {
       const s = ONBOARD_SCREENS[onboardStep];
+      const isLast = onboardStep === ONBOARD_SCREENS.length - 1;
+
       document.getElementById("obEmoji").textContent = s.emoji;
       document.getElementById("obTitle").textContent = s.title;
       document.getElementById("obBody").innerHTML = s.bodyHtml;
-      document.getElementById("obSkip").textContent = s.skipLabel || "Skip";
 
+      // Dots
+      const dots = document.querySelectorAll(".onboard-dots span");
+      dots.forEach((d, i) => d.classList.toggle("active", i === onboardStep));
+
+      // Skip →  (advances one step)
+      const nextBtn = document.getElementById("obNext");
+      nextBtn.style.display = s.showSkip ? "" : "none";
+      nextBtn.textContent = isLast ? "Done" : "Skip →";
+
+      // Skip setup entirely (exits onboarding)
+      document.getElementById("obSkip").style.display = s.showSkipAll ? "" : "none";
+
+      // Primary action button
       const actionBtn = document.getElementById("obAction");
       if (s.actionLabel) {
         actionBtn.textContent = s.actionLabel;
         actionBtn.style.display = "";
         actionBtn.onclick = () => {
+          // AI screen — save key then advance
+          if (onboardStep === 1) {
+            const key = (document.getElementById("obGeminiKey")?.value || "").trim();
+            if (key) { state.settings.geminiKey = key; saveState(); }
+          }
           if (s.actionFn) {
             document.getElementById("onboard").classList.remove("show");
             s.actionFn();
-            // If it's the last step, finish. Otherwise store progress.
-            if (onboardStep === ONBOARD_SCREENS.length - 1) {
-              finishOnboard();
-            } else {
-              // Advance so next time onboard shows it's on the next step
-              onboardStep++;
-              state.settings.onboardStep = onboardStep;
-              saveState();
-            }
+            if (isLast) { finishOnboard(); }
+            else { onboardStep++; state.settings.onboardStep = onboardStep; saveState(); }
           } else {
-            // No actionFn — just advance
             onboardStep++;
+            state.settings.onboardStep = onboardStep;
+            saveState();
             renderOnboard();
           }
         };
@@ -4399,11 +4419,19 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
         actionBtn.style.display = "none";
       }
 
-      // "Skip →" advances one step (or finishes on last)
-      document.getElementById("obNext").textContent = onboardStep === ONBOARD_SCREENS.length - 1 ? "Done" : "Skip →";
-
-      const dots = document.querySelectorAll(".onboard-dots span");
-      dots.forEach((d, i) => d.classList.toggle("active", i === onboardStep));
+      // Wire up AI key input live-save + status
+      const keyInput = document.getElementById("obGeminiKey");
+      if (keyInput) {
+        // Pre-fill if already saved
+        if (state.settings.geminiKey) keyInput.value = state.settings.geminiKey;
+        keyInput.oninput = () => {
+          const v = keyInput.value.trim();
+          state.settings.geminiKey = v;
+          saveState();
+          const st = document.getElementById("obAiStatus");
+          if (st) st.textContent = v ? "✅ Key saved — tap Save & continue" : "";
+        };
+      }
     }
 
     function finishOnboard() {
