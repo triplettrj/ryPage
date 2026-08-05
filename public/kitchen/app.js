@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 16:36";
+    const BUILD_DATE    = "Aug 05, 2026 16:40";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -4140,7 +4140,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 16:36")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 16:40")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
