@@ -77,22 +77,6 @@ const styles = `
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .ry-status {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 0.76rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
-    color: #6EE7B7; background: rgba(16,185,129,0.1);
-    border: 1px solid rgba(16,185,129,0.28);
-    padding: 6px 14px; border-radius: 999px; margin-bottom: 26px;
-  }
-  .ry-dot {
-    width: 6px; height: 6px; border-radius: 50%; background: #34D399;
-    box-shadow: 0 0 0 0 rgba(52,211,153,0.65); animation: pulse 2.2s infinite;
-  }
-  @keyframes pulse {
-    70% { box-shadow: 0 0 0 9px rgba(52,211,153,0); }
-    100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
-  }
-
   .ry-hero h1 {
     font-size: clamp(2.9rem, 9vw, 5.6rem);
     font-weight: 800; letter-spacing: -0.045em; line-height: 0.96;
@@ -443,24 +427,20 @@ const LandingPage = () => {
             <div className="ry-avatar-ring">
               <img src={`${BASE}/about-photo-sm.jpg`} alt="Ryan Triplett" />
             </div>
-            <div className="ry-status">
-              <span className="ry-dot" />
-              Available for work
-            </div>
             <h1>Ryan Triplett</h1>
             <p className="ry-tag">
-              I build <strong>websites and apps</strong> for local businesses in
-              Orange County — designed, built, and live in a fraction of the
-              usual time.
+              A playground for <strong>sites and apps</strong> I build for the
+              fun of it — spas, taco caterers, plumbers, donut shops, and
+              whatever else sounds good that week.
             </p>
             <div className="ry-stats">
               <div className="ry-stat">
                 <b>{TOTAL_SITES}</b>
-                <span>Sites live</span>
+                <span>Sites built</span>
               </div>
               <div className="ry-stat">
                 <b>{APPS.length}</b>
-                <span>Apps shipped</span>
+                <span>Apps built</span>
               </div>
               <div className="ry-stat">
                 <b>OC</b>
