@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 15:56";
+    const BUILD_DATE    = "Aug 05, 2026 16:14";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -4014,7 +4014,11 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       document.getElementById("claudeKeyStatus").textContent =
         (state.settings.proxyUrl && state.settings.accessCode) ? "Using Claude proxy." :
         state.settings.claudeKey ? "Using Claude API key." :
-        state.settings.geminiKey ? "Using Google Gemini (free)." : "";
+        state.settings.geminiKey ? "Using your Gemini key." :
+        "Using built-in Gemini key.";
+      // Show/hide the built-in key badge
+      const builtInNote = document.getElementById("geminiBuiltInNote");
+      if (builtInNote) builtInNote.style.display = state.settings.geminiKey ? "none" : "inline-flex";
       document.getElementById("setAnyListEmail").value = state.settings.anyListEmail || "";
       document.getElementById("prefAllergies").value = p.allergies || "";
       document.getElementById("prefDietary").value = p.dietary || "";
@@ -4025,7 +4029,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 15:56")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 16:14")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
@@ -4106,7 +4110,10 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       document.getElementById("setGeminiKey")?.addEventListener("change", e => {
         state.settings.geminiKey = e.target.value.trim();
         saveState();
-        document.getElementById("claudeKeyStatus").textContent = state.settings.geminiKey ? "Gemini key saved." : "";
+        const hasOwn = !!state.settings.geminiKey;
+        document.getElementById("claudeKeyStatus").textContent = hasOwn ? "Using your Gemini key." : "Using built-in Gemini key.";
+        const builtInNote = document.getElementById("geminiBuiltInNote");
+        if (builtInNote) builtInNote.style.display = hasOwn ? "none" : "inline-flex";
         updateTestBtnLabel();
       });
       // Set label on page load based on saved values
