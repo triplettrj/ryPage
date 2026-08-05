@@ -622,9 +622,12 @@
           <!-- Option 1: Free — Google Gemini -->
           <div class="label-wrap">
             <div>Google Gemini API key <span style="font-size:11px; background:var(--green-light); color:var(--green-dark); border-radius:4px; padding:1px 6px; font-weight:600;">FREE</span></div>
-            <div class="label-sub">Get a free key at <strong>aistudio.google.com</strong> → "Get API key". No credit card needed. 1,500 requests/day free.</div>
+            <div class="label-sub">
+              <span id="geminiBuiltInNote" style="display:inline-flex; align-items:center; gap:5px; background:var(--green-light); color:var(--green-dark); border-radius:6px; padding:3px 8px; font-weight:600; font-size:11px; margin-bottom:4px;">✅ Built-in key active — AI works out of the box</span>
+              <br>Want to use your own? Get a free key at <strong>aistudio.google.com</strong> → "Get API key". No credit card needed. 1,500 requests/day free.
+            </div>
           </div>
-          <input type="password" id="setGeminiKey" placeholder="AIza..." autocomplete="off" spellcheck="false" style="width:100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: monospace; font-size: 13px;" />
+          <input type="password" id="setGeminiKey" placeholder="Optional — override built-in key" autocomplete="off" spellcheck="false" style="width:100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: monospace; font-size: 13px;" />
 
           <!-- Option 2: Shared proxy (just needs an access code) -->
           <div style="margin-top:14px; border-top:1px solid var(--border); padding-top:14px;">
