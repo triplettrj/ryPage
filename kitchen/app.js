@@ -1,6 +1,6 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 07, 2026 10:20";
-    const BUILD_VERSION = "c8656c2";
+    const BUILD_DATE    = "Aug 07, 2026 12:42";
+    const BUILD_VERSION = "a716927";
 
     // ============================================================
     // RECIPE LIBRARY (16 recipes with full steps + tags)
@@ -1668,15 +1668,18 @@ Return ONLY valid JSON — no prose:
     // Layout is defined first; inventory items live inside it.
     // ============================================================
 
+    // Presets name the storage TYPE only. They deliberately carry no zone
+    // names: zones come from AI reading your photo, or you type them yourself.
+    // There is no third source.
     const STORAGE_PRESETS = [
-      { type:"fridge",  name:"Fridge",       icon:"🧊", zones:["Top shelf","Middle shelf","Bottom shelf","Crisper drawer","Door"] },
-      { type:"pantry",  name:"Pantry",        icon:"🗄️", zones:["Top shelf","Eye level","Lower shelf","Counter","Spice rack"] },
-      { type:"freezer", name:"Freezer",       icon:"❄️", zones:["Top","Middle","Bottom","Door"] },
-      { type:"counter", name:"Counter",       icon:"🍌", zones:["Counter","Fruit bowl","Bread area"] },
-      { type:"fridge",  name:"Mini fridge",   icon:"🧊", zones:["Top","Bottom","Door"] },
-      { type:"freezer", name:"Chest freezer", icon:"❄️", zones:["Top layer","Middle","Bottom"] },
-      { type:"pantry",  name:"Cabinet",       icon:"🪵", zones:["Top shelf","Middle shelf","Lower shelf"] },
-      { type:"custom",  name:"Custom…",       icon:"📦", zones:[] },
+      { type:"fridge",  name:"Fridge",        icon:"🧊" },
+      { type:"pantry",  name:"Pantry",        icon:"🗄️" },
+      { type:"freezer", name:"Freezer",       icon:"❄️" },
+      { type:"counter", name:"Counter",       icon:"🍌" },
+      { type:"fridge",  name:"Mini fridge",   icon:"🧊" },
+      { type:"freezer", name:"Chest freezer", icon:"❄️" },
+      { type:"pantry",  name:"Cabinet",       icon:"🪵" },
+      { type:"custom",  name:"Custom…",       icon:"📦" },
     ];
 
     // Scan target — set when arriving from a zone Scan button
@@ -2266,7 +2269,7 @@ Return ONLY valid JSON — no prose:
         "Describe ONLY what you can actually see, top to bottom:",
         "- every shelf, drawer, bin, rack, and compartment",
         "- roughly where each sits vertically (top / upper-middle / middle / lower / bottom)",
-        "- anything distinctive: egg tray, crisper, door racks, wire vs glass shelves",
+        "- what makes each one distinctive, in your own words",
         "",
         `If this is NOT a ${locLabel}, or the photo is too dark, blurry, or empty to make out,`,
         'say exactly: CANNOT_SEE — followed by why.',
@@ -2310,13 +2313,15 @@ Return ONLY valid JSON — no prose:
         "",
         "Rules:",
         "- Include ONLY zones actually mentioned in the description. Invent nothing.",
-        "- Keep their specific names: 'Egg tray', 'Left crisper', 'Door top rack'.",
+        "- Keep the exact wording they used for each zone. Do not rename or generalise.",
         '- "y" = vertical position as a fraction of image height (0.0 top, 1.0 bottom).',
         '- "h" = that zone\'s height as a fraction. Zones should tile top-to-bottom without big gaps.',
         "- Order top to bottom.",
         "",
         'Return ONLY a JSON array. Each object: "name" (string), "y" (number 0-1), "h" (number 0-1).',
-        'Example: [{"name":"Top shelf","y":0.0,"h":0.2},{"name":"Crisper drawer","y":0.75,"h":0.25}]',
+        // Deliberately NOT a fridge/pantry example. A storage-shaped example
+        // here gets echoed back verbatim as "zones" regardless of the photo.
+        'Format example: [{"name":"EXAMPLE A","y":0.0,"h":0.5},{"name":"EXAMPLE B","y":0.5,"h":0.5}]',
         "No prose, no markdown, no code fences.",
       ].join("\n");
 
@@ -2343,7 +2348,21 @@ Return ONLY valid JSON — no prose:
       const zones = parsed.map(item => {
         if (typeof item === "string") return { name: item.trim(), y: null, h: null };
         return { name: String(item.name || "").trim(), y: Number(item.y) || 0, h: Number(item.h) || 0.2 };
-      }).filter(z => z.name);
+      }).filter(z => z.name && !/^EXAMPLE [AB]$/i.test(z.name));
+
+      // Backstop. A model that gives up on the photo falls back to generic
+      // shelf names, which are indistinguishable from the presets we deleted.
+      // Boilerplate is a FAILURE, not a result — surface it so the user gets
+      // the manual path rather than fake zones.
+      const GENERIC = /^(top|middle|bottom|upper|lower)?\s*(shelf|drawer|rack|door|compartment|bin|layer|counter)?$/i;
+      const genericCount = zones.filter(z => GENERIC.test(z.name.trim())).length;
+      if (zones.length && genericCount === zones.length) {
+        throw new Error(
+          "The AI returned only generic shelf names, which means it couldn't " +
+          "actually read your photo. Add your zones manually below"
+        );
+      }
+      if (!zones.length) throw new Error("The AI didn't find any zones in this photo");
 
       return zones;
     }
@@ -2371,21 +2390,10 @@ Return ONLY valid JSON — no prose:
       const loc = getStorageLayout().find(l => l.id === locId);
       if (!loc) return;
       document.getElementById("addZoneTitle").textContent = `Add zones to ${loc.icon} ${loc.name}`;
-      document.getElementById("addZoneSubtitle").textContent = "Tap suggestions to add, or type a custom name.";
-      const existing = new Set((loc.zones || []).map(z => z.name));
-      const preset = STORAGE_PRESETS.find(p => p.type === loc.type);
-      const suggestions = (preset?.zones || []).filter(z => !existing.has(z));
+      document.getElementById("addZoneSubtitle").textContent = "Type the name of each shelf, drawer, or compartment.";
+      // No suggestion chips: the app never supplies a zone name.
       const sugg = document.getElementById("addZoneSuggestions");
-      sugg.innerHTML = suggestions.map(s =>
-        `<button class="chip" data-zone="${escapeHtml(s)}">${s}</button>`
-      ).join("");
-      sugg.querySelectorAll(".chip").forEach(chip => {
-        chip.addEventListener("click", () => {
-          addZoneToLoc(addZoneTargetLocId, chip.dataset.zone);
-          chip.classList.add("active");
-          chip.disabled = true;
-        });
-      });
+      if (sugg) sugg.innerHTML = "";
       document.getElementById("customZoneName").value = "";
       showModal("addZoneModal");
     }
@@ -3558,10 +3566,7 @@ Return ONLY valid JSON — no prose:
         const _locName = scanTarget
           ? `${scanTarget.locName} (${scanTarget.zoneName})`
           : "storage area";
-        const _zoneNames = scanTarget
-          ? [scanTarget.zoneName]
-          : ["Top shelf","Middle shelf","Bottom shelf"];
-        analyzePhotoWithClaude(dataUrl, _locName, _zoneNames).then((items) => {
+        analyzePhotoWithClaude(dataUrl, _locName).then((items) => {
           scanDraftItems = items.map(i => ({ included: true, ...i }));
           if (!scanDraftItems.length) scanDraftItems.push(emptyScanItem());
           renderScanItemsList();
@@ -3675,7 +3680,7 @@ Return ONLY valid JSON — no prose:
       }
     }
 
-    async function analyzePhotoWithClaude(dataUrl, locLabel = "storage area", zoneNames = ["Top shelf","Middle shelf","Bottom shelf"]) {
+    async function analyzePhotoWithClaude(dataUrl, locLabel = "storage area") {
       if (!hasClaude()) throw new Error("Set up Claude proxy or API key in Settings first");
       const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
       if (!match) throw new Error("Bad image format");
@@ -4274,8 +4279,8 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       // Build info
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
-      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c8656c2") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 07, 2026 10:20")
+      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "a716927") ? `v${BUILD_VERSION}` : "";
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 07, 2026 12:42")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
