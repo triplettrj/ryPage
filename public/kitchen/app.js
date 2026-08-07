@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 06, 2026 22:21";
+    const BUILD_DATE    = "Aug 06, 2026 22:26";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -2087,20 +2087,41 @@ Return ONLY valid JSON — no prose:
     });
 
     // Step 2 → photo input
+    // Resize + compress an image dataUrl to max width/height and JPEG quality
+    function compressImage(dataUrl, maxPx = 800, quality = 0.75) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = () => resolve(dataUrl); // fallback: send original
+        img.src = dataUrl;
+      });
+    }
+
+    let _bsAnalysisCancelled = false;
+
     document.getElementById("bsPhotoInput")?.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file || !bsPending) return;
       e.target.value = "";
+      _bsAnalysisCancelled = false;
 
       const reader = new FileReader();
       reader.onload = async (ev) => {
-        const dataUrl = ev.target.result;
-        bsPhotoUrl = dataUrl; // persist so step 3 can show it
+        const rawDataUrl = ev.target.result;
+        bsPhotoUrl = rawDataUrl; // persist full-res for display
         const hasKey = hasClaude();
 
         // Replace step 2 content with photo + prominent analyzing state
         document.getElementById("bsPhotoPreview").innerHTML = `
-          <img src="${dataUrl}" style="width:100%; border-radius:12px; margin-bottom:12px; max-height:200px; object-fit:cover;" />`;
+          <img src="${rawDataUrl}" style="width:100%; border-radius:12px; margin-bottom:12px; max-height:200px; object-fit:cover;" />`;
 
         // Hide the upload button and skip button, show spinner in their place
         const uploadBtn = document.querySelector("label[for='bsPhotoInput'], #bsStep2 label");
@@ -2113,18 +2134,28 @@ Return ONLY valid JSON — no prose:
         analyzeEl.id = "bsAnalyzingState";
         analyzeEl.innerHTML = `
           <div class="ai-spinner"></div>
-          <div class="ai-label">${hasKey ? "Analyzing with Claude AI…" : "Reading photo…"}</div>
-          <p class="ai-sub">${hasKey ? "Identifying your shelves, drawers, and compartments" : "Getting your photo ready"}</p>`;
+          <div class="ai-label">Analyzing with AI…</div>
+          <p class="ai-sub">Identifying your shelves, drawers, and compartments</p>
+          <button id="bsCancelAnalysis" style="margin-top:10px; background:none; border:1px solid var(--border); border-radius:8px; padding:6px 14px; font-size:12px; color:var(--muted); cursor:pointer;">Skip — add zones manually</button>`;
         document.getElementById("bsStep2").appendChild(analyzeEl);
+
+        document.getElementById("bsCancelAnalysis")?.addEventListener("click", () => {
+          _bsAnalysisCancelled = true;
+          bsShowZoneReview();
+        });
 
         if (hasKey) {
           try {
-            const aiZones = await analyzeStorageLayoutPhoto(dataUrl, bsPending.type, bsPending.name);
+            // Compress before sending — iPhone photos can be 5MB+
+            const compressed = await compressImage(rawDataUrl, 800, 0.75);
+            const aiZones = await analyzeStorageLayoutPhoto(compressed, bsPending.type, bsPending.name);
+            if (_bsAnalysisCancelled) return;
             if (aiZones.length) {
               bsZoneData = aiZones;
               bsZones = aiZones.map(z => z.name);
             }
           } catch (err) {
+            if (_bsAnalysisCancelled) return;
             console.warn("Layout AI failed:", err.message);
             analyzeEl.innerHTML = `
               <div class="ai-label" style="color:var(--amber);">⚠️ AI couldn't read the photo</div>
@@ -2132,7 +2163,7 @@ Return ONLY valid JSON — no prose:
             await new Promise(r => setTimeout(r, 1800));
           }
         }
-        bsShowZoneReview();
+        if (!_bsAnalysisCancelled) bsShowZoneReview();
       };
       reader.readAsDataURL(file);
     });
@@ -4139,7 +4170,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 06, 2026 22:21")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 06, 2026 22:26")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
