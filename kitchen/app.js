@@ -1,6 +1,6 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 07, 2026 12:50";
-    const BUILD_VERSION = "9c62d42";
+    const BUILD_DATE    = "Aug 07, 2026 13:27";
+    const BUILD_VERSION = "908d40e";
 
     // ============================================================
     // RECIPE LIBRARY (16 recipes with full steps + tags)
@@ -2374,18 +2374,9 @@ Return ONLY valid JSON — no prose:
         .map(z => ({ ...z, name: z.name.replace(/\s*\([^)]*\)\s*$/, "").trim() }))
         .filter(z => z.name);
 
-      // Backstop. A model that gives up on the photo falls back to generic
-      // shelf names, which are indistinguishable from the presets we deleted.
-      // Boilerplate is a FAILURE, not a result — surface it so the user gets
-      // the manual path rather than fake zones.
-      const GENERIC = /^(top|middle|bottom|upper|lower)?\s*(shelf|drawer|rack|door|compartment|bin|layer|counter)?$/i;
-      const genericCount = zones.filter(z => GENERIC.test(z.name.trim())).length;
-      if (zones.length && genericCount === zones.length) {
-        throw new Error(
-          "The AI returned only generic shelf names, which means it couldn't " +
-          "actually read your photo. Add your zones manually below"
-        );
-      }
+      // Two outcomes only: the AI read the photo and these are its zones, or
+      // it couldn't and the user types them in. Nothing here second-guesses
+      // the model's answer.
       if (!zones.length) throw new Error("The AI didn't find any zones in this photo");
 
       return zones;
@@ -4303,8 +4294,8 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       // Build info
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
-      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "9c62d42") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 07, 2026 12:50")
+      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "908d40e") ? `v${BUILD_VERSION}` : "";
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 07, 2026 13:27")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
