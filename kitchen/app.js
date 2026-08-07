@@ -1,6 +1,6 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 07, 2026 12:42";
-    const BUILD_VERSION = "a716927";
+    const BUILD_DATE    = "Aug 07, 2026 12:50";
+    const BUILD_VERSION = "9c62d42";
 
     // ============================================================
     // RECIPE LIBRARY (16 recipes with full steps + tags)
@@ -2266,10 +2266,21 @@ Return ONLY valid JSON — no prose:
       const describePrompt = [
         `Look carefully at this photo. It should show the inside of a ${locLabel}.`,
         "",
-        "Describe ONLY what you can actually see, top to bottom:",
+        `Describe ONLY the inside of the ${locLabel} itself, top to bottom:`,
         "- every shelf, drawer, bin, rack, and compartment",
         "- roughly where each sits vertically (top / upper-middle / middle / lower / bottom)",
         "- what makes each one distinctive, in your own words",
+        "- if several are the same kind, say how many there are",
+        "",
+        // Deliberately NOT asking it to enumerate each one, or for numeric
+        // positions. Pushed to do either, it stops counting what's in the photo
+        // and starts generating a sequence — it invented 6 drawers where there
+        // were 4. Describing naturally, it got the count right. Splitting a
+        // stated count into entries is step 2's job, and text models do it well.
+        "Important:",
+        `- Ignore anything outside the ${locLabel}: the floor, walls, ceiling,`,
+        "  other furniture, and items sitting nearby. Those are not storage zones.",
+        "- Only count what is actually there. Do not pad the list.",
         "",
         `If this is NOT a ${locLabel}, or the photo is too dark, blurry, or empty to make out,`,
         'say exactly: CANNOT_SEE — followed by why.',
@@ -2313,9 +2324,16 @@ Return ONLY valid JSON — no prose:
         "",
         "Rules:",
         "- Include ONLY zones actually mentioned in the description. Invent nothing.",
-        "- Keep the exact wording they used for each zone. Do not rename or generalise.",
+        "- Keep their wording, but make each name short and plain. Strip any",
+        "  parenthetical position notes: 'Second Shelf (Upper-Middle)' becomes 'Second shelf'.",
+        "- If the description groups identical zones together ('four pull-out drawers'),",
+        "  split them into one entry each, numbered top to bottom.",
+        `- Skip anything that is not storage inside the ${locLabel} — no floor, wall,`,
+        "  ceiling, room, or nearby furniture.",
         '- "y" = vertical position as a fraction of image height (0.0 top, 1.0 bottom).',
-        '- "h" = that zone\'s height as a fraction. Zones should tile top-to-bottom without big gaps.',
+        '- "h" = that zone\'s height as a fraction.',
+        "- Use the positions the description actually implies. Do NOT just divide the",
+        "  image into equal slices — zones are usually different heights.",
         "- Order top to bottom.",
         "",
         'Return ONLY a JSON array. Each object: "name" (string), "y" (number 0-1), "h" (number 0-1).',
@@ -2348,7 +2366,13 @@ Return ONLY valid JSON — no prose:
       const zones = parsed.map(item => {
         if (typeof item === "string") return { name: item.trim(), y: null, h: null };
         return { name: String(item.name || "").trim(), y: Number(item.y) || 0, h: Number(item.h) || 0.2 };
-      }).filter(z => z.name && !/^EXAMPLE [AB]$/i.test(z.name));
+      })
+        .filter(z => z.name && !/^EXAMPLE [AB]$/i.test(z.name))
+        // Models describe the surroundings too; those aren't storage zones.
+        .filter(z => !/^(the\s+)?(floor|ground|wall|ceiling|room|background|surroundings?|nearby.*)$/i.test(z.name.trim()))
+        // Drop parenthetical position notes the model left in the name.
+        .map(z => ({ ...z, name: z.name.replace(/\s*\([^)]*\)\s*$/, "").trim() }))
+        .filter(z => z.name);
 
       // Backstop. A model that gives up on the photo falls back to generic
       // shelf names, which are indistinguishable from the presets we deleted.
@@ -4279,8 +4303,8 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       // Build info
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
-      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "a716927") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 07, 2026 12:42")
+      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "9c62d42") ? `v${BUILD_VERSION}` : "";
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 07, 2026 12:50")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
