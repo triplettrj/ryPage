@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 06, 2026 22:31";
+    const BUILD_DATE    = "Aug 06, 2026 22:58";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -801,7 +801,10 @@
         });
       }
       const data = await res.json();
-      const text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || "").join("");
+      // Some backends return an already-parsed object in `text` — stringify it back
+      const text = (data.candidates?.[0]?.content?.parts || [])
+        .map(p => typeof p.text === "string" ? p.text : p.text != null ? JSON.stringify(p.text) : "")
+        .join("");
       return new Response(JSON.stringify({ content: [{ type: "text", text }] }), {
         status: 200,
         headers: { "content-type": "application/json" },
@@ -4175,7 +4178,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 06, 2026 22:31")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 06, 2026 22:58")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
