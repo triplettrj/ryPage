@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 05, 2026 23:56";
+    const BUILD_DATE    = "Aug 06, 2026 22:21";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -712,8 +712,8 @@
     // Gemini calls are translated internally so nothing else needs to change.
     function hasClaude() {
       const s = state.settings;
-      // Always true — built-in Gemini key is the fallback when nothing is configured
-      return !!((s.proxyUrl && s.accessCode) || s.claudeKey || s.geminiKey || DEFAULT_GEMINI_KEY);
+      // Cloudflare proxy is always available as built-in fallback — always return true
+      return true;
     }
 
     // Translate a Claude-format request body to Gemini format
@@ -2065,8 +2065,7 @@ Return ONLY valid JSON — no prose:
             return;
           }
           bsPending = { name: preset.name, icon: preset.icon, type: preset.type };
-          // Pre-load preset zones as fallback for step 3
-          bsZones = [...preset.zones];
+          bsZones = [];
           // Move to photo step
           const locLabel = { fridge:"refrigerator", freezer:"freezer", pantry:"pantry", counter:"countertop" }[preset.type] || preset.name.toLowerCase();
           document.getElementById("bsStep2Title").textContent = `📷 Photo your ${preset.icon} ${preset.name}`;
@@ -2126,10 +2125,10 @@ Return ONLY valid JSON — no prose:
               bsZones = aiZones.map(z => z.name);
             }
           } catch (err) {
-            console.warn("Layout AI failed, using presets:", err.message);
+            console.warn("Layout AI failed:", err.message);
             analyzeEl.innerHTML = `
               <div class="ai-label" style="color:var(--amber);">⚠️ AI couldn't read the photo</div>
-              <p class="ai-sub">Using preset zones instead — you can edit them next</p>`;
+              <p class="ai-sub">Add your zones manually on the next screen</p>`;
             await new Promise(r => setTimeout(r, 1800));
           }
         }
@@ -2146,9 +2145,9 @@ Return ONLY valid JSON — no prose:
     function bsShowZoneReview() {
       const hasKey = hasClaude();
       document.getElementById("bsStep3Title").textContent = `${bsPending?.icon || "📦"} ${bsPending?.name || "Storage"} zones`;
-      document.getElementById("bsStep3Sub").textContent = hasKey && bsPhotoUrl && bsZones.length
-        ? "Claude identified these zones from your photo. Tap × to remove any, or add your own."
-        : "These zones come from a preset. Remove any that don't apply, or add your own.";
+      document.getElementById("bsStep3Sub").textContent = bsPhotoUrl && bsZones.length
+        ? "AI identified these zones from your photo. Tap × to remove any, or add your own."
+        : "Add your zones below — name each shelf, drawer, or compartment.";
 
       // Show labeled photo overlay above the zone list
       const photoEl = document.getElementById("bsStep3Photo");
@@ -4140,7 +4139,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 05, 2026 23:56")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 06, 2026 22:21")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
