@@ -1,6 +1,6 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 07, 2026 13:27";
-    const BUILD_VERSION = "908d40e";
+    const BUILD_DATE    = "Aug 07, 2026 13:29";
+    const BUILD_VERSION = "13e1bc1";
 
     // ============================================================
     // RECIPE LIBRARY (16 recipes with full steps + tags)
@@ -4294,8 +4294,8 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       // Build info
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
-      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "908d40e") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 07, 2026 13:27")
+      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "13e1bc1") ? `v${BUILD_VERSION}` : "";
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 07, 2026 13:29")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
