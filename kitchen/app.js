@@ -1,6 +1,6 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 06, 2026 22:58";
-    const BUILD_VERSION = "c035f8b";
+    const BUILD_DATE    = "Aug 07, 2026 10:20";
+    const BUILD_VERSION = "c8656c2";
 
     // ============================================================
     // RECIPE LIBRARY (16 recipes with full steps + tags)
@@ -2151,7 +2151,10 @@ Return ONLY valid JSON — no prose:
           try {
             // Compress before sending — iPhone photos can be 5MB+
             const compressed = await compressImage(rawDataUrl, 800, 0.75);
-            const aiZones = await analyzeStorageLayoutPhoto(compressed, bsPending.type, bsPending.name);
+            const aiZones = await analyzeStorageLayoutPhoto(
+              compressed, bsPending.type, bsPending.name,
+              (msg) => { const l = analyzeEl.querySelector(".ai-label"); if (l) l.textContent = msg; }
+            );
             if (_bsAnalysisCancelled) return;
             if (aiZones.length) {
               bsZoneData = aiZones;
@@ -2240,7 +2243,8 @@ Return ONLY valid JSON — no prose:
     });
 
     // ── AI: analyze a photo and return zone names ─────────────────
-    async function analyzeStorageLayoutPhoto(dataUrl, locType, locName) {
+    async function analyzeStorageLayoutPhoto(dataUrl, locType, locName, onProgress) {
+      const step = (msg) => { try { onProgress && onProgress(msg); } catch {} };
       if (!hasClaude()) throw new Error("Set up Claude proxy or API key in Settings first");
       const match = dataUrl.match(/^data:(image\/[a-z]+);base64,(.+)$/);
       if (!match) throw new Error("Bad image format");
@@ -2249,45 +2253,91 @@ Return ONLY valid JSON — no prose:
 
       const locLabel = { fridge:"refrigerator", freezer:"freezer", pantry:"pantry", counter:"kitchen countertop" }[locType] || locName;
 
-      const prompt = [
-        `This is a photo of the inside of a ${locLabel}.`,
+      // Two-step. Small vision models abandon the image when forced to emit
+      // strict JSON — they fall back to canned knowledge and invent generic
+      // shelves. Asking for prose first keeps them looking at the actual photo;
+      // a second text-only pass turns that description into JSON.
+
+      // Step 1 — LOOK. Prose only, and an explicit escape hatch so the model
+      // can admit it sees nothing rather than inventing a plausible fridge.
+      const describePrompt = [
+        `Look carefully at this photo. It should show the inside of a ${locLabel}.`,
         "",
-        "Identify every distinct shelf, drawer, compartment, and storage zone that is visible.",
-        "For each zone, estimate its vertical position and height as a fraction of the total image height (0.0 = very top, 1.0 = very bottom).",
+        "Describe ONLY what you can actually see, top to bottom:",
+        "- every shelf, drawer, bin, rack, and compartment",
+        "- roughly where each sits vertically (top / upper-middle / middle / lower / bottom)",
+        "- anything distinctive: egg tray, crisper, door racks, wire vs glass shelves",
         "",
-        "Rules:",
-        "- Name each zone specifically: 'Top shelf', 'Egg tray', 'Crisper drawer', 'Door top rack', etc.",
-        "- If two side-by-side drawers, name separately: 'Left crisper', 'Right crisper'",
-        "- List zones top-to-bottom",
-        "- 3–8 zones is typical; don't over-split",
-        "- y + h should roughly equal the next zone's y; zones should tile without big gaps",
+        `If this is NOT a ${locLabel}, or the photo is too dark, blurry, or empty to make out,`,
+        'say exactly: CANNOT_SEE — followed by why.',
         "",
-        'Return ONLY a valid JSON array of objects. Each object must have "name" (string), "y" (number 0-1), "h" (number 0-1).',
-        'Example: [{"name":"Top shelf","y":0.0,"h":0.2},{"name":"Middle shelf","y":0.2,"h":0.25},{"name":"Bottom shelf","y":0.45,"h":0.3},{"name":"Crisper drawer","y":0.75,"h":0.25}]',
-        "No prose, no markdown, no code fences.",
+        "Do not guess. Do not describe a typical one. Describe THIS photo.",
       ].join("\n");
 
-      const res = await claudeMessages({
+      step("Looking at your photo…");
+      const seeRes = await claudeMessages({
         model: "claude-sonnet-4-6",
-        max_tokens: 600,
+        max_tokens: 700,
         messages: [{
           role: "user",
           content: [
             { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
-            { type: "text", text: prompt },
+            { type: "text", text: describePrompt },
           ],
         }],
       });
+      if (!seeRes.ok) {
+        const j = await seeRes.json().catch(() => ({}));
+        throw new Error(`AI error ${seeRes.status}: ${j.error?.message || "vision request failed"}`);
+      }
+      const seeData = await seeRes.json();
+      const description = (seeData.content || []).map(c => c.text || "").join("\n").trim();
+
+      if (!description) throw new Error("AI returned an empty description of the photo");
+      if (/CANNOT_SEE/i.test(description)) {
+        const why = description.replace(/.*CANNOT_SEE\s*[—-]*\s*/is, "").trim();
+        throw new Error(why || "The photo couldn't be read clearly");
+      }
+
+      // Step 2 — STRUCTURE. Text-only, so no image to lose track of.
+      const structurePrompt = [
+        `Below is a description of the inside of a ${locLabel}, written by someone looking at a photo of it.`,
+        "Convert the storage zones they describe into JSON.",
+        "",
+        "--- DESCRIPTION ---",
+        description,
+        "--- END ---",
+        "",
+        "Rules:",
+        "- Include ONLY zones actually mentioned in the description. Invent nothing.",
+        "- Keep their specific names: 'Egg tray', 'Left crisper', 'Door top rack'.",
+        '- "y" = vertical position as a fraction of image height (0.0 top, 1.0 bottom).',
+        '- "h" = that zone\'s height as a fraction. Zones should tile top-to-bottom without big gaps.',
+        "- Order top to bottom.",
+        "",
+        'Return ONLY a JSON array. Each object: "name" (string), "y" (number 0-1), "h" (number 0-1).',
+        'Example: [{"name":"Top shelf","y":0.0,"h":0.2},{"name":"Crisper drawer","y":0.75,"h":0.25}]',
+        "No prose, no markdown, no code fences.",
+      ].join("\n");
+
+      step("Mapping the zones it found…");
+      const res = await claudeMessages({
+        model: "claude-sonnet-4-6",
+        max_tokens: 700,
+        messages: [{ role: "user", content: [{ type: "text", text: structurePrompt }] }],
+      });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        throw new Error(`Claude API ${res.status}: ${j.error?.message || ""}`);
+        throw new Error(`AI error ${res.status}: ${j.error?.message || "could not structure the zones"}`);
       }
       const data = await res.json();
       const text = (data.content || []).map(c => c.text || "").join("\n");
-      const jsonMatch = text.match(/\[[\s\S]*?\]/);
-      if (!jsonMatch) throw new Error("No JSON array in response");
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (!Array.isArray(parsed)) throw new Error("Not an array");
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) throw new Error("AI didn't return a usable zone list");
+      let parsed;
+      try { parsed = JSON.parse(jsonMatch[0]); }
+      catch { throw new Error("AI returned malformed zone data"); }
+      if (!Array.isArray(parsed)) throw new Error("AI didn't return a zone list");
 
       // Support both old string format and new {name,y,h} format
       const zones = parsed.map(item => {
@@ -2763,8 +2813,58 @@ Return ONLY valid JSON — no prose:
       if (!match) throw new Error("Bad image format");
       const mediaType = match[1];
       const b64 = match[2];
+      // Two-step, same reason as analyzeStorageLayoutPhoto: forced to emit
+      // strict JSON, the vision model stops reading the label and invents a
+      // plausible product. Prose first keeps it on the actual image.
+
+      // Step 1 — READ the label out loud.
+      const readPrompt = [
+        "Read this photo of a single kitchen item.",
+        "",
+        "Transcribe ONLY text and details you can actually see:",
+        "- the product name as printed",
+        "- the brand",
+        "- any net weight or volume (with its unit)",
+        "- any barcode digits",
+        "",
+        "If no product label is legible — blank, blurry, too dark, or not a product —",
+        "say exactly: CANNOT_READ — followed by why.",
+        "",
+        "Do not guess a product. Transcribe what is printed on THIS label.",
+      ].join("\n");
+
+      const readRes = await claudeMessages({
+        model: "claude-sonnet-4-6",
+        max_tokens: 500,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
+            { type: "text", text: readPrompt },
+          ],
+        }],
+      });
+      if (!readRes.ok) {
+        let detail = "";
+        try { const j = await readRes.json(); detail = j.error?.message || ""; } catch {}
+        throw new Error(`AI error ${readRes.status}${detail ? ": " + detail : ""}`);
+      }
+      const readData = await readRes.json();
+      const labelText = (readData.content || []).map(c => c.text || "").join("\n").trim();
+
+      if (!labelText) throw new Error("AI returned nothing for this photo");
+      if (/CANNOT_READ/i.test(labelText)) {
+        const why = labelText.replace(/.*CANNOT_READ\s*[—-]*\s*/is, "").trim();
+        throw new Error(why || "The label couldn't be read");
+      }
+
+      // Step 2 — STRUCTURE the transcription. Text-only.
       const prompt = [
-        "This is a close-up photo of ONE kitchen item. Read the label carefully.",
+        "Below is a transcription of a kitchen product label.",
+        "",
+        "--- LABEL ---",
+        labelText,
+        "--- END ---",
         "",
         "Return a single JSON object with these fields:",
         '- "name": specific product name from the label, lowercase (e.g. "marinara sauce", "sea salt", "rice vinegar")',
@@ -2775,7 +2875,8 @@ Return ONLY valid JSON — no prose:
         '- "upc": 12- or 13-digit UPC/EAN barcode if visible; empty string "" otherwise',
         "",
         "Rules:",
-        "- Do NOT guess values you can't actually see on the label.",
+        "- Use ONLY what appears in the transcription above. Invent nothing.",
+        "- If a field isn't in the transcription, use \"\" or null. Do not fill it with a guess.",
         "- canonicalName should be generic so recipes match. e.g. \"Rao's Homemade Marinara\" → canonicalName \"marinara sauce\".",
         '- Return ONLY the JSON object, no prose, no markdown fences.',
         '',
@@ -2784,24 +2885,20 @@ Return ONLY valid JSON — no prose:
       const res = await claudeMessages({
         model: "claude-sonnet-4-6",
         max_tokens: 600,
-        messages: [{
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: mediaType, data: b64 } },
-            { type: "text", text: prompt },
-          ],
-        }],
+        messages: [{ role: "user", content: [{ type: "text", text: prompt }] }],
       });
       if (!res.ok) {
         let detail = "";
         try { const j = await res.json(); detail = j.error?.message || ""; } catch {}
-        throw new Error(`Claude API ${res.status}${detail ? ": " + detail : ""}`);
+        throw new Error(`AI error ${res.status}${detail ? ": " + detail : ""}`);
       }
       const data = await res.json();
       const text = (data.content || []).map(c => c.text || "").join("\n");
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("Claude didn't return structured data");
-      const parsed = JSON.parse(jsonMatch[0]);
+      if (!jsonMatch) throw new Error("AI didn't return usable item details");
+      let parsed;
+      try { parsed = JSON.parse(jsonMatch[0]); }
+      catch { throw new Error("AI returned malformed item data"); }
       return {
         name: String(parsed.name || "").trim(),
         brand: String(parsed.brand || "").trim(),
@@ -4177,8 +4274,8 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       // Build info
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
-      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 06, 2026 22:58")
+      if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c8656c2") ? `v${BUILD_VERSION}` : "";
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 07, 2026 10:20")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
