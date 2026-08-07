@@ -1,5 +1,5 @@
     // ── Build info (replaced by sync.sh at copy time) ────────────
-    const BUILD_DATE    = "Aug 06, 2026 22:26";
+    const BUILD_DATE    = "Aug 06, 2026 22:31";
     const BUILD_VERSION = "c035f8b";
 
     // ============================================================
@@ -2158,9 +2158,14 @@ Return ONLY valid JSON — no prose:
             if (_bsAnalysisCancelled) return;
             console.warn("Layout AI failed:", err.message);
             analyzeEl.innerHTML = `
-              <div class="ai-label" style="color:var(--amber);">⚠️ AI couldn't read the photo</div>
-              <p class="ai-sub">Add your zones manually on the next screen</p>`;
-            await new Promise(r => setTimeout(r, 1800));
+              <div style="background:var(--amber-light,#fff8e1); border-radius:12px; padding:12px 14px; text-align:left;">
+                <div style="font-weight:700; color:var(--amber,#f59e0b); margin-bottom:4px;">⚠️ AI couldn't read the photo</div>
+                <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">${escapeHtml(err.message || "Unknown error")}</div>
+                <button id="bsAiFailOk" class="btn btn-secondary" style="width:100%; font-size:13px;">OK — I'll add zones manually</button>
+              </div>`;
+            await new Promise((resolve) => {
+              document.getElementById("bsAiFailOk")?.addEventListener("click", resolve);
+            });
           }
         }
         if (!_bsAnalysisCancelled) bsShowZoneReview();
@@ -4170,7 +4175,7 @@ When suggesting recipes, prefer ones that use ingredients already in inventory. 
       const vEl = document.getElementById("aboutVersion");
       const dEl = document.getElementById("aboutBuildDate");
       if (vEl) vEl.textContent = (BUILD_VERSION && BUILD_VERSION !== "c035f8b") ? `v${BUILD_VERSION}` : "";
-      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 06, 2026 22:26")
+      if (dEl) dEl.textContent = (BUILD_DATE && BUILD_DATE !== "Aug 06, 2026 22:31")
         ? `Updated ${BUILD_DATE} · Built collaboratively with Claude`
         : "Built collaboratively with Claude";
       showModal("settingsModal");
