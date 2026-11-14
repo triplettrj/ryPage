@@ -389,3 +389,58 @@ input:focus { border-color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- workout clock (coach) ---------- */
+
+.workout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.workout.running { border-color: color-mix(in srgb, var(--z3) 60%, var(--line)); }
+.workout.paused { border-color: color-mix(in srgb, var(--z4) 60%, var(--line)); }
+.wk-time { font-size: 40px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.wk-state { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.workout.running .wk-state { color: var(--z3); }
+.workout.paused .wk-state { color: var(--z4); }
+.wk-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.wk-controls .btn { width: auto; padding: 11px 20px; }
+.wk-length { display: flex; align-items: center; gap: 8px; }
+.wk-length label { margin: 0; }
+.wk-length select {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font: inherit;
+}
+.wk-length input { width: 84px; padding: 10px 12px; }
+
+.lost {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  background: color-mix(in srgb, var(--z4) 12%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--z4) 50%, var(--line));
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.lost p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.lost .error { flex-basis: 100%; margin: 0; }
+.lost-actions { display: flex; gap: 10px; }
+.lost-actions .btn { width: auto; }
+
+.workout-note { margin: 0 0 12px; font-size: 14px; color: var(--muted); }
+.workout-note.running { color: var(--z3); }
+.workout-note.paused { color: var(--z4); }

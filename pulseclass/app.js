@@ -250,8 +250,11 @@ class ClassConnection {
       if (msg.t === 'joined') {
         myPublicId = msg.you ?? null;
         store.set('pc.code', msg.code);
+        this.wasJoined = true;
+        this.lost = false;
         showJoined(`Streaming to ${msg.name} (${msg.code})`, 'on');
         classView.setEnabled(msg.classView);
+        showWorkout(msg.workout);
         if (bpm) this.sendHr(bpm);
       } else if (msg.t === 'settings') {
         classView.setEnabled(msg.classView);
@@ -259,6 +262,15 @@ class ClassConnection {
         classView.update(msg.athletes);
       } else if (msg.t === 'me') {
         showEffort(msg);
+        showWorkout(msg.workout);
+      } else if (msg.t === 'workout') {
+        showWorkout(msg.workout);
+      } else if (msg.t === 'error' && msg.reason === 'class not found' && this.wasJoined) {
+        // The server restarted and lost the class; the coach can start it again
+        // with the same code. Keep checking instead of giving up.
+        this.retry = Math.max(this.retry, 3);
+        this.lost = true;
+        showJoined('This class has stopped on the server. Waiting for your coach to start it again…', 'warn');
       } else if (msg.t === 'error') {
         this.close();
         showJoinError(msg.error);
@@ -266,7 +278,7 @@ class ClassConnection {
     };
     this.ws.onclose = () => {
       if (this.closed) return;
-      showJoined('Connection lost. Reconnecting…', 'warn');
+      if (!this.lost) showJoined('Connection lost. Reconnecting…', 'warn');
       setTimeout(() => !this.closed && this.open(), Math.min(1000 * 2 ** this.retry++, 15000));
     };
   }
@@ -368,6 +380,31 @@ function showJoined(text, state) {
 }
 
 // Your own effort points and time in each zone, from the server every 2 s.
+// The coach's workout clock. Points only count while it's running.
+let workoutState = null;
+let workoutAt = 0;
+function showWorkout(w) {
+  if (!w) return;
+  workoutState = w;
+  workoutAt = Date.now();
+  renderWorkout();
+}
+function renderWorkout() {
+  const w = workoutState;
+  if (!w || $('joinedBox').classList.contains('hidden')) return $('workoutNote').classList.add('hidden');
+  const elapsed = Math.min(w.elapsedMs + (w.state === 'running' ? Date.now() - workoutAt : 0), w.durationMs ?? Infinity);
+  const clock = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const left = w.durationMs != null ? ` · ${clock(w.durationMs - elapsed)} left` : ` · ${clock(elapsed)}`;
+  $('workoutNote').textContent = {
+    ready: 'The workout hasn’t started. Points start counting when your coach starts it.',
+    running: `Workout running${left}. Points are counting.`,
+    paused: 'Workout paused. Points aren’t counting.',
+    done: 'Workout finished. Your points are final.',
+  }[w.state] ?? '';
+  $('workoutNote').className = `workout-note ${w.state}`;
+}
+setInterval(renderWorkout, 1000);
+
 function showEffort({ points, zoneSec }) {
   $('effort').classList.remove('hidden');
   $('myPoints').textContent = points ?? 0;

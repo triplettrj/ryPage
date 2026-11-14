@@ -31,6 +31,7 @@
     <p>Your coach and the room TV see your heart rate, % of max and effort points. Turn on <b>Share with the class</b> to see classmates who also share, and a leaderboard.</p>
     <h3>Zones and effort points</h3>
     <p>Your max heart rate is estimated as 220 − your age. Zones are % of that: Zone 1 Warm-up 50–60%, Zone 2 Easy 60–70%, Zone 3 Aerobic 70–80%, Zone 4 Threshold 80–90%, Zone 5 Max 90%+. You earn 1 effort point a minute in Zone 1, 2 in Zone 2, and so on up to 5 a minute in Zone 5.</p>
+    <p>Points, time in zones, your average and your peak only count while your coach's workout is running, so warming up before the start and hanging around after the end don't count.</p>
 
     <h2 id="devices">Heart rate devices</h2>
     <ul>
@@ -53,14 +54,24 @@
     <h2 id="coaches">Coaches</h2>
     <h3>Start a class</h3>
     <p>Open the coach dashboard and tap <b>Create class</b>. For a studio, tick <b>Permanent room</b>: the code and TV link never change, so you can print a poster once and leave the TV bookmarked.</p>
+    <h3>Run the workout</h3>
+    <p>Effort points, time in zones, averages and peaks only count while the workout is running. Heart rates show on the dashboard and TV the whole time.</p>
+    <ul>
+      <li>Pick a <b>Length</b> for a countdown (it finishes on its own at zero), or <b>No timer</b> to stop it yourself, then tap <b>Start workout</b>.</li>
+      <li><b>Pause</b> stops the clock and the points, for a break or a demo. <b>Resume</b> carries on.</li>
+      <li><b>Stop</b> ends it: points are final, and the TV shows the final results ranked by points. <b>Start a new workout</b> starts everyone from zero again.</li>
+      <li>The TV shows the time left (or the time so far), and phones show whether points are counting.</li>
+    </ul>
     <h3>On the dashboard</h3>
     <ul>
       <li><b>Sort</b> by name, heart rate, % of max or points.</li>
       <li><b>Show join QR</b> shows a big QR code to scan. <b>Print poster</b> makes a sheet for the wall.</li>
       <li><b>Open TV mode</b> or <b>Copy TV link</b> for the room screen. Add <code>&amp;sort=points</code> to the TV link to rank by effort points, or <code>&amp;sort=name</code> for alphabetical order. The TV link can't change anything.</li>
       <li><b>Class view on phones</b> lets athletes who share see each other. Turn it off for classes that shouldn't compare.</li>
-      <li><b>Class summary</b> shows everyone's points, average, peak and time in zones, with a CSV download. Download it before you tap <b>New session</b>, which resets everything for the next class.</li>
+      <li><b>Class summary</b> shows everyone's points, average, peak and time in zones, with a CSV download. Download it before you tap <b>New session</b>, which resets everything, including the workout, for the next class.</li>
+      <li><b>+ New class</b> starts another class or opens one of your rooms.</li>
     </ul>
+    <p>If the dashboard says <b>This class has ended</b>, the server restarted and forgot it (this happens on the free hosting plan). Tap <b>Start it again</b>: it comes back with the same code, and phones, the TV and printed QR codes reconnect on their own.</p>
     <p>Keep the dashboard link private: it has a key that controls the class. Anyone with the join code can only join and send heart rate.</p>
 
     <h2 id="trouble">Troubleshooting</h2>
