@@ -15,6 +15,20 @@ export function maxHrForAge(age) {
   return a >= 5 && a <= 110 ? Math.round(220 - a) : DEFAULT_MAX_HR;
 }
 
+/** A max heart rate someone could really have, or null. */
+export function validMaxHr(value) {
+  const n = Math.round(Number(value));
+  return n >= 100 && n <= 240 ? n : null;
+}
+
+/**
+ * The max heart rate to use: the one the athlete entered, else 220 − age, and
+ * never less than one the server learned from their own heart rate.
+ */
+export function maxHrFor({ age, entered, learned }) {
+  return Math.max(validMaxHr(entered) ?? maxHrForAge(age), validMaxHr(learned) ?? 0);
+}
+
 export function zoneFor(bpm, maxHr = DEFAULT_MAX_HR) {
   return zoneForPct(Math.round((bpm / maxHr) * 100));
 }

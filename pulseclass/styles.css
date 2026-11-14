@@ -68,7 +68,7 @@ button, input {
 
 label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
 
-input[type=text], input[type=number], input[type=url] {
+input[type=text], input[type=number], input[type=url], input[type=password] {
   width: 100%;
   background: var(--panel-2);
   border: 1px solid var(--line);
@@ -447,6 +447,9 @@ input:focus { border-color: var(--accent); }
   font-variant-numeric: tabular-nums;
 }
 .wk-length-unit { min-width: 92px; }
+
+.signed-in { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+button.link { background: none; border: 0; padding: 0; color: var(--text); text-decoration: underline; cursor: pointer; font: inherit; }
 
 .lost {
   display: flex;

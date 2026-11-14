@@ -1,4 +1,4 @@
-import { zoneFor, zoneForPct, maxHrForAge } from './zones.js';
+import { zoneFor, zoneForPct, maxHrForAge, maxHrFor, validMaxHr } from './zones.js';
 
 const $ = id => document.getElementById(id);
 const store = {
@@ -72,23 +72,46 @@ let myPublicId = null;
 
 $('name').value = store.get('pc.name') ?? '';
 $('age').value = store.get('pc.age') ?? '';
+$('maxHr').value = store.get('pc.maxHr') ?? '';
+// A max the server raised because this athlete's heart rate stayed above the one we had.
+let learnedMax = validMaxHr(store.get('pc.learnedMax'));
 
 const profile = () => ({
   name: $('name').value.trim() || 'Athlete',
-  maxHr: maxHrForAge($('age').value),
+  maxHr: maxHrFor({ age: $('age').value, entered: $('maxHr').value, learned: learnedMax }),
 });
 
 function updateMaxHint() {
   const age = $('age').value;
-  $('maxHrHint').textContent = age
-    ? `Estimated max heart rate: ${profile().maxHr} BPM (220 − age).`
-    : 'Add your age so zones match you. Max heart rate is estimated as 220 − age.';
+  const entered = validMaxHr($('maxHr').value);
+  const base = entered ?? maxHrForAge(age);
+  const max = profile().maxHr;
+  $('maxHrHint').textContent = max > base
+    ? `Max heart rate: ${max} BPM. Raised from ${base} because your heart rate stayed above it.`
+    : entered ? `Using your max heart rate: ${max} BPM.`
+    : age ? `Estimated max heart rate: ${max} BPM (220 − age). Know your real max? Enter it under Max HR.`
+    : 'Add your age so zones match you (max heart rate is estimated as 220 − age), or enter your max.';
 }
 updateMaxHint();
 
-for (const id of ['name', 'age']) {
+/** The server raised our max heart rate (see learnMaxHr in server.js). */
+function learnMax(value) {
+  const max = validMaxHr(value);
+  if (!max || max <= profile().maxHr) return;
+  learnedMax = max;
+  store.set('pc.learnedMax', String(max));
+  updateMaxHint();
+  if (bpm) render(bpm);
+}
+
+for (const id of ['name', 'age', 'maxHr']) {
   $(id).addEventListener('change', () => {
     store.set(`pc.${id}`, $(id).value.trim());
+    if (id !== 'name') {
+      // Their own numbers replace what was learned.
+      learnedMax = null;
+      store.del('pc.learnedMax');
+    }
     updateMaxHint();
     if (bpm) render(bpm);
     classConn?.sendHello();
@@ -288,6 +311,7 @@ class ClassConnection {
       } else if (msg.t === 'class') {
         classView.update(msg.athletes);
       } else if (msg.t === 'me') {
+        learnMax(msg.maxHr);
         showEffort(msg);
         showWorkout(msg.workout);
       } else if (msg.t === 'workout') {
