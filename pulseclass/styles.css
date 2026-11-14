@@ -412,17 +412,41 @@ input:focus { border-color: var(--accent); }
 .workout.paused .wk-state { color: var(--z4); }
 .wk-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .wk-controls .btn { width: auto; padding: 11px 20px; }
-.wk-length { display: flex; align-items: center; gap: 8px; }
-.wk-length label { margin: 0; }
-.wk-length select {
+.wk-length { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; }
+.stepper {
+  display: inline-flex;
+  align-items: center;
   background: var(--panel-2);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 12px;
-  color: var(--text);
-  font: inherit;
+  border-radius: 12px;
+  overflow: hidden;
 }
-.wk-length input { width: 84px; padding: 10px 12px; }
+.stepper button {
+  width: 46px;
+  height: 46px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.stepper button:hover { background: var(--panel); }
+.stepper button:active, .stepper button.holding { background: var(--line); }
+.stepper button:disabled { opacity: 0.35; cursor: default; background: transparent; }
+.stepper output {
+  min-width: 52px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.wk-length-unit { min-width: 92px; }
 
 .lost {
   display: flex;

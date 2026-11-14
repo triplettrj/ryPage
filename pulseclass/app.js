@@ -31,6 +31,33 @@ if (standalone) {
   showCoachLink();
 }
 
+// ---------- hand over to the phone app ----------
+
+// On a phone the app does more than this page can: iPhone browsers have no
+// Bluetooth at all, and on Android the app keeps streaming with the screen off.
+// The link opens the app with this class's code and server filled in.
+const ua = navigator.userAgent;
+const isAndroid = /Android/.test(ua);
+// iPads say they're Macs; a "Mac" with a touch screen is an iPad.
+const isIOS = !isAndroid && (/iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+function appLink() {
+  const host = standalone ? cleanServer($('server').value) : location.host;
+  const origin = !host ? '' : standalone ? `${isLocalHost(host) ? 'http' : 'https'}://${host}` : location.origin;
+  const code = $('code').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const query = new URLSearchParams({ ...(code ? { code } : {}), ...(origin ? { server: origin } : {}) }).toString();
+  return `pulseclass://join${query ? `?${query}` : ''}`;
+}
+
+if (isIOS || isAndroid) {
+  $('appCard').classList.remove('hidden');
+  $('appHint').textContent = isIOS
+    ? 'iPhone browsers can’t connect to heart rate monitors, so use the PulseClass app. It opens with this class filled in. Don’t have it yet? Ask your coach for the install link.'
+    : 'The PulseClass app keeps sending your heart rate with the screen off. It opens with this class filled in. Don’t have it? You can carry on here in Chrome.';
+  // Built on tap, so it has whatever code and server are on the page by then.
+  $('appOpenBtn').addEventListener('click', () => { $('appOpenBtn').href = appLink(); });
+}
+
 // ---------- profile ----------
 
 // This id is the athlete's only credential with the server, so it must be

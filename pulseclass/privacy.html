@@ -28,8 +28,9 @@
     <p>Each phone makes a random ID, different for every server, so you keep your place if the connection drops. It isn't linked to your Apple ID or anything else.</p>
 
     <h2>What the server keeps</h2>
-    <p>During a session the server holds, in memory only: your name, current heart rate, average and peak, effort points, time in each zone, and a 10-minute trend line. It's deleted when you tap <b>Leave class</b>, when the coach starts a new session, 30 minutes after you disconnect, or when the server restarts. A coach can download a summary of the session (names, points, average and peak, time in zones) from their dashboard.</p>
-    <p>The only thing written to disk is each class's name, code, access keys and settings. Never heart rate or athlete names.</p>
+    <p><b>During a workout</b> the server holds your name, current heart rate, average and peak, effort points, time in each zone, and a 10-minute trend line. Your current heart rate and the trend line are held in memory only and are never saved. The rest is saved on the server so a restart mid-class doesn't lose your points. It's deleted when you tap <b>Leave class</b>, when the coach resets for the next workout, or 30 minutes after you disconnect.</p>
+    <p><b>When a workout finishes</b>, the server keeps its results so your coach can look back at them: your name, effort points, time in each zone, and average and peak heart rate. It keeps the last 30 workouts of a class. A copy is also kept in the browser your coach uses for the dashboard. Results are deleted when your coach deletes them, or when the class is cleared (classes that aren't permanent rooms are cleared after 12 hours without activity). To have your results removed, ask your coach. A coach can also download them as a file.</p>
+    <p>Second-by-second heart rate is never stored. The server also saves each class's name, code, access keys and settings.</p>
 
     <h2>Apple Health and Apple Watch</h2>
     <p>The Apple Watch app reads your heart rate during workouts that you start, and saves the workout to Apple Health on your devices, where it counts toward your Activity rings. Health data is used only to show your heart rate in the class you join. It isn't used for advertising, isn't sold, and isn't shared with anyone else.</p>
