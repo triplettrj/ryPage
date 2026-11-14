@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en" data-standalone>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0f14">
+  <title>PulseClass</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="wrap">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4h2c.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.2C19.5 16.4 12 21 12 21z"/></svg>
+      PulseClass
+      <a href="#" id="coachLink" class="btn ghost" style="width:auto;margin-left:auto;font-size:14px">I'm a coach →</a>
+    </div>
+
+    <!-- Profile -->
+    <section class="card" id="profileCard">
+      <h2>About you</h2>
+      <div class="row">
+        <div class="field" style="flex:2">
+          <label for="name">Name</label>
+          <input id="name" type="text" maxlength="40" placeholder="Your name" autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label for="age">Age</label>
+          <input id="age" type="number" inputmode="numeric" min="5" max="110" placeholder="e.g. 32">
+        </div>
+      </div>
+      <p class="hint" id="maxHrHint">Max heart rate is estimated as 220 − age.</p>
+    </section>
+
+    <!-- Live heart rate -->
+    <section class="card live" id="liveCard">
+      <div class="bpm" id="bpm">--</div>
+      <div class="unit"><span class="heart" id="heart" aria-hidden="true">♥</span> BPM</div>
+      <div class="zone" id="zone">No monitor connected</div>
+    </section>
+
+    <!-- Monitor -->
+    <section class="card">
+      <h2>Heart rate monitor</h2>
+      <div class="status" style="margin-bottom:12px"><span class="dot" id="monitorDot"></span><span id="monitorStatus" role="status" aria-live="polite">Not connected</span></div>
+      <button class="btn" id="connectBtn">Connect monitor</button>
+      <button class="btn secondary hidden" id="disconnectBtn">Disconnect</button>
+      <button class="btn ghost" id="simulateBtn">No monitor? Use a simulated one</button>
+      <p class="hint hidden" id="btUnsupported">
+        This browser can't use Bluetooth. On iPhone, use the PulseClass iPhone app. On Android or a laptop, use Chrome or Edge.
+      </p>
+      <p class="hint">Works with Bluetooth chest straps and armbands (Polar, Wahoo, Garmin, Coros and others). Apple Watch needs the iPhone app.</p>
+    </section>
+
+    <!-- Class -->
+    <section class="card">
+      <h2>Class</h2>
+      <div id="joinForm">
+        <div class="field hidden" id="serverField">
+          <label for="server">Server</label>
+          <input id="server" type="text" inputmode="url" placeholder="pulseclass.example.com" autocapitalize="off" autocomplete="off" spellcheck="false">
+          <p class="hint" style="margin:6px 0 0">The web address your coach uses for PulseClass. Scanning the class QR code fills it in.</p>
+        </div>
+        <div class="field">
+          <label for="code">Class code</label>
+          <input id="code" type="text" maxlength="8" placeholder="ABCDE" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase;letter-spacing:.12em;font-weight:700">
+        </div>
+        <button class="btn" id="joinBtn">Join class</button>
+      </div>
+      <div id="joinedBox" class="hidden">
+        <div class="status" style="margin-bottom:12px"><span class="dot" id="classDot"></span><span id="classStatus" role="status" aria-live="polite"></span></div>
+        <div class="effort hidden" id="effort">
+          <div><b id="myPoints">0</b> effort points</div>
+          <div class="zone-strip" id="zoneStrip" aria-label="Time in each zone"></div>
+          <p class="hint" style="margin:6px 0 0">1 point a minute in Zone 1, up to 5 a minute in Zone 5.</p>
+        </div>
+        <button class="btn secondary" id="leaveBtn">Leave class</button>
+      </div>
+      <p class="error hidden" id="classError" role="alert"></p>
+      <label class="check" style="margin:16px 0 0">
+        <input type="checkbox" id="share">
+        <span><b>Share with the class</b><br><span class="hint" style="margin:0">See classmates who also share, and a leaderboard by % of max. Your coach and the room TV always see you.</span></span>
+      </label>
+    </section>
+
+    <!-- Class view: only shown to people who share -->
+    <section class="card hidden" id="classViewCard">
+      <div class="cv-head">
+        <h2 style="margin:0">Class view</h2>
+        <div class="toolbar" role="group" aria-label="Leaderboard">
+          <button data-board="now" class="active" aria-pressed="true">Now</button>
+          <button data-board="avg" aria-pressed="false">Session avg</button>
+          <button data-board="points" aria-pressed="false">Points</button>
+        </div>
+      </div>
+      <ol class="board" id="board"></ol>
+      <p class="hint" id="boardNote"></p>
+    </section>
+    <p class="hint" style="text-align:center"><a href="help.html" style="color:inherit">Help</a> · <a href="privacy.html" style="color:inherit">Privacy</a></p>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

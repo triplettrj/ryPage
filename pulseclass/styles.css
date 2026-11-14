@@ -1,0 +1,391 @@
+:root {
+  --bg: #0d0f14;
+  --panel: #171a22;
+  --panel-2: #20242f;
+  --line: #2c3140;
+  --text: #f2f4f8;
+  --muted: #9097a8;
+  --accent: #ff3b5c;
+  --z0: #5b6274;
+  --z1: #8a94a8;
+  --z2: #3b8cff;
+  --z3: #22c55e;
+  --z4: #f59e0b;
+  --z5: #ef4444;
+  --radius: 16px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+button, input {
+  font: inherit;
+  color: inherit;
+}
+
+.wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+}
+.brand svg { color: var(--accent); }
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.card h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+
+input[type=text], input[type=number], input[type=url] {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  outline: none;
+}
+input:focus { border-color: var(--accent); }
+
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; min-width: 0; }
+.field { margin-bottom: 12px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 16px;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn.secondary { background: var(--panel-2); border: 1px solid var(--line); }
+.btn.ghost { background: transparent; color: var(--muted); padding: 8px; }
+
+.hint { color: var(--muted); font-size: 14px; margin: 10px 0 0; }
+.error { color: #ff8a8a; font-size: 14px; margin: 10px 0 0; }
+.hidden { display: none !important; }
+
+/* ---------- athlete live display ---------- */
+
+.live {
+  text-align: center;
+  padding: 28px 18px;
+  transition: background 0.4s;
+}
+.live .bpm {
+  font-size: clamp(96px, 32vw, 160px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.live .unit { color: var(--muted); font-weight: 600; margin-top: 4px; }
+.live .zone {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  background: var(--panel-2);
+}
+.heart { display: inline-block; color: var(--accent); }
+.heart.beat { animation: beat 0.35s ease-out; }
+@keyframes beat { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--z0); flex: none; }
+.dot.on { background: var(--z3); box-shadow: 0 0 0 3px rgb(34 197 94 / 0.2); }
+.dot.warn { background: var(--z4); }
+
+/* ---------- coach dashboard ---------- */
+
+.dash { padding: 20px 24px 40px; }
+
+.dash-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.dash-head h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+.dash-head .sub { color: var(--muted); font-size: 14px; }
+
+.join-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+}
+.join-box .code {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+.join-box .small { color: var(--muted); font-size: 13px; line-height: 1.3; }
+
+.toolbar { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 14px; }
+.toolbar button {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.toolbar { flex-wrap: wrap; }
+.toolbar .spacer { flex: 1; }
+.toolbar button.active { color: var(--text); border-color: var(--text); }
+.toolbar .pill {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.toolbar .pill:hover, .toolbar button:hover { color: var(--text); }
+.switch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin-right: 6px; }
+.switch input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+.check { display: flex; gap: 10px; align-items: flex-start; color: var(--text); font-size: 15px; margin: 4px 0 14px; cursor: pointer; }
+.check input { accent-color: var(--accent); width: 18px; height: 18px; margin: 2px 0 0; flex: none; }
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--muted);
+  vertical-align: 2px;
+}
+.tile .tag { margin-left: 4px; font-size: 10px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.tile {
+  position: relative;
+  border-radius: var(--radius);
+  padding: 14px 16px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  transition: background 0.5s, opacity 0.3s;
+}
+.tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--zc, transparent);
+  opacity: 0.22;
+  transition: background 0.5s;
+}
+.tile > * { position: relative; }
+.tile .name {
+  font-weight: 700;
+  font-size: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tile .big {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 4px 0 2px;
+}
+.tile .bpm {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.tile .pct { font-size: 22px; font-weight: 700; color: var(--zc, var(--muted)); }
+.tile .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 10px;
+  justify-content: space-between;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.tile .zonebar { height: 6px; border-radius: 3px; background: var(--zc, var(--z0)); margin: 8px 0; }
+.tile canvas { width: 100%; height: 40px; display: block; }
+.tile.stale { opacity: 0.45; }
+.tile.stale::before { opacity: 0; }
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 80px 20px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+.empty strong { color: var(--text); font-size: 20px; display: block; margin-bottom: 8px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 24px; color: var(--muted); font-size: 13px; }
+.legend span::before {
+  content: "";
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  background: var(--c);
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+@media (max-width: 600px) {
+  .dash { padding: 16px; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .tile .bpm { font-size: 44px; }
+  .tile .pct { font-size: 16px; }
+  .join-box .code { font-size: 24px; }
+}
+
+/* ---------- class view on athletes' phones ---------- */
+
+.cv-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.board { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.board li {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  font-variant-numeric: tabular-nums;
+}
+.board li.me { outline: 2px solid var(--accent); outline-offset: -2px; }
+.board .rk { color: var(--muted); font-weight: 700; text-align: center; }
+.board .nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.board .val { font-weight: 800; }
+.board .val small { color: var(--muted); font-weight: 600; margin-left: 6px; }
+.board .bar { grid-column: 2 / 4; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.board .bar i { display: block; height: 100%; background: var(--c); border-radius: 3px; transition: width .6s; }
+
+/* Join QR code: thumbnail in the header, big overlay, and in the empty state. */
+.qr-thumb {
+  padding: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: zoom-in;
+  line-height: 0;
+}
+.qr-thumb img { width: 56px; height: 56px; display: block; }
+.empty-qr {
+  display: block;
+  margin: 18px auto 0;
+  width: 200px;
+  height: 200px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 12px;
+}
+.qr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.78);
+}
+.qr-overlay.hidden { display: none; }
+.qr-card {
+  width: min(440px, 100%);
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+.qr-card img {
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 1;
+  background: #fff;
+  padding: 14px;
+  border-radius: 12px;
+}
+.qr-card .qr-code { font-size: 40px; font-weight: 800; letter-spacing: 0.12em; margin: 12px 0 4px; }
+.qr-card .small { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.qr-card .btn { margin-top: 12px; }
+
+/* Your effort points and time in zones (athlete app) */
+.effort { margin: 0 0 12px; font-size: 15px; }
+.effort b { font-size: 22px; }
+.zone-strip { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 6px; background: var(--line); }
+.zone-strip span { display: block; min-width: 0; }
+
+/* Accessibility: a visible focus ring for keyboard users, and no motion for
+   people who ask their system for less. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
